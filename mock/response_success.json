@@ -1,7 +1,0 @@
-{
-    "kind": "Status",
-    "apiVersion": "v1",
-    "metadata": {},
-    "status": "Success",
-    "code": 201
-}
