@@ -1,0 +1,38 @@
+# Daily thread
+
+## Semaine 1 (02/03 - 06/03)
+Rencontre avec les équipes, découverte des concepts de batsim, nix, kubernetes.
+
+Etat de l'art.
+
+Formation Go.
+
+## Semaine 2 (09/03 - 13/03)
+Etat de l'art.
+
+Fin formation Go.
+
+Tutos Nix.
+
+Bcp de discussions autour de l'approche à prendre -> Proof of concept sur le
+bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
+
+## Semaine 3
+### 16/03
+- Mise en place de l'environnement de travail sur ma machine à la maison.
+- Tuto batsim "doing a reproducible environnment"
+- Tuto api en go, avec un bon rappel des paramètres d'une API. Premières lignes de test, pour tester la bonne communication entre bat-kube et ./scheduler.sh
+
+### 17/03
+- Etabli des réponses mock du simulateur au scheduler.
+- Utilisation de packr pour la gestion des fichiers. Essayé d'utiliser Pkger, pas réussi
+- Début de traitement de requête post pour binder. Le scheduler finit toujours sur une erreur interne qu'il faut débugger
+
+### 18/03
+- Version fonctionnelle d'une api qui ne renvoie que des mocks prédéfinis.
+- Exploré la piste des mock de cluster. Peut être utilisé pour rediriger les points de l'api que l'on ne veut pas implémenter.
+- Next step : bashScheduler avec des mocks -> Probleme conceptuel, les mocks sont utiles côté client.
+- Etat de l'art sur les mock servers / nodes, rédaction avantages/inconvénients approches d'architecture, proposé une extension de la solution custom client.
+
+### 19/03
+- Réunion avec Olivier. Next step : simulateur de bout en boutpour le bashScheduler
