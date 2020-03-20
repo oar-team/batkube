@@ -35,4 +35,10 @@ bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
 - Etat de l'art sur les mock servers / nodes, rédaction avantages/inconvénients approches d'architecture, proposé une extension de la solution custom client.
 
 ### 19/03
-- Réunion avec Olivier. Next step : simulateur de bout en boutpour le bashScheduler
+- Réunion avec Olivier. Next step : simulateur de bout en bout pour le bashScheduler
+- Exploré la doc de batsim (Plateforme, workloads, events). Mise en parallèle des entités batsim et kube.
+- Nouvelle organisation des repos
+
+### 20/03
+- Réunion avec michael et olivier, mise au point collective. Mises au clair sur les traductions pods/jobs, clarifications de qlq points sur la prochaine étape incrémentale.
+- Expérimentations avec les objets kube et le fake client go
