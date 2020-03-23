@@ -42,3 +42,10 @@ bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
 ### 20/03
 - Réunion avec michael et olivier, mise au point collective. Mises au clair sur les traductions pods/jobs, clarifications de qlq points sur la prochaine étape incrémentale.
 - Expérimentations avec les objets kube et le fake client go
+
+## Semaine 4
+### 23 / 03
+- Parvenu à parser un deployment.yaml en objet v1
+- Remise au point avec michael sur l'architecture du simulateur
+- mise en place de multipass + k3s pour lancer des tests locaux
+- lecture et discussions sur les packages / modules Go
