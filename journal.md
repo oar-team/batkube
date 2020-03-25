@@ -55,3 +55,9 @@ bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
 - Lectures go sur la gestion et propagation des erreurs
 - Deserialisation des compute_resources en node
 - Communication des objets entre broker et api
+
+### 25/03
+- Tenté de sérialiser des objets kube -> besoin de générer les fonctions DeepCopyObject [reference](https://blog.openshift.com/kubernetes-deep-dive-code-generation-customresources/)
+- Nouvelle piste à explorer : la librairie [apiserver](https://github.com/kubernetes/apiserver)
+- réunion hebdo avec Olivier
+- Doc et préparation de demo

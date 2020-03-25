@@ -157,6 +157,19 @@ A ResourceList is a map made of (ResourceName, resource.Quantity) pairs.
 
 ## The Batsim interface
 
+### Batsim architecture
+y
+Batsim is divided into two processes. One process is doing the actual
+simulation, while the other is doing the decision process. This way,
+we can plug any scheduler to batsim in order to test it extensively.
+
+![batsim architecture](imgs/batsim-processes.png)
+
+These two processes communicate in json format, following the Batsim Protocol
+(more information in the [Batsim documentation](https://batsim.readthedocs.io/en/latest/index.html))
+
+### Implementation of the Batkube interface
+
 Here are three levels at which we can position ourselves in order to
 communicate with kubernetes schedulers.
 
@@ -168,12 +181,38 @@ Coding a REST API from scratch, with the same endpoints as in the kube api.
 
 Advantages
 - Will work with any scheduler without any tampering
+- Easily handpick endpoints to code, while leaving the others to reduce the workload.
 
 Drawbacks
-- Very cumbersome, massive work load to even handle all the endpoints.
-- Might not be possible as schedulers need a lot of informations. Maybe they
- would crash if they don't get responses from the endpoints they are querying
- from.
+- Schedulers might require a lot if information from the api server, which will
+in the end force us to code a lot of endpoints. This is maybe not really a
+drawback, as understanding the schedulers needs is necessary in any case.
+Incrementally implementing the endpoints might even be the best solution to
+collaboratively work on the simulator, in order to support more complex
+schedulers.
+
+This is the most sound solution, as it can be plugged into any scheduler.
+Also, being a stand alone service, it has the most sound architecture.
+
+Let us develop on this idea. Here is how Batsim communicates with a scheduler :
+
+![batsim scheduler communication](imgs/batsim-scheduler-messages.png)
+
+json messages are exchanged between the two processes using a ZeroMQ request-reply pattern. Again, more details in the [documentation](https://batsim.readthedocs.io/en/latest/index.html).
+
+This means that we have to stand in between these two processes translate and synchronise the two entities.
+Here is the current Batkube architecture :
+
+![archi](imgs/batkube-architecture.png)
+
+##### Main problematics
+
+- Translation : messages have to be translated from the Batsim protocol to
+kubernetes types and events.
+- Time management : Batsim is in control of the time. The scheduler must be
+synchronized with Batsim if it relies on some time measurements. This is not
+a problem if the scheduler is purely event-based : in that case, all exchanges
+are synchronous.
 
 #### Modified kube API
 
@@ -185,8 +224,7 @@ Advantages
 - Same as with the last solution, will work with any scheduler
 
 Drawbacks
-- Digging into the api to know which endpoints we need to code may be still a
- considerable amount of work. But it seems more doable than the last solution
+- We would need to dig deep into the api code. Which is huge.
 - Requires to find a solution about the endpoints we choose to leave as is.
  Won't they raise errors if they can't connect to their expected kubelets?
 
@@ -217,4 +255,8 @@ Here is an idea to lower the workload :
 As a starting point, we will start by coding an interface for the
 [bashScheduler](https://github.com/rothgar/bashScheduler) in order to better
 understand an tackle the technical details of the implementation.
+
+Major update 1 : we may need to recode the scheduler in go, so as to
+synchronize the scheduler with batsim. Currently the bashScheduler sleeps in
+between calls, which is a major issue time-wise.
 
