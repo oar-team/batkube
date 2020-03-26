@@ -61,3 +61,8 @@ bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
 - Nouvelle piste à explorer : la librairie [apiserver](https://github.com/kubernetes/apiserver)
 - réunion hebdo avec Olivier
 - Doc et préparation de demo
+
+### 26/03
+- Demo
+- Corrigé le bug des runtime.Object
+- Ajouté des types Batsim.
