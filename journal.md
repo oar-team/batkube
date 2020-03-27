@@ -66,3 +66,8 @@ bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
 - Demo
 - Corrigé le bug des runtime.Object
 - Ajouté des types Batsim.
+
+### 27/04
+- Réu avec michael et Olivier. Prochaines étapes : 1) finir la v0 end to end 2) Diagramme de séquence
+3) Etudier la faisabilité de go-swagger 4) Problème du temps
+- Sérialisation propre de SIMULATION_BEGINS en struct go
