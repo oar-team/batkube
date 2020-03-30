@@ -67,7 +67,13 @@ bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
 - Corrigé le bug des runtime.Object
 - Ajouté des types Batsim.
 
-### 27/04
+### 27/03
 - Réu avec michael et Olivier. Prochaines étapes : 1) finir la v0 end to end 2) Diagramme de séquence
 3) Etudier la faisabilité de go-swagger 4) Problème du temps
 - Sérialisation propre de SIMULATION_BEGINS en struct go
+
+## Semaine 5
+### 30/03
+- Encore de la sérialisation et du travail sur les types liés à batsim. Très certainement d'autres retouches qui arrivent.
+- Réflexions sur une autre architecture possible de batkube, ne définissant pas une nouvelle api
+- Réflexion sur la gestion de la conversion pod <-> job
