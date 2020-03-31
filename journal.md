@@ -77,3 +77,10 @@ bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
 - Encore de la sérialisation et du travail sur les types liés à batsim. Très certainement d'autres retouches qui arrivent.
 - Réflexions sur une autre architecture possible de batkube, ne définissant pas une nouvelle api
 - Réflexion sur la gestion de la conversion pod <-> job
+
+### 31/03
+- Rapide appel avec Michael à propos de l'idée d'architecture -> décidée pas viable. Doc mise à jour.
+- re-boulot sur les types Profile. Abandon de l'interface Profile (pour le moment).
+- début d'implémentation de l'idée d'une convertion pod <-> job basée sur des .yml, abandon (pas du tout une bonne idée)
+- Remise en cause du rôle des différents éléments de batkube nottament par rapport à la concurrence. Mise au propre
+d'une vraie organisation plus adaptée, modulaire, claire. Implémentation demain.

@@ -170,8 +170,36 @@ These two processes communicate in json format, following the Batsim Protocol
 
 ### Implementation of the Batkube interface
 
-Here are three levels at which we can position ourselves in order to
+Here are some levels at which we can position ourselves in order to
 communicate with kubernetes schedulers.
+
+#### Kubelet API server
+
+One low level idea is to implement the simulator at the kubelet level.
+This implementation is very generic : you could plug in any kubernetes configuration with, of course,
+any scheduler you want.
+
+Hovewer, this adds several layers of complexity both at runtime and during
+development. The simulator would have to handle every detail : actual
+infrastrcture simukation, networking, message handling with the api-server...
+Also, it would require an entier k8s setup in order to run simulations.
+
+The only case where this would be useful is when the user wants to simulate an
+entire kube infrastructure. We only want to evaluate the schedulers.
+
+#### Modified kube API
+
+Fitting The API to our needs by handpicking the endpoints we need to re-code, and leaving as is everything else.
+
+![custom implementation](imgs/interface-custom.png)
+
+Advantages
+- Will work with any scheduler
+
+Drawbacks
+- We would need to dig deep into the api code. Which is huge.
+- Requires to find a solution about the endpoints we choose to leave as is.
+ Won't they raise errors if they don't get the answers they except?
 
 #### API from scratch
 
@@ -191,8 +219,8 @@ Incrementally implementing the endpoints might even be the best solution to
 collaboratively work on the simulator, in order to support more complex
 schedulers.
 
-This is the most sound solution, as it can be plugged into any scheduler.
-Also, being a stand alone service, it has the most sound architecture.
+This is the most sound solution, as it can be plugged into any scheduler and
+doesn't require too much digging into kubernetes code.
 
 Let us develop on this idea. Here is how Batsim communicates with a scheduler :
 
@@ -201,7 +229,7 @@ Let us develop on this idea. Here is how Batsim communicates with a scheduler :
 json messages are exchanged between the two processes using a ZeroMQ request-reply pattern. Again, more details in the [documentation](https://batsim.readthedocs.io/en/latest/index.html).
 
 This means that we have to stand in between these two processes translate and synchronise the two entities.
-Here is the current Batkube architecture :
+Here is the **current** Batkube architecture (it will **most probably** undergo changes in the near future):
 
 ![archi](imgs/batkube-architecture.png)
 
@@ -213,20 +241,6 @@ kubernetes types and events.
 synchronized with Batsim if it relies on some time measurements. This is not
 a problem if the scheduler is purely event-based : in that case, all exchanges
 are synchronous.
-
-#### Modified kube API
-
-Fitting The API to our needs by handpicking the endpoints we need to re-code, and leaving as is everything else.
-
-![custom implementation](imgs/interface-custom.png)
-
-Advantages
-- Same as with the last solution, will work with any scheduler
-
-Drawbacks
-- We would need to dig deep into the api code. Which is huge.
-- Requires to find a solution about the endpoints we choose to leave as is.
- Won't they raise errors if they can't connect to their expected kubelets?
 
 #### Client side
 
