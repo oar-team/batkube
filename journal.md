@@ -84,3 +84,9 @@ bashScheduler, avec une implémentation bas niveau directement en tant qu'API.
 - début d'implémentation de l'idée d'une convertion pod <-> job basée sur des .yml, abandon (pas du tout une bonne idée)
 - Remise en cause du rôle des différents éléments de batkube nottament par rapport à la concurrence. Mise au propre
 d'une vraie organisation plus adaptée, modulaire, claire. Implémentation demain.
+
+### 01/04
+- Changé l'architecture de batkube : le traitement des messages se fait dans l'api et non plus daans le broker. Code plus clair.
+- Support de JOB_SUBMITTED
+- Support du query paramater fieldSelector pour /pods
+- Expériences sur la synchro -> Stocker les objets v1 en variable globale de l'api ne fonctionne pas. Il faut trouver une autre solution.
