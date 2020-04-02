@@ -90,3 +90,8 @@ d'une vraie organisation plus adaptée, modulaire, claire. Implémentation demai
 - Support de JOB_SUBMITTED
 - Support du query paramater fieldSelector pour /pods
 - Expériences sur la synchro -> Stocker les objets v1 en variable globale de l'api ne fonctionne pas. Il faut trouver une autre solution.
+
+### 02/04
+- Première version fonctionnelle de bout en bout. Améliorations sur les logs. README mis à jour.
+- Premier jet sur un diagramme de séquence. Discuté avec Olivier via telegram sur la synchro du temps et l'architecture du code.
+- Pas fait grand chose d'autre, fuite d'eau à la maison qui requiert mon attention
