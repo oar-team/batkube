@@ -95,3 +95,12 @@ d'une vraie organisation plus adaptée, modulaire, claire. Implémentation demai
 - Première version fonctionnelle de bout en bout. Améliorations sur les logs. README mis à jour.
 - Premier jet sur un diagramme de séquence. Discuté avec Olivier via telegram sur la synchro du temps et l'architecture du code.
 - Pas fait grand chose d'autre, fuite d'eau à la maison qui requiert mon attention
+
+### 03/04
+- Réu avec michael et olivier
+- Recherches sur les interactions entre kube et scheduler (watch, informers)
+- Manips en essayant de lancer des expériences avec un scheduler utilisant go -> problème de la config kube.
+
+### 06/04
+- Recherches sur l'authentification avec l'api server : config kube, https
+- Expériences avec swagger api. Authentification réussie avec les certificats ssl, mais le serveur demande des credentials dont je n'ai aucune idée...
