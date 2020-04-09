@@ -104,3 +104,18 @@ d'une vraie organisation plus adaptée, modulaire, claire. Implémentation demai
 ### 06/04
 - Recherches sur l'authentification avec l'api server : config kube, https
 - Expériences avec swagger api. Authentification réussie avec les certificats ssl, mais le serveur demande des credentials dont je n'ai aucune idée...
+
+### 07/04
+- Passé la journée à tenter de débugger la swagger api. Pas réussi -> handler mytérieux qui renvoie une 401 unauthorized
+- Ce qui a été tenté : déboggage avec curl (et postman), avec et sans certificats, implémentation
+basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagger (DEBUG=1)
+
+### 08/04
+- Solution au problème trouvé par Olivier
+- Encore beaucoup de temps passé sur l'authentification et à comprendre le fonctionnement de swagger api
+- Slides pour la démo
+
+### 09/04
+- matin: demo
+- Testé le code exemple de swagger pour les json en chunk
+- Migré le code de l'api swagger à la racine du projet, enlevé l'ancien package api
