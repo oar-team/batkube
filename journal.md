@@ -101,6 +101,8 @@ d'une vraie organisation plus adaptée, modulaire, claire. Implémentation demai
 - Recherches sur les interactions entre kube et scheduler (watch, informers)
 - Manips en essayant de lancer des expériences avec un scheduler utilisant go -> problème de la config kube.
 
+## Semaine 6
+
 ### 06/04
 - Recherches sur l'authentification avec l'api server : config kube, https
 - Expériences avec swagger api. Authentification réussie avec les certificats ssl, mais le serveur demande des credentials dont je n'ai aucune idée...
@@ -119,3 +121,13 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 - matin: demo
 - Testé le code exemple de swagger pour les json en chunk
 - Migré le code de l'api swagger à la racine du projet, enlevé l'ancien package api
+
+### 10/04
+- réu michael / oliver
+- Diagramme de séquence
+
+## Semaine 7
+
+### 14/04
+- portage du code de batkube sur swagger api
+- events bien envoyés, avec le bon type d'objet
