@@ -131,3 +131,13 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 ### 14/04
 - portage du code de batkube sur swagger api
 - events bien envoyés, avec le bon type d'objet
+
+### 15/04
+- Implémentation de binding mais bug et pas de possibilité de log : besoin de bouger les implémentations des handlers
+- Prob trouvé, c'est un bug de swagger : seule solution toruvée pour le moment : virer les wildcards dans les consumes.
+
+### 16/04
+- Fix le swagger.json pour faire fonctionner binding, rajouté des checks dans le endpoint.
+- Bougé les objets du broker et rajouté qlq getters et setters
+- rajouté quelques fonctions util et d'accès aux ressources
+- Discussions autour de la réimplémentation de time, diagramme de séquence mis à jour
