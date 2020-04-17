@@ -141,3 +141,7 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 - Bougé les objets du broker et rajouté qlq getters et setters
 - rajouté quelques fonctions util et d'accès aux ressources
 - Discussions autour de la réimplémentation de time, diagramme de séquence mis à jour
+
+### 17/04
+- Réu michael & olivier
+- Début du rapport de stage, mini expe scheduler kubernetes
