@@ -144,4 +144,12 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 
 ### 17/04
 - Réu michael & olivier
-- Début du rapport de stage, mini expe scheduler kubernetes
+- Début du mémoire, mini expe scheduler kubernetes
+
+## Semaine 8
+
+### 20/04
+- Mémoire
+- Tenté la réponse à l'issue github sur le consumer json, sans succès
+- Tenté de lancer kube-batch, pas réussi
+- Listé les endpoints interrogés par kube-scheduler
