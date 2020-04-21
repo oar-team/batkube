@@ -1,6 +1,5 @@
 *.log
 *.out
-*.pdf
 *.toc
 *.aux
 report/master-project-blx.bib
