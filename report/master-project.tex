@@ -225,27 +225,56 @@ written as examples or tutorials about writing custom schedulers. These basic
 schedulers made the process of writing proof of concepts much easier.
 
 
-\subsection{Industry grade shcedulers}
+\subsection{Industry grade schedulers}
 
 \subsubsection{Kubernetes scheduler}
-kube-scheduler\cite{kube-sched} is the de facto scheduler for any Kubernetes
-cluster (at least with the native Kubernetes distribution).
 
+kube-scheduler is the de facto scheduler for any Kubernetes
+cluster (at least with the native Kubernetes distribution) and can be found in
+Kubernetes repository\cite{kube-repo}.
 
-\subsubsection{Poseidon}
+It is a generic scheduler and very effective in most cases.
 
 \subsubsection{kube-batch}
 
+kube-batch\cite{kube-batch} is a batch scheduler developed by the Kubernetes
+Scheduling SIG\cite{scheduling-sig}.
+
+It has proven reliable on an industrial size and serves as a base for other scheduling projects (e.g. Volcano\cite{volcano}).
+
+\subsubsection{Poseidon}
+
 \subsection{Example schedulers}
-\subsubsection{Random scheduler}
+
+These schedulers helped a great deal in understanding how a scheduler interacts
+with the Kubernetes api-server, thanks to their simplicity.
 
 \subsubsection{Bash scheduler}
 
-\section{Technical challenges}
+The bashScheduler\cite{bashScheduler} is a tiny project created demonstrating a
+very basic implementation of a random scheduler using only bash, so as to break
+down exchanges between the api server and the scheduler with simple http
+requests.
+
+It has served as a base upon which the first POC was created.
+
+\subsubsection{Random scheduler}
+
+This project is taken from a tutorial\cite{banzai-tuto} redacted by Banzai
+Cloud to guide us through the implementation of a custom scheduler using the go
+client\cite{client-go} from kubernetes.
+Like the bashScheduler, it randomly binds pods on available nodes. Although, it
+takes things to the next level by using the go client thus introducing the
+concept of kubernetes informers and using https instead of plain http.
+
+The second POC was built using this scheduler as a base.
 
 \chapter{Implementation}
 
+\section{Technical challenges}
+
 \section{Batkube architecture}
+
 
 \chapter{Evaluation}
 
