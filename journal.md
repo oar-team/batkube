@@ -153,3 +153,17 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 - Tenté la réponse à l'issue github sur le consumer json, sans succès
 - Tenté de lancer kube-batch, pas réussi
 - Listé les endpoints interrogés par kube-scheduler
+
+### 21/04
+- Mémoire
+- expés avec le poc d'Olivier
+
+### 22/04
+- Issue github encore (go swagger & mime types)
+- Discussion avec Olivier sur le sujet du fork de time (la piste de la libc est plus compliquée que prévu)
+- mini expes avec k3s, pour se rendre compte de ce qu'il y a à implémenter
+- expérimentations avec les sources go (compilation, modification de time.go)
+
+### 23/04
+- demo
+- bataillé avec vim
