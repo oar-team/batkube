@@ -167,3 +167,19 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 ### 23/04
 - demo
 - bataillé avec vim
+- implémenté un poc fonctionnel pour time.go mais que des galères avec les dépendances go
+
+### 24/04
+- C'est bon pour les dépendances.
+- réu michael olivier
+- planché sur l'implementation des timers. théorie plutôt mise au point.
+
+## Semaine 9
+
+### 27/04
+- Implémentation de l'envoi de messages en bulk depuis time, besoin d'amélioration
+
+### 28/04
+- Requetes et réponses synchronisés
+- début d'implem des timers
+- taf sur now() pour renvoyer des valeurs qui ont du sens au niveau de l'implémentation de time de go. Pas testé.
