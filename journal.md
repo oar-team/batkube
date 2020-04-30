@@ -183,3 +183,13 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 - Requetes et réponses synchronisés
 - début d'implem des timers
 - taf sur now() pour renvoyer des valeurs qui ont du sens au niveau de l'implémentation de time de go. Pas testé.
+
+### 29/04
+- Implem des timers, ils passen les tests
+- Synchro des requêtes/réponse absolument pas nécessaire si je renvoie juste le temps à chaque fois
+- tentative pourun autre systeme que les uuid, fonctionne pas
+
+### 30/04
+- réu michael olivier.
+- merge des deux solutions, best of both worlds
+- doc
