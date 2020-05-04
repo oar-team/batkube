@@ -197,4 +197,8 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 ## Semaine 10
 
 ### 04/05
-- doc batsky-time, échanges zmq
+- doc batsky-go (pseudo algos), échanges zmq
+- fixed : échanges zmq
+- fixed : deadlock des timers. cause : les for(condition){} trop rapides, les
+autres routines n'avaient même pas de chance de prendre la main et le code
+était bloqué. Solution : bougé les for un cran au dessus.
