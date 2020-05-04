@@ -4,7 +4,6 @@
 % \usepackage[french]{babel}
 % \usepackage[T1]{fontenc}
 
-% Others
 \usepackage[margin=2cm]{geometry} % decrease margin
 \usepackage{graphicx} % include images
 \usepackage{hyperref} % urls, hyperlinks, etc
@@ -15,6 +14,7 @@
 \usepackage{titlesec} % Modify chapter headings
 \usepackage{wrapfig} % wrap text around figures
 \usepackage{float} % force figure positions at the end of the file
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
 
 \addbibresource{biblio.bib}
 
@@ -271,9 +271,60 @@ The second POC was built using this scheduler as a base.
 
 \chapter{Implementation}
 
-\section{Technical challenges}
-
 \section{Batkube architecture}
+TODO
+
+\section{Time hijack}
+TODO
+
+\subsection{batsky-go}
+\SetKwInput{KwInput}{Input}
+\SetKwInput{KwOutput}{Output}
+
+
+\begin{algorithm}[H]
+\DontPrintSemicolon
+\KwInput{req: request channel, res: result channel map}
+\While{Batkube is not ready} {
+	wait\;
+}
+requests = []request\;
+\While{req is not empty} {
+	m = $<$- req \tcc{Non blocking receive}
+	requests = append(requests, m)\;
+}
+sendToBatkube(requests) \tcc{Only requests with duration > 0 are actually sent. Batkube will always anwser.}
+now = responseFromBatkube()\;
+\For{m in range requests} {
+	res[m.id] $<$-now \tcc{The caller continues execution upon reception}
+}
+
+	
+\caption{Requester loop}
+\label{alg:reqLoop}
+\end{algorithm}
+
+
+\begin{algorithm}[H]
+\DontPrintSemicolon
+\KwResult{Current simulation time}
+\KwInput{d: timer duration, req: request channel, res: response channel map}
+\KwOutput{now : simulation time}
+
+\If{requester loop is not running}{
+	go runRequesterLoop() \tcc{There can on ly be one loop runing at a time}
+}
+id = newUUID()\;
+m = newRequestMessage(d, id) \tcc{Requests are identified using uuids}
+resChannel = newChannel()\;
+res[id] = resChannel \tcc{A channel is associated with each request}
+req $<$- m \tcc{The code blocks here until request is handled}
+now = $<$-resChannel \tcc{The code blocks here until response is sent by the requester loop}
+return now\;
+\caption{Time request (time.now())}
+\label{alg:now}
+\end{algorithm}
+
 
 
 \chapter{Evaluation}

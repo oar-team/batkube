@@ -193,3 +193,8 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 - réu michael olivier.
 - merge des deux solutions, best of both worlds
 - doc
+
+## Semaine 10
+
+### 04/05
+- doc batsky-time, échanges zmq
