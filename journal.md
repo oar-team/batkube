@@ -202,3 +202,8 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 - fixed : deadlock des timers. cause : les for(condition){} trop rapides, les
 autres routines n'avaient même pas de chance de prendre la main et le code
 était bloqué. Solution : bougé les for un cran au dessus.
+
+### 05/05
+- demo
+- reu lig
+- fork de apimachinery concluant, fonctionne avec un simple wait.Until. A voir avec des cas plus complexes.
