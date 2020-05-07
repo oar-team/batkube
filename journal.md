@@ -207,3 +207,8 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 - demo
 - reu lig
 - fork de apimachinery concluant, fonctionne avec un simple wait.Until. A voir avec des cas plus complexes.
+
+### 06/05
+- réu michael olivier
+- bougé le commit sur apimachinery dans un fork
+- expés avec client-go, peu concluantes (besoin de time/rate qui a besoin de context etc...)
