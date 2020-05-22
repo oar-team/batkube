@@ -203,12 +203,32 @@ basique de BearerTokenAuth, déboggage pas à pas de l'api, mode debug de swagge
 autres routines n'avaient même pas de chance de prendre la main et le code
 était bloqué. Solution : bougé les for un cran au dessus.
 
-### 05/05
+### 06/05
 - demo
 - reu lig
 - fork de apimachinery concluant, fonctionne avec un simple wait.Until. A voir avec des cas plus complexes.
 
-### 06/05
+### 07/05
 - réu michael olivier
 - bougé le commit sur apimachinery dans un fork
 - expés avec client-go, peu concluantes (besoin de time/rate qui a besoin de context etc...)
+
+## Semaine 11
+
+### 18/05
+- Etat de l'art
+- expériences avec les changements de dépendance. Revenu au remplacement des wait.Until() simplement
+- portage du code broker de test dans batkube
+
+### 19/05
+- Etat de l'art
+- Pas mal d'essais avec les dépendances encore une fois.
+- Essais avec la piste du vendoring
+- Commencé à changer les types utilisés dans batsky-go pour de vrais time.Time et time.Duration. Les tests ne passent pas, à continuer.
+
+### 20/05
+- Demo
+- réu avec olivier, encore un peu état de l'art
+
+### 22/05
+- 

@@ -15,6 +15,7 @@
 \usepackage{wrapfig} % wrap text around figures
 \usepackage{float} % force figure positions at the end of the file
 \usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{dirtytalk}
 
 \addbibresource{biblio.bib}
 
@@ -99,6 +100,10 @@
 \chapter{Introduction}
 
 
+\chapter{HPC, Kubernetes and the scheduling problem}
+
+\section{Kubernetes concepts}
+
 In the early stages of application development, organizations used to run their
 services on physical servers. With this direct approach came a few
 problematics: resources allocation, maintainability, scalability for exemple.
@@ -113,31 +118,52 @@ containers.
 	\label{fig:container-evolution}
 \end{figure}
 
-Containers can be thought of as lightweight virtual machines.  Containerized
-applications are applications running inside of a container, completely
-independently of the underlying physical infrastructure. There are many
-benefits to this : separating the development from deployment,
-portability, easy resource allocation, breaking large services into smaller
-micro-services or support of continuous integration tools, to cite a few.\\
+Containers can be thought of as lightweight virtual machines. Unlike virtual
+machines, containers share the same kernel with the host machine but still
+allow for a very controlled environment to run applications. There are many
+benefits to this : separating the development from deployment, portability,
+easy resource allocation, breaking large services into smaller micro-services
+or support of continuous integration tools (containers greatly facilitate
+integration tests), to cite a few.\\
 
-Kubernetes\cite{kubernetes} allows the automation of the process of deploying, maintaining and
-scaling containerized applications. It is an open source platform originally
-designed by Google and now maintained and developed by the Cloud Native
-Computing Foundation. It is industry grade and widely used by web services, big
-or small, for its ease of use and its reliability.
+Kubernetes\cite{kubernetes} aims at automating of the process of deploying,
+maintaining and scaling containerized applications. It is an open source
+platform originally designed by Google and now maintained and developed by the
+Cloud Native Computing Foundation\footnote{\url{https://www.cncf.io/}}. It is
+industry grade and widely used by web services, big or small, for its -
+relative - ease of use and its reliability.
 
-However, eventhough it allows the automation of technical tasks that used to be
-done manually, it doesn't take away other problematics like scheduling.
-Scheduling is the NP-complete problem of allocating containers on physical
-machines : one has to take into account resource availability, latency between
-servers, storage locality, etc. Kubernetes schedulers have to handle this
-difficult task of allocating resources in the most efficient way.
+\begin{figure}[]
+	\centering
+	\includegraphics[width=\textwidth]{imgs/components-of-kubernetes.png}
+	\captionsource{Components of Kubernetes}{https://kubernetes.io/docs/concepts/overview/components/}
+	\label{fig:kube-components}
+\end{figure}
 
-Thanks to the architecture of Kubernetes which is built around a central
-component, the API server, schedulers can be developed independently in order
-to fit particular needs. As a matter of fact, one universal scheduler that
-would efficiently operate on any infrastructure will most likely never exist
-and organizations often develop their own scheduler to better fit their needs.
+\section{HPC and Kubernetes}
+A general definition of HPC would be :
+\say{\textit{High Performance Computing (HPC) most generally refers to the
+		practice of aggregating computing power in a way that delivers
+		much higher performance than one could get out of a typical
+		desktop computer in order to solve large problems in science,
+		engineering, or
+		business.}}
+\footnote{\url{https://wwwen.uni.lu/university/high_performance_computing}}
+
+HPC can either rether to ``High Performance Computing'' or ``High Performance
+Computer'', but it is generally clear which one it refers to, given the
+context.
+An HPC workload is mostly caracterized by parallel tasks that run on a large
+amount of compute units - refered to as ``nodes''.
+
+
+
+
+\section{The scheduling problem}
+
+\section{Simulating infrastructures}
+\subsection{HPC simulators}
+\subsection{Kubernetes simulation}
 
 This raises the question of scheduler development. Developing a scheduler
 implies being able to test its performances throughout the development process,
@@ -155,31 +181,10 @@ services but is capable of handling High-Performance
 Computing\cite{kube-for-hpc}. This project aims at adapting Batsim so it can
 evaluate Kuberenetes schedulers.
 
-\chapter{Problematic}
-
-\section{Objectives}
-
-The goal of this project is to design and implement Batkube, which will be an
-interface between Batsim and Kubernetes schedulers. With this interface, we
-want to compare Batsim results gainst data from a real Kubernetes cluster,
-given HPC workloads.
-
-\section{Kubernetes concepts}
-
-\begin{figure}[]
-	\centering
-	\includegraphics[width=\textwidth]{imgs/components-of-kubernetes.png}
-	\captionsource{Components of Kubernetes}{https://kubernetes.io/docs/concepts/overview/components/}
-	\label{fig:kube-components}
-\end{figure}
-
 \section{Batsim concepts}
 
 \subsection{Limitations}
 
-\section{Translation}
-
-\section{Synchronization}
 
 \chapter{State of the art}
 
@@ -269,11 +274,25 @@ concept of kubernetes informers and using https instead of plain http.
 
 The second POC was built using this scheduler as a base.
 
+\chapter{Problematic}
+
+\section{Objectives}
+
+The goal of this project is to design and implement Batkube, which will be an
+interface between Batsim and Kubernetes schedulers. With this interface, we
+want to compare Batsim results gainst data from a real Kubernetes cluster,
+given HPC workloads.
+
+\section{Translation}
+
+\section{Synchronization}
+
 \chapter{Implementation}
 
 \section{Batkube architecture}
 TODO
 
+\section{API implementation}
 \section{Time hijack}
 TODO
 
