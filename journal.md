@@ -231,4 +231,5 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 - réu avec olivier, encore un peu état de l'art
 
 ### 22/05
-- 
+- Etat de l'art, rapport
+- Utilisation de go/ast pour trouver les imports à time et les calls à replace. TODO : faire les remplacements.
