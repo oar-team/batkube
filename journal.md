@@ -237,4 +237,5 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 ## Semaine 12
 
 ### 26/05
-
+- rédigé la partie sur kubernetes. Qlq recherches sur kubernetes et le HPC
+- fini le script helper pour changer les calls à time
