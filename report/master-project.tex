@@ -97,7 +97,8 @@
 \tableofcontents
 \newpage
 
-\chapter{Introduction}
+\chapter{Introduction / Abstract}
+TODO
 
 
 \chapter{HPC, Kubernetes and the scheduling problem}
@@ -188,6 +189,8 @@ context.
 An HPC workload is mostly caracterized by parallel tasks that run on a large
 amount of compute units - refered to as ``nodes''.
 
+TODO
+
 
 
 
@@ -213,98 +216,11 @@ services but is capable of handling High-Performance
 Computing\cite{kube-for-hpc}. This project aims at adapting Batsim so it can
 evaluate Kuberenetes schedulers.
 
-\section{Batsim concepts}
+\section{The Batsim infrasctucture simulator}
+\subsection{Batsim concepts}
 
 \subsection{Limitations}
 
-
-\chapter{State of the art}
-
-\section{Simulating Kubernetes}
-
-Simulating the Kubernetes ecosystem is a difficult task that hasn't been done
-many times. In fact, we have been able to find only two references on the
-subject. One is a from an internship, and the other does not have any open
-source release.
-
-To our knowledge, there isn't any other project about adapting Simgrid to
-Kubernetes.
-
-\subsection{k8s-cluster-simulator}
-
-k8s-cluster-simulator\cite{kubesim} is an internship project written in Go. It
-aims at simulating a Kubernetes clusters in order to evaluate schedulers with
-basic workloads, with as little changes to schedulers implementation as
-possible.
-
-The user can specify resource usage for some pods in a yaml config file (cpu,
-memory, gpu) and submit them through an interface. The scheduler is also
-submitted through an interface, and that makes the code not exactly plug and
-play : the scheduler has to comply with the interface to be evaluated.
-
-This is a simple project useful for understanding some Kubernetes core concepts
-and technical details.
-
-\subsection{JoySim simulator from JD.com}
-
-This is a project led by the company JD.com, presented in the \textbf{KubeCon +
-	CloudNativeCon North America 2019}\cite{joysim}. It looks like a very
-complete, fully fledged Kubernetes cluster simulator, however it is not (yet)
-open-source : ``Planning to work with CNCF SIG-Scheduling for an open source
-release''.
-
-\section{Kubernetes schedulers}
-
-Gathering knowledge on the scheduling ecosystem in Kubernetes is a first step
-in deciding what direction to take with Batkube. It came out that the most
-useful resources we could find were the very simple schedulers that were
-written as examples or tutorials about writing custom schedulers. These basic
-schedulers made the process of writing proof of concepts much easier.
-
-
-\subsection{Industry grade schedulers}
-
-\subsubsection{Kubernetes scheduler}
-
-kube-scheduler is the de facto scheduler for any Kubernetes
-cluster (at least with the native Kubernetes distribution) and can be found in
-Kubernetes repository\cite{kube-repo}.
-
-It is a generic scheduler and very effective in most cases.
-
-\subsubsection{kube-batch}
-
-kube-batch\cite{kube-batch} is a batch scheduler developed by the Kubernetes
-Scheduling SIG\cite{scheduling-sig}.
-
-It has proven reliable on an industrial size and serves as a base for other scheduling projects (e.g. Volcano\cite{volcano}).
-
-\subsubsection{Poseidon}
-
-\subsection{Example schedulers}
-
-These schedulers helped a great deal in understanding how a scheduler interacts
-with the Kubernetes api-server, thanks to their simplicity.
-
-\subsubsection{Bash scheduler}
-
-The bashScheduler\cite{bashScheduler} is a tiny project created demonstrating a
-very basic implementation of a random scheduler using only bash, so as to break
-down exchanges between the api server and the scheduler with simple http
-requests.
-
-It has served as a base upon which the first POC was created.
-
-\subsubsection{Random scheduler}
-
-This project is taken from a tutorial\cite{banzai-tuto} redacted by Banzai
-Cloud to guide us through the implementation of a custom scheduler using the go
-client\cite{client-go} from kubernetes.
-Like the bashScheduler, it randomly binds pods on available nodes. Although, it
-takes things to the next level by using the go client thus introducing the
-concept of kubernetes informers and using https instead of plain http.
-
-The second POC was built using this scheduler as a base.
 
 \chapter{Problematic}
 
