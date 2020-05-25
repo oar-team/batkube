@@ -233,3 +233,8 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 ### 22/05
 - Etat de l'art, rapport
 - Utilisation de go/ast pour trouver les imports à time et les calls à replace. TODO : faire les remplacements.
+
+## Semaine 12
+
+### 26/05
+

@@ -46,19 +46,19 @@
     \centering
     \begin{minipage}{.25\textwidth}
 	    \centering
-	    \includegraphics[width=80pt]{imgs/ENSIMAG.png}\\[1cm]
+	    \includegraphics[width=80pt]{../imgs/ENSIMAG.png}\\[1cm]
     \end{minipage}%
     \begin{minipage}{.25\textwidth}
 	    \centering
-	    \includegraphics[width=80pt]{imgs/uga-logo.png}\\[1cm]
+	    \includegraphics[width=80pt]{../imgs/uga-logo.png}\\[1cm]
     \end{minipage}%
     \begin{minipage}{.25\textwidth}
 	    \centering
-	    \includegraphics[width=80pt]{imgs/ryax-logo.png}\\[1cm]
+	    \includegraphics[width=80pt]{../imgs/ryax-logo.png}\\[1cm]
     \end{minipage}%
     \begin{minipage}{.25\textwidth}
 	    \centering
-	    \includegraphics[width=80pt]{imgs/logo-LIG.jpg}\\[1cm]
+	    \includegraphics[width=80pt]{../imgs/logo-LIG.jpg}\\[1cm]
     \end{minipage}
 
     \vspace{4cm}
@@ -111,9 +111,9 @@ Developers then went on with virtualized machines to run their services
 regardless of physical infrasctucture, which then led to the concept of
 containers.
 
-\begin{figure}[]
+\begin{figure}[h]
 	\centering
-	\includegraphics[width=\textwidth]{imgs/container_evolution.png}
+	\includegraphics[width=\textwidth]{../imgs/container_evolution.png}
 	\captionsource{Evolution of application deployment.}{https://kubernetes.io/docs/concepts/overview/what-is-kubernetes/}
 	\label{fig:container-evolution}
 \end{figure}
@@ -126,19 +126,51 @@ easy resource allocation, breaking large services into smaller micro-services
 or support of continuous integration tools (containers greatly facilitate
 integration tests), to cite a few.\\
 
-Kubernetes\cite{kubernetes} aims at automating of the process of deploying,
+Kubernetes\footnote{\url{https://kubernetes.io/}} aims at automating of the process of deploying,
 maintaining and scaling containerized applications. It is an open source
 platform originally designed by Google and now maintained and developed by the
 Cloud Native Computing Foundation\footnote{\url{https://www.cncf.io/}}. It is
 industry grade and widely used by web services, big or small, for its -
 relative - ease of use and its reliability.
 
+The basic processing unit of Kubernetes is called a \textbf{pod}. A pod is composed of
+one or several containerized applications and volumes (A volume is some storage
+space on the host machine that can be linked to containers, so they can read
+persistent information or store data in the long term). In the cloud native
+context a pod can be thought of as a service or micro-service, but we will see
+them a little bit differently.
+
+Pods are bundled together in \textbf{nodes} (figure \ref{fig:node-overview}),
+which are most of the time physical machines (but might as well be virtual
+machines). They represent another layer to be passed through to access the
+outside world which can be useful to add some layers of security or facilitate
+communication between pods, for example. Each node runs at least one pod and
+also one kubelet which is a process responsible for communicating with the rest
+of Kubernetes (or more precisely, with the master node which in turns
+communicates with the api server). A set of nodes is called a \textbf{cluster}.
+Each Kubernetes instance is responsible for running one cluster.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.5]{../imgs/node-overview.png}
+	\captionsource{Node overview}{https://kubernetes.io/docs/tutorials/kubernetes-basics/explore/explore-intro/}
+	\label{fig:node-overview}
+\end{figure}
+
+
 \begin{figure}[]
 	\centering
-	\includegraphics[width=\textwidth]{imgs/components-of-kubernetes.png}
+	\includegraphics[width=\textwidth]{../imgs/components-of-kubernetes.png}
 	\captionsource{Components of Kubernetes}{https://kubernetes.io/docs/concepts/overview/components/}
 	\label{fig:kube-components}
 \end{figure}
+
+Kubernetes revolves around a central component, its api server (figure
+\ref{fig:kube-components}). The majority of every operations go through this
+api server : user interactions through kubectl, scheduling operations, saves of
+kubernetes state in etcd\ldots We will focus on the lower-right part of this
+figure, that is to say the scheduler, the api server and the cluster itself.
+
 
 \section{HPC and Kubernetes}
 A general definition of HPC would be :
@@ -150,7 +182,7 @@ A general definition of HPC would be :
 		business.}}
 \footnote{\url{https://wwwen.uni.lu/university/high_performance_computing}}
 
-HPC can either rether to ``High Performance Computing'' or ``High Performance
+HPC can either refer to ``High Performance Computing'' or ``High Performance
 Computer'', but it is generally clear which one it refers to, given the
 context.
 An HPC workload is mostly caracterized by parallel tasks that run on a large
