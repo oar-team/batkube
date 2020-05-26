@@ -239,3 +239,9 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 ### 26/05
 - rédigé la partie sur kubernetes. Qlq recherches sur kubernetes et le HPC
 - fini le script helper pour changer les calls à time
+
+### 27/05
+- noté infos et liens sur la relation kube / HPC
+- expériences concluantes sur le changement des dépendances avec le batsky-go-installer. problèmes :
+    - problème de communication entre les socket zmq du broker et du requester. Rien compris.
+    - la solution tout synchrone entre time, broker et scheduler ne fonctionne pas. next step : tenter l'asynchrone entre broker et time.
