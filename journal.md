@@ -245,3 +245,10 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 - expériences concluantes sur le changement des dépendances avec le batsky-go-installer. problèmes :
     - problème de communication entre les socket zmq du broker et du requester. Rien compris.
     - la solution tout synchrone entre time, broker et scheduler ne fonctionne pas. next step : tenter l'asynchrone entre broker et time.
+
+### 28/05
+- commencé à rédiger le lien hpc / kubernetes
+- résolu le soucis zmq
+- expériences de bout en bout. scheduler toujours bloqué
+    - essayé de tout remplacer (ajouté une fonctionnalité à l'installer pour ignorer des dossiers)
+    - essayé de remplacer que wait.until
