@@ -255,3 +255,6 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 
 ### 28/05
 - Rapport : rédigé le chapter "Kubernetes and HPC"
+- Implémenté broker asynchrone
+- Corrigé, réorganisé un peu de code dans batkube
+- Trouvé ce qui bloquait le scheduler : tout simplement le mauvais kubeconfig. tout fonctionne à condition de lancer batsim en dernier (une phase de warmup est nécessaire)
