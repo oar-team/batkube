@@ -101,17 +101,19 @@
 TODO
 
 
-\chapter{Kubernetes and the scheduling problem}
+\chapter{Kubernetes} 
 
 \section{Kubernetes overview}
 
 \subsubsection{Cloud Native Computing}
 In the early stages of application development, organizations used to run their
-services on physical servers. With this direct approach came a few
-problematics: resources allocation, maintainability, scalability for exemple.
-Developers then went on with virtualized machines to run their services
-regardless of physical infrasctucture, which then led to the concept of
-containers.
+services on physical servers. With this direct approach came many challenges
+that needed to be coped with manually like resources allocation,
+maintainability or scalability. In an attempt to automate this process
+developers started using virtual machines which enabled them to run their
+services regardless of physical infrasctucture while having a better control
+over resources allocation.  This led to the concept of containers which takes
+the idea of encapsulated applications further.
 
 \begin{figure}[h]
 	\centering
@@ -120,18 +122,18 @@ containers.
 	\label{fig:container-evolution}
 \end{figure}
 
-Containers can be thought of as lightweight virtual machines. Unlike virtual
-machines, containers share the same kernel with the host machine but still
-allow for a very controlled environment to run applications. There are many
+Containers can be thought of as lightweight virtual machines. Unlike the
+latter, containers share the same kernel with the host machine but still allow
+for a very controlled environment to run applications. There are many
 benefits to this : separating the development from deployment, portability,
 easy resource allocation, breaking large services into smaller micro-services
 or support of continuous integration tools (containers greatly facilitate
-integration tests), to cite a few.\\
+integration tests).\\
 
-The Cloud Native Computing Foundation\footnote{\url{https://www.cncf.io/}} was
-founded in the intent of leveraging the container technology for a overall
-better web.
-This is the definition of Cloud Native Computing according to the CNCF :
+The CNCF\footnote{\url{https://www.cncf.io/}} (Cloud Native Computing
+Foundation) was founded in the intent of leveraging the container technology
+for an overall better web. In a general way, we now speak of these
+containerized and modular applications as cloud native computing :
 
 \textit{``Cloud native technologies empower organizations to build and run
 	scalable applications in modern, dynamic environments such as public,
@@ -152,22 +154,11 @@ container orchestration.
 
 
 \subsubsection{Kubernetes concepts}
-The basic processing unit of Kubernetes is called a \textbf{pod}. A pod is
-composed of one or several containers and volumes (A volume is some storage
-space on the host machine that can be linked to containers, so they can read
-persistent information or store data in the long term). In the cloud native
-context a pod can be thought of as a service or micro-service, but we will see
-them a little bit differently.
-
-Pods are bundled together in \textbf{nodes} (figure \ref{fig:node-overview}),
-which are most of the time physical machines (but might as well be virtual
-machines). They represent another layer to be passed through to access the
-outside world which can be useful to add some layers of security or facilitate
-communication between pods, for example. Each node runs at least one pod and
-also one kubelet which is a process responsible for communicating with the rest
-of Kubernetes (or more precisely, with the master node which in turns
-communicates with the api server). A set of nodes is called a \textbf{cluster}.
-Each Kubernetes instance is responsible for running one cluster.
+The basic processing unit of Kubernetes is called a \textbf{pod} which is
+composed of one or several containers and volumes\footnote{A volume is some
+	storage space on the host machine that can be linked to containers, so
+	they can read persistent information or store data in the long term}.
+In the cloud native context a pod most often hosts a service or micro-service.
 
 \begin{figure}[h]
 	\centering
@@ -176,24 +167,34 @@ Each Kubernetes instance is responsible for running one cluster.
 	\label{fig:node-overview}
 \end{figure}
 
+Pods are bundled together in \textbf{nodes} (figure \ref{fig:node-overview})
+which are either physical or virtual machines. They represent another barrier
+to pass through to access the outside world which can be useful to add layers
+of security or facilitate communication between pods. Nodes take the idea of
+containerisation further by encapsulating the already encapsulated services.
+Each node runs at least one pod and also one \textbf{kubelet} which is a
+process responsible for communicating with the rest of Kubernetes (or more
+precisely, with the master node which in turns communicates with the api
+server). A set of nodes is called a \textbf{cluster}. Each Kubernetes instance
+is responsible for running a cluster.
 
-\begin{figure}[]
+Kubernetes revolves its API server which is its central component (figure
+\ref{fig:kube-components}). The majority of operations between components go
+through this REST API like user interactions through kubectl or scheduling
+operations.
+
+\begin{figure}[h]
 	\centering
 	\includegraphics[width=\textwidth]{../imgs/components-of-kubernetes.png}
 	\captionsource{Components of Kubernetes}{https://kubernetes.io/docs/concepts/overview/components/}
 	\label{fig:kube-components}
 \end{figure}
 
-Kubernetes revolves around a central component, its api server (figure
-\ref{fig:kube-components}). The majority of every operations go through this
-api server like user interactions through kubectl or scheduling operations.
-
-
 \section{HPC and Kubernetes}
 The difference between HPC (High Performance Computing) and Kubernetes lies in
 the workloads they are intended to tackle.
 
-A general definition of HPC - which can also be applied to HPDA - would be :
+A general definition of HPC would be :
 \say{\textit{High Performance Computing (HPC) most generally refers to the
 		practice of aggregating computing power in a way that delivers
 		much higher performance than one could get out of a typical
@@ -214,19 +215,38 @@ becomes very sensitive to latency as these tasks have got to communicate
 together. This is done through MPIs (Message Passing Interfaces) which
 represent a large part of the HPC field.\\
 
-Kubernetes was designed for cloud native applications.  Services or micro
-services are run in containers and are expected to be available at all times :
-it ensures that containers are restarted when a failure occurs. It also
-provides portability, monitoring and easier administation. It was then
-developed with this objective in mind which hardly complies with the challenges
-of HPC.
+%Kubernetes was designed for cloud native applications.  Services or micro
+%services are run in containers and are expected to be available at all times :
+%it ensures that containers are restarted when a failure occurs. It also
+%provides portability, monitoring and easier administation. It was then
+%developed with this objective in mind which hardly complies with the challenges
+%of HPC.
 
-However, there are many issues with the aging HPC field that can be resolved
-with a container driven approach. Kubernetes is now the standard for AI and
-Machine Learning as shown by the many efforts at making it an efficient
-environment\cite{lee2017design}\cite{233001}\cite{10.1145/3154842.3154845}, and
-many believe it represents the future of HPC aswell.
+%However, there are many issues with the aging HPC field that can be resolved
+%with a container driven approach. 
+Kubernetes is now the standard for AI and Machine Learning as shown by the many
+efforts at making this coupling an efficient
+environment\cite{lee2017design}\cite{233001}\cite{10.1145/3154842.3154845},
+which brought an increasing interest for container driven HPC aswell and
+Kubernetes for HPC in particular. Batch schedulers such as
+kube-batch\footnote{\url{https://github.com/kubernetes-sigs/kube-batch}} have
+been implemented for kube, and numerous HPC applications like
+slurm\footnote{\url{https://slurm.schedmd.com/containers.html}} have been
+containerized aswell.
 
+Indeed, containers have many advantages that HPC users can benefit from. Here
+are some notable ones:
+\begin{itemize}
+	\item First off, research has shown that Kuberenetes offer similar
+		performance to more standard bare metal HPC\cite{8950981}.
+	\item Users will get the same environment everywhere making up for a
+		uniform and standardized workplace.
+	\item Portability : users could seamlessly hop from one infrastructure
+		to another based on their needs and criteria like price,
+		performance, and capabilities rather than compatibility.
+	\item Encapsulation : HPC applications often rely on complex
+		dependencies that can be easily concealed into containers.
+\end{itemize}
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.5]{../imgs/hpc-container.jpg}
@@ -234,10 +254,15 @@ many believe it represents the future of HPC aswell.
 	\label{fig:hpc-container}
 \end{figure}
 
-TODO
+Despite all those advantages, Kubernetes is not ready yet to be used
+in proper HPC environment because it lacks vital components like a proper batch
+job queuing system, and support for MPI applications. It cannot yet compete
+against the very well established HPC ecosystem, however efforts are being made
+in this direction. This master thesis is focused on a part of this problem :
+Kubernetes simulation for scheduler (and batch schedulers) evaluation.
 
 
-
+\chapter{The scheduling problem}
 \section{The scheduling problem}
 
 \section{Simulating infrastructures}
