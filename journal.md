@@ -258,3 +258,8 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 - Implémenté broker asynchrone
 - Corrigé, réorganisé un peu de code dans batkube
 - Trouvé ce qui bloquait le scheduler : tout simplement le mauvais kubeconfig. tout fonctionne à condition de lancer batsim en dernier (une phase de warmup est nécessaire)
+
+### 29/05
+- réu michael olivier
+- Implémenté une politique de timeout basique
+- tests avec une workload + large que le nombre de noeuds
