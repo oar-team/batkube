@@ -263,3 +263,10 @@ autres routines n'avaient même pas de chance de prendre la main et le code
 - réu michael olivier
 - Implémenté une politique de timeout basique
 - tests avec une workload + large que le nombre de noeuds
+
+## Semaine 13
+
+### 02/06
+- Recherches sur le scheduling, pour en donner une définition
+- Refs Michael
+- Bougé le code de random-scheduler-simulator dans le repo batkube, en ai profité pour mettre à jour le swagger.json et go-swagger (c'était un peu pénible)

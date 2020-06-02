@@ -259,11 +259,26 @@ in proper HPC environment because it lacks vital components like a proper batch
 job queuing system, and support for MPI applications. It cannot yet compete
 against the very well established HPC ecosystem, however efforts are being made
 in this direction. This master thesis is focused on a part of this problem :
-Kubernetes simulation for scheduler (and batch schedulers) evaluation.
-
+Kubernetes simulation for batch schedulers evaluation.
 
 \chapter{The scheduling problem}
-\section{The scheduling problem}
+
+\section{Batch scheduling}
+
+\subsection{A general definition}
+
+\subsection{Kubernetes batch schedulers}
+\subsubsection{kube-scheduler}
+Not exactly a batch scheduler, it is the default scheduler for Kubernetes made
+by the CNCF
+
+\subsubsection{kube-batch}
+\subsubsection{Poseidon}
+\subsubsection{bashScheduler by rothgar}
+\subsubsection{random-scheduler by Banzaicloud}
+\subsubsection{k8s-custom-scheduler by IBM}
+\subsubsection{scheduler by kelseyhightower}
+
 
 \section{Simulating infrastructures}
 \subsection{HPC simulators}
@@ -285,7 +300,7 @@ services but is capable of handling High-Performance
 Computing\cite{kube-for-hpc}. This project aims at adapting Batsim so it can
 evaluate Kuberenetes schedulers.
 
-\section{The Batsim infrasctucture simulator}
+\section{The Batsim infrastructure simulator}
 \subsection{Batsim concepts}
 
 \subsection{Limitations}
