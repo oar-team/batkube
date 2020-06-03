@@ -15,6 +15,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/yamlpc"
 	"github.com/gogo/protobuf/proto"
+	"github.com/mitchellh/mapstructure"
 
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/broker"
@@ -127,7 +128,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		return err
 	})
 	api.TxtProducer = runtime.TextProducer()
-	api.YamlProducer = yamlpc.YAMLProducer()
+	//api.YamlProducer = yamlpc.YAMLProducer()
 
 	// Applies when the "authorization" header is set
 	//api.BearerTokenAuth = func(token string) (interface{}, error) {
@@ -202,7 +203,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 
 			// Bind the pod
-			_, err = broker.GetNode(params.Body.Target.Name)
+			_, err = broker.GetNode(params.Body.Target.Name) // Find out if the node exists
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
@@ -243,6 +244,30 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				Status:     "Success",
 				Code:       201,
 			})
+		})
+	})
+
+	api.CoreV1PatchCoreV1NodeHandler = core_v1.PatchCoreV1NodeHandlerFunc(func(params core_v1.PatchCoreV1NodeParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			node, err := broker.GetNode(params.Name)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if err := mapstructure.Decode(params.Body, node); err != nil {
+				panic(err)
+			}
+
+			if err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
+				Kind:       "Status",
+				APIVersion: "v1",
+				Status:     "Success",
+				Code:       201,
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 		})
 	})
 

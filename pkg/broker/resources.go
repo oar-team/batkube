@@ -9,8 +9,8 @@ import (
 // Resources protected by getters and setters
 var events []models.IoK8sApimachineryPkgApisMetaV1WatchEvent
 
-var Nodes models.IoK8sAPICoreV1NodeList
-var Pods models.IoK8sAPICoreV1PodList
+var Nodes models.IoK8sAPICoreV1NodeList = models.IoK8sAPICoreV1NodeList{}
+var Pods models.IoK8sAPICoreV1PodList = models.IoK8sAPICoreV1PodList{}
 var SimData translate.SimulationBeginsData
 
 //var ToExecute PodStack

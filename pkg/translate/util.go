@@ -30,6 +30,7 @@ func GetValueFromTags(o interface{}, tags []string) interface{} {
 		if len(tags) == 1 {
 			return v.Field(i).Interface()
 		}
+		// TODO : handle indirect types (ex : https://github.com/jinzhu/copier/blob/b57f9002281ac48ed8cbc489b1e91121e1a0824c/copier.go#L131)
 		return GetValueFromTags(v.Field(i).Interface(), tags[1:])
 	}
 	var nothing interface{}
