@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteCoordinationV1CollectionNamespacedLeaseHandlerFunc turns a function with the right signature into a delete coordination v1 collection namespaced lease handler
-type DeleteCoordinationV1CollectionNamespacedLeaseHandlerFunc func(DeleteCoordinationV1CollectionNamespacedLeaseParams, interface{}) middleware.Responder
+type DeleteCoordinationV1CollectionNamespacedLeaseHandlerFunc func(DeleteCoordinationV1CollectionNamespacedLeaseParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteCoordinationV1CollectionNamespacedLeaseHandlerFunc) Handle(params DeleteCoordinationV1CollectionNamespacedLeaseParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteCoordinationV1CollectionNamespacedLeaseHandlerFunc) Handle(params DeleteCoordinationV1CollectionNamespacedLeaseParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteCoordinationV1CollectionNamespacedLeaseHandler interface for that can handle valid delete coordination v1 collection namespaced lease params
 type DeleteCoordinationV1CollectionNamespacedLeaseHandler interface {
-	Handle(DeleteCoordinationV1CollectionNamespacedLeaseParams, interface{}) middleware.Responder
+	Handle(DeleteCoordinationV1CollectionNamespacedLeaseParams) middleware.Responder
 }
 
 // NewDeleteCoordinationV1CollectionNamespacedLease creates a new http.Handler for the delete coordination v1 collection namespaced lease operation
@@ -46,25 +46,12 @@ func (o *DeleteCoordinationV1CollectionNamespacedLease) ServeHTTP(rw http.Respon
 	}
 	var Params = NewDeleteCoordinationV1CollectionNamespacedLeaseParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

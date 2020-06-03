@@ -12,16 +12,16 @@ import (
 )
 
 // WatchCoreV1NamespacedPodListHandlerFunc turns a function with the right signature into a watch core v1 namespaced pod list handler
-type WatchCoreV1NamespacedPodListHandlerFunc func(WatchCoreV1NamespacedPodListParams, interface{}) middleware.Responder
+type WatchCoreV1NamespacedPodListHandlerFunc func(WatchCoreV1NamespacedPodListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchCoreV1NamespacedPodListHandlerFunc) Handle(params WatchCoreV1NamespacedPodListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchCoreV1NamespacedPodListHandlerFunc) Handle(params WatchCoreV1NamespacedPodListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchCoreV1NamespacedPodListHandler interface for that can handle valid watch core v1 namespaced pod list params
 type WatchCoreV1NamespacedPodListHandler interface {
-	Handle(WatchCoreV1NamespacedPodListParams, interface{}) middleware.Responder
+	Handle(WatchCoreV1NamespacedPodListParams) middleware.Responder
 }
 
 // NewWatchCoreV1NamespacedPodList creates a new http.Handler for the watch core v1 namespaced pod list operation
@@ -46,25 +46,12 @@ func (o *WatchCoreV1NamespacedPodList) ServeHTTP(rw http.ResponseWriter, r *http
 	}
 	var Params = NewWatchCoreV1NamespacedPodListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

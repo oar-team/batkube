@@ -12,16 +12,16 @@ import (
 )
 
 // GetNetworkingAPIGroupHandlerFunc turns a function with the right signature into a get networking API group handler
-type GetNetworkingAPIGroupHandlerFunc func(GetNetworkingAPIGroupParams, interface{}) middleware.Responder
+type GetNetworkingAPIGroupHandlerFunc func(GetNetworkingAPIGroupParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetNetworkingAPIGroupHandlerFunc) Handle(params GetNetworkingAPIGroupParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetNetworkingAPIGroupHandlerFunc) Handle(params GetNetworkingAPIGroupParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetNetworkingAPIGroupHandler interface for that can handle valid get networking API group params
 type GetNetworkingAPIGroupHandler interface {
-	Handle(GetNetworkingAPIGroupParams, interface{}) middleware.Responder
+	Handle(GetNetworkingAPIGroupParams) middleware.Responder
 }
 
 // NewGetNetworkingAPIGroup creates a new http.Handler for the get networking API group operation
@@ -46,25 +46,12 @@ func (o *GetNetworkingAPIGroup) ServeHTTP(rw http.ResponseWriter, r *http.Reques
 	}
 	var Params = NewGetNetworkingAPIGroupParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

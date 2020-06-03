@@ -12,16 +12,16 @@ import (
 )
 
 // PatchNetworkingV1beta1IngressClassHandlerFunc turns a function with the right signature into a patch networking v1beta1 ingress class handler
-type PatchNetworkingV1beta1IngressClassHandlerFunc func(PatchNetworkingV1beta1IngressClassParams, interface{}) middleware.Responder
+type PatchNetworkingV1beta1IngressClassHandlerFunc func(PatchNetworkingV1beta1IngressClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchNetworkingV1beta1IngressClassHandlerFunc) Handle(params PatchNetworkingV1beta1IngressClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchNetworkingV1beta1IngressClassHandlerFunc) Handle(params PatchNetworkingV1beta1IngressClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchNetworkingV1beta1IngressClassHandler interface for that can handle valid patch networking v1beta1 ingress class params
 type PatchNetworkingV1beta1IngressClassHandler interface {
-	Handle(PatchNetworkingV1beta1IngressClassParams, interface{}) middleware.Responder
+	Handle(PatchNetworkingV1beta1IngressClassParams) middleware.Responder
 }
 
 // NewPatchNetworkingV1beta1IngressClass creates a new http.Handler for the patch networking v1beta1 ingress class operation
@@ -46,25 +46,12 @@ func (o *PatchNetworkingV1beta1IngressClass) ServeHTTP(rw http.ResponseWriter, r
 	}
 	var Params = NewPatchNetworkingV1beta1IngressClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

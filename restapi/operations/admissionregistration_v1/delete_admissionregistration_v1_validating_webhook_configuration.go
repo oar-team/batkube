@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc turns a function with the right signature into a delete admissionregistration v1 validating webhook configuration handler
-type DeleteAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc func(DeleteAdmissionregistrationV1ValidatingWebhookConfigurationParams, interface{}) middleware.Responder
+type DeleteAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc func(DeleteAdmissionregistrationV1ValidatingWebhookConfigurationParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc) Handle(params DeleteAdmissionregistrationV1ValidatingWebhookConfigurationParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc) Handle(params DeleteAdmissionregistrationV1ValidatingWebhookConfigurationParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteAdmissionregistrationV1ValidatingWebhookConfigurationHandler interface for that can handle valid delete admissionregistration v1 validating webhook configuration params
 type DeleteAdmissionregistrationV1ValidatingWebhookConfigurationHandler interface {
-	Handle(DeleteAdmissionregistrationV1ValidatingWebhookConfigurationParams, interface{}) middleware.Responder
+	Handle(DeleteAdmissionregistrationV1ValidatingWebhookConfigurationParams) middleware.Responder
 }
 
 // NewDeleteAdmissionregistrationV1ValidatingWebhookConfiguration creates a new http.Handler for the delete admissionregistration v1 validating webhook configuration operation
@@ -46,25 +46,12 @@ func (o *DeleteAdmissionregistrationV1ValidatingWebhookConfiguration) ServeHTTP(
 	}
 	var Params = NewDeleteAdmissionregistrationV1ValidatingWebhookConfigurationParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

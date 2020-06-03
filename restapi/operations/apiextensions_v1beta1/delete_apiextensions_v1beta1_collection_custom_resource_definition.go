@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionHandlerFunc turns a function with the right signature into a delete apiextensions v1beta1 collection custom resource definition handler
-type DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionHandlerFunc func(DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionParams, interface{}) middleware.Responder
+type DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionHandlerFunc func(DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionHandlerFunc) Handle(params DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionHandlerFunc) Handle(params DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionHandler interface for that can handle valid delete apiextensions v1beta1 collection custom resource definition params
 type DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionHandler interface {
-	Handle(DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionParams, interface{}) middleware.Responder
+	Handle(DeleteApiextensionsV1beta1CollectionCustomResourceDefinitionParams) middleware.Responder
 }
 
 // NewDeleteApiextensionsV1beta1CollectionCustomResourceDefinition creates a new http.Handler for the delete apiextensions v1beta1 collection custom resource definition operation
@@ -46,25 +46,12 @@ func (o *DeleteApiextensionsV1beta1CollectionCustomResourceDefinition) ServeHTTP
 	}
 	var Params = NewDeleteApiextensionsV1beta1CollectionCustomResourceDefinitionParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

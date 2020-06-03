@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteAppsV1CollectionNamespacedControllerRevisionHandlerFunc turns a function with the right signature into a delete apps v1 collection namespaced controller revision handler
-type DeleteAppsV1CollectionNamespacedControllerRevisionHandlerFunc func(DeleteAppsV1CollectionNamespacedControllerRevisionParams, interface{}) middleware.Responder
+type DeleteAppsV1CollectionNamespacedControllerRevisionHandlerFunc func(DeleteAppsV1CollectionNamespacedControllerRevisionParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteAppsV1CollectionNamespacedControllerRevisionHandlerFunc) Handle(params DeleteAppsV1CollectionNamespacedControllerRevisionParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteAppsV1CollectionNamespacedControllerRevisionHandlerFunc) Handle(params DeleteAppsV1CollectionNamespacedControllerRevisionParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteAppsV1CollectionNamespacedControllerRevisionHandler interface for that can handle valid delete apps v1 collection namespaced controller revision params
 type DeleteAppsV1CollectionNamespacedControllerRevisionHandler interface {
-	Handle(DeleteAppsV1CollectionNamespacedControllerRevisionParams, interface{}) middleware.Responder
+	Handle(DeleteAppsV1CollectionNamespacedControllerRevisionParams) middleware.Responder
 }
 
 // NewDeleteAppsV1CollectionNamespacedControllerRevision creates a new http.Handler for the delete apps v1 collection namespaced controller revision operation
@@ -46,25 +46,12 @@ func (o *DeleteAppsV1CollectionNamespacedControllerRevision) ServeHTTP(rw http.R
 	}
 	var Params = NewDeleteAppsV1CollectionNamespacedControllerRevisionParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

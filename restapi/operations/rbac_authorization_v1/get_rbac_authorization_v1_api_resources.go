@@ -12,16 +12,16 @@ import (
 )
 
 // GetRbacAuthorizationV1APIResourcesHandlerFunc turns a function with the right signature into a get rbac authorization v1 API resources handler
-type GetRbacAuthorizationV1APIResourcesHandlerFunc func(GetRbacAuthorizationV1APIResourcesParams, interface{}) middleware.Responder
+type GetRbacAuthorizationV1APIResourcesHandlerFunc func(GetRbacAuthorizationV1APIResourcesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetRbacAuthorizationV1APIResourcesHandlerFunc) Handle(params GetRbacAuthorizationV1APIResourcesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetRbacAuthorizationV1APIResourcesHandlerFunc) Handle(params GetRbacAuthorizationV1APIResourcesParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetRbacAuthorizationV1APIResourcesHandler interface for that can handle valid get rbac authorization v1 API resources params
 type GetRbacAuthorizationV1APIResourcesHandler interface {
-	Handle(GetRbacAuthorizationV1APIResourcesParams, interface{}) middleware.Responder
+	Handle(GetRbacAuthorizationV1APIResourcesParams) middleware.Responder
 }
 
 // NewGetRbacAuthorizationV1APIResources creates a new http.Handler for the get rbac authorization v1 API resources operation
@@ -46,25 +46,12 @@ func (o *GetRbacAuthorizationV1APIResources) ServeHTTP(rw http.ResponseWriter, r
 	}
 	var Params = NewGetRbacAuthorizationV1APIResourcesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

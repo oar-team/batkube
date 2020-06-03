@@ -12,16 +12,16 @@ import (
 )
 
 // WatchSchedulingV1beta1PriorityClassListHandlerFunc turns a function with the right signature into a watch scheduling v1beta1 priority class list handler
-type WatchSchedulingV1beta1PriorityClassListHandlerFunc func(WatchSchedulingV1beta1PriorityClassListParams, interface{}) middleware.Responder
+type WatchSchedulingV1beta1PriorityClassListHandlerFunc func(WatchSchedulingV1beta1PriorityClassListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchSchedulingV1beta1PriorityClassListHandlerFunc) Handle(params WatchSchedulingV1beta1PriorityClassListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchSchedulingV1beta1PriorityClassListHandlerFunc) Handle(params WatchSchedulingV1beta1PriorityClassListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchSchedulingV1beta1PriorityClassListHandler interface for that can handle valid watch scheduling v1beta1 priority class list params
 type WatchSchedulingV1beta1PriorityClassListHandler interface {
-	Handle(WatchSchedulingV1beta1PriorityClassListParams, interface{}) middleware.Responder
+	Handle(WatchSchedulingV1beta1PriorityClassListParams) middleware.Responder
 }
 
 // NewWatchSchedulingV1beta1PriorityClassList creates a new http.Handler for the watch scheduling v1beta1 priority class list operation
@@ -46,25 +46,12 @@ func (o *WatchSchedulingV1beta1PriorityClassList) ServeHTTP(rw http.ResponseWrit
 	}
 	var Params = NewWatchSchedulingV1beta1PriorityClassListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

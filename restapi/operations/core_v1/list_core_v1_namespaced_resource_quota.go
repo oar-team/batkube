@@ -12,16 +12,16 @@ import (
 )
 
 // ListCoreV1NamespacedResourceQuotaHandlerFunc turns a function with the right signature into a list core v1 namespaced resource quota handler
-type ListCoreV1NamespacedResourceQuotaHandlerFunc func(ListCoreV1NamespacedResourceQuotaParams, interface{}) middleware.Responder
+type ListCoreV1NamespacedResourceQuotaHandlerFunc func(ListCoreV1NamespacedResourceQuotaParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListCoreV1NamespacedResourceQuotaHandlerFunc) Handle(params ListCoreV1NamespacedResourceQuotaParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListCoreV1NamespacedResourceQuotaHandlerFunc) Handle(params ListCoreV1NamespacedResourceQuotaParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListCoreV1NamespacedResourceQuotaHandler interface for that can handle valid list core v1 namespaced resource quota params
 type ListCoreV1NamespacedResourceQuotaHandler interface {
-	Handle(ListCoreV1NamespacedResourceQuotaParams, interface{}) middleware.Responder
+	Handle(ListCoreV1NamespacedResourceQuotaParams) middleware.Responder
 }
 
 // NewListCoreV1NamespacedResourceQuota creates a new http.Handler for the list core v1 namespaced resource quota operation
@@ -46,25 +46,12 @@ func (o *ListCoreV1NamespacedResourceQuota) ServeHTTP(rw http.ResponseWriter, r 
 	}
 	var Params = NewListCoreV1NamespacedResourceQuotaParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

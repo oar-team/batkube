@@ -12,16 +12,16 @@ import (
 )
 
 // WatchApiregistrationV1APIServiceHandlerFunc turns a function with the right signature into a watch apiregistration v1 API service handler
-type WatchApiregistrationV1APIServiceHandlerFunc func(WatchApiregistrationV1APIServiceParams, interface{}) middleware.Responder
+type WatchApiregistrationV1APIServiceHandlerFunc func(WatchApiregistrationV1APIServiceParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchApiregistrationV1APIServiceHandlerFunc) Handle(params WatchApiregistrationV1APIServiceParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchApiregistrationV1APIServiceHandlerFunc) Handle(params WatchApiregistrationV1APIServiceParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchApiregistrationV1APIServiceHandler interface for that can handle valid watch apiregistration v1 API service params
 type WatchApiregistrationV1APIServiceHandler interface {
-	Handle(WatchApiregistrationV1APIServiceParams, interface{}) middleware.Responder
+	Handle(WatchApiregistrationV1APIServiceParams) middleware.Responder
 }
 
 // NewWatchApiregistrationV1APIService creates a new http.Handler for the watch apiregistration v1 API service operation
@@ -46,25 +46,12 @@ func (o *WatchApiregistrationV1APIService) ServeHTTP(rw http.ResponseWriter, r *
 	}
 	var Params = NewWatchApiregistrationV1APIServiceParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

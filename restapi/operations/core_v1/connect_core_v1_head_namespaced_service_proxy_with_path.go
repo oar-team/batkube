@@ -12,16 +12,16 @@ import (
 )
 
 // ConnectCoreV1HeadNamespacedServiceProxyWithPathHandlerFunc turns a function with the right signature into a connect core v1 head namespaced service proxy with path handler
-type ConnectCoreV1HeadNamespacedServiceProxyWithPathHandlerFunc func(ConnectCoreV1HeadNamespacedServiceProxyWithPathParams, interface{}) middleware.Responder
+type ConnectCoreV1HeadNamespacedServiceProxyWithPathHandlerFunc func(ConnectCoreV1HeadNamespacedServiceProxyWithPathParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ConnectCoreV1HeadNamespacedServiceProxyWithPathHandlerFunc) Handle(params ConnectCoreV1HeadNamespacedServiceProxyWithPathParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ConnectCoreV1HeadNamespacedServiceProxyWithPathHandlerFunc) Handle(params ConnectCoreV1HeadNamespacedServiceProxyWithPathParams) middleware.Responder {
+	return fn(params)
 }
 
 // ConnectCoreV1HeadNamespacedServiceProxyWithPathHandler interface for that can handle valid connect core v1 head namespaced service proxy with path params
 type ConnectCoreV1HeadNamespacedServiceProxyWithPathHandler interface {
-	Handle(ConnectCoreV1HeadNamespacedServiceProxyWithPathParams, interface{}) middleware.Responder
+	Handle(ConnectCoreV1HeadNamespacedServiceProxyWithPathParams) middleware.Responder
 }
 
 // NewConnectCoreV1HeadNamespacedServiceProxyWithPath creates a new http.Handler for the connect core v1 head namespaced service proxy with path operation
@@ -46,25 +46,12 @@ func (o *ConnectCoreV1HeadNamespacedServiceProxyWithPath) ServeHTTP(rw http.Resp
 	}
 	var Params = NewConnectCoreV1HeadNamespacedServiceProxyWithPathParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

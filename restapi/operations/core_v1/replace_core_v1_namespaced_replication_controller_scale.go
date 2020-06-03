@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceCoreV1NamespacedReplicationControllerScaleHandlerFunc turns a function with the right signature into a replace core v1 namespaced replication controller scale handler
-type ReplaceCoreV1NamespacedReplicationControllerScaleHandlerFunc func(ReplaceCoreV1NamespacedReplicationControllerScaleParams, interface{}) middleware.Responder
+type ReplaceCoreV1NamespacedReplicationControllerScaleHandlerFunc func(ReplaceCoreV1NamespacedReplicationControllerScaleParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceCoreV1NamespacedReplicationControllerScaleHandlerFunc) Handle(params ReplaceCoreV1NamespacedReplicationControllerScaleParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceCoreV1NamespacedReplicationControllerScaleHandlerFunc) Handle(params ReplaceCoreV1NamespacedReplicationControllerScaleParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceCoreV1NamespacedReplicationControllerScaleHandler interface for that can handle valid replace core v1 namespaced replication controller scale params
 type ReplaceCoreV1NamespacedReplicationControllerScaleHandler interface {
-	Handle(ReplaceCoreV1NamespacedReplicationControllerScaleParams, interface{}) middleware.Responder
+	Handle(ReplaceCoreV1NamespacedReplicationControllerScaleParams) middleware.Responder
 }
 
 // NewReplaceCoreV1NamespacedReplicationControllerScale creates a new http.Handler for the replace core v1 namespaced replication controller scale operation
@@ -46,25 +46,12 @@ func (o *ReplaceCoreV1NamespacedReplicationControllerScale) ServeHTTP(rw http.Re
 	}
 	var Params = NewReplaceCoreV1NamespacedReplicationControllerScaleParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

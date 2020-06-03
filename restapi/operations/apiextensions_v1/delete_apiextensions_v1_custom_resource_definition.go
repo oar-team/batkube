@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteApiextensionsV1CustomResourceDefinitionHandlerFunc turns a function with the right signature into a delete apiextensions v1 custom resource definition handler
-type DeleteApiextensionsV1CustomResourceDefinitionHandlerFunc func(DeleteApiextensionsV1CustomResourceDefinitionParams, interface{}) middleware.Responder
+type DeleteApiextensionsV1CustomResourceDefinitionHandlerFunc func(DeleteApiextensionsV1CustomResourceDefinitionParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteApiextensionsV1CustomResourceDefinitionHandlerFunc) Handle(params DeleteApiextensionsV1CustomResourceDefinitionParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteApiextensionsV1CustomResourceDefinitionHandlerFunc) Handle(params DeleteApiextensionsV1CustomResourceDefinitionParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteApiextensionsV1CustomResourceDefinitionHandler interface for that can handle valid delete apiextensions v1 custom resource definition params
 type DeleteApiextensionsV1CustomResourceDefinitionHandler interface {
-	Handle(DeleteApiextensionsV1CustomResourceDefinitionParams, interface{}) middleware.Responder
+	Handle(DeleteApiextensionsV1CustomResourceDefinitionParams) middleware.Responder
 }
 
 // NewDeleteApiextensionsV1CustomResourceDefinition creates a new http.Handler for the delete apiextensions v1 custom resource definition operation
@@ -46,25 +46,12 @@ func (o *DeleteApiextensionsV1CustomResourceDefinition) ServeHTTP(rw http.Respon
 	}
 	var Params = NewDeleteApiextensionsV1CustomResourceDefinitionParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

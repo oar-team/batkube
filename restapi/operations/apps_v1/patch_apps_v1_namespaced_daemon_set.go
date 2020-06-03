@@ -12,16 +12,16 @@ import (
 )
 
 // PatchAppsV1NamespacedDaemonSetHandlerFunc turns a function with the right signature into a patch apps v1 namespaced daemon set handler
-type PatchAppsV1NamespacedDaemonSetHandlerFunc func(PatchAppsV1NamespacedDaemonSetParams, interface{}) middleware.Responder
+type PatchAppsV1NamespacedDaemonSetHandlerFunc func(PatchAppsV1NamespacedDaemonSetParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchAppsV1NamespacedDaemonSetHandlerFunc) Handle(params PatchAppsV1NamespacedDaemonSetParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchAppsV1NamespacedDaemonSetHandlerFunc) Handle(params PatchAppsV1NamespacedDaemonSetParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchAppsV1NamespacedDaemonSetHandler interface for that can handle valid patch apps v1 namespaced daemon set params
 type PatchAppsV1NamespacedDaemonSetHandler interface {
-	Handle(PatchAppsV1NamespacedDaemonSetParams, interface{}) middleware.Responder
+	Handle(PatchAppsV1NamespacedDaemonSetParams) middleware.Responder
 }
 
 // NewPatchAppsV1NamespacedDaemonSet creates a new http.Handler for the patch apps v1 namespaced daemon set operation
@@ -46,25 +46,12 @@ func (o *PatchAppsV1NamespacedDaemonSet) ServeHTTP(rw http.ResponseWriter, r *ht
 	}
 	var Params = NewPatchAppsV1NamespacedDaemonSetParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

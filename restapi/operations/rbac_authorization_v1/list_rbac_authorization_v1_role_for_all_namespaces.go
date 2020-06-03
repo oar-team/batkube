@@ -12,16 +12,16 @@ import (
 )
 
 // ListRbacAuthorizationV1RoleForAllNamespacesHandlerFunc turns a function with the right signature into a list rbac authorization v1 role for all namespaces handler
-type ListRbacAuthorizationV1RoleForAllNamespacesHandlerFunc func(ListRbacAuthorizationV1RoleForAllNamespacesParams, interface{}) middleware.Responder
+type ListRbacAuthorizationV1RoleForAllNamespacesHandlerFunc func(ListRbacAuthorizationV1RoleForAllNamespacesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListRbacAuthorizationV1RoleForAllNamespacesHandlerFunc) Handle(params ListRbacAuthorizationV1RoleForAllNamespacesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListRbacAuthorizationV1RoleForAllNamespacesHandlerFunc) Handle(params ListRbacAuthorizationV1RoleForAllNamespacesParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListRbacAuthorizationV1RoleForAllNamespacesHandler interface for that can handle valid list rbac authorization v1 role for all namespaces params
 type ListRbacAuthorizationV1RoleForAllNamespacesHandler interface {
-	Handle(ListRbacAuthorizationV1RoleForAllNamespacesParams, interface{}) middleware.Responder
+	Handle(ListRbacAuthorizationV1RoleForAllNamespacesParams) middleware.Responder
 }
 
 // NewListRbacAuthorizationV1RoleForAllNamespaces creates a new http.Handler for the list rbac authorization v1 role for all namespaces operation
@@ -46,25 +46,12 @@ func (o *ListRbacAuthorizationV1RoleForAllNamespaces) ServeHTTP(rw http.Response
 	}
 	var Params = NewListRbacAuthorizationV1RoleForAllNamespacesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

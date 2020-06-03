@@ -12,16 +12,16 @@ import (
 )
 
 // WatchCoreV1NodeListHandlerFunc turns a function with the right signature into a watch core v1 node list handler
-type WatchCoreV1NodeListHandlerFunc func(WatchCoreV1NodeListParams, interface{}) middleware.Responder
+type WatchCoreV1NodeListHandlerFunc func(WatchCoreV1NodeListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchCoreV1NodeListHandlerFunc) Handle(params WatchCoreV1NodeListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchCoreV1NodeListHandlerFunc) Handle(params WatchCoreV1NodeListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchCoreV1NodeListHandler interface for that can handle valid watch core v1 node list params
 type WatchCoreV1NodeListHandler interface {
-	Handle(WatchCoreV1NodeListParams, interface{}) middleware.Responder
+	Handle(WatchCoreV1NodeListParams) middleware.Responder
 }
 
 // NewWatchCoreV1NodeList creates a new http.Handler for the watch core v1 node list operation
@@ -46,25 +46,12 @@ func (o *WatchCoreV1NodeList) ServeHTTP(rw http.ResponseWriter, r *http.Request)
 	}
 	var Params = NewWatchCoreV1NodeListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

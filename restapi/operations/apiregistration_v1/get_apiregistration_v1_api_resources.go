@@ -12,16 +12,16 @@ import (
 )
 
 // GetApiregistrationV1APIResourcesHandlerFunc turns a function with the right signature into a get apiregistration v1 API resources handler
-type GetApiregistrationV1APIResourcesHandlerFunc func(GetApiregistrationV1APIResourcesParams, interface{}) middleware.Responder
+type GetApiregistrationV1APIResourcesHandlerFunc func(GetApiregistrationV1APIResourcesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetApiregistrationV1APIResourcesHandlerFunc) Handle(params GetApiregistrationV1APIResourcesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetApiregistrationV1APIResourcesHandlerFunc) Handle(params GetApiregistrationV1APIResourcesParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetApiregistrationV1APIResourcesHandler interface for that can handle valid get apiregistration v1 API resources params
 type GetApiregistrationV1APIResourcesHandler interface {
-	Handle(GetApiregistrationV1APIResourcesParams, interface{}) middleware.Responder
+	Handle(GetApiregistrationV1APIResourcesParams) middleware.Responder
 }
 
 // NewGetApiregistrationV1APIResources creates a new http.Handler for the get apiregistration v1 API resources operation
@@ -46,25 +46,12 @@ func (o *GetApiregistrationV1APIResources) ServeHTTP(rw http.ResponseWriter, r *
 	}
 	var Params = NewGetApiregistrationV1APIResourcesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

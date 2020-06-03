@@ -12,16 +12,16 @@ import (
 )
 
 // ConnectCoreV1PostNodeProxyHandlerFunc turns a function with the right signature into a connect core v1 post node proxy handler
-type ConnectCoreV1PostNodeProxyHandlerFunc func(ConnectCoreV1PostNodeProxyParams, interface{}) middleware.Responder
+type ConnectCoreV1PostNodeProxyHandlerFunc func(ConnectCoreV1PostNodeProxyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ConnectCoreV1PostNodeProxyHandlerFunc) Handle(params ConnectCoreV1PostNodeProxyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ConnectCoreV1PostNodeProxyHandlerFunc) Handle(params ConnectCoreV1PostNodeProxyParams) middleware.Responder {
+	return fn(params)
 }
 
 // ConnectCoreV1PostNodeProxyHandler interface for that can handle valid connect core v1 post node proxy params
 type ConnectCoreV1PostNodeProxyHandler interface {
-	Handle(ConnectCoreV1PostNodeProxyParams, interface{}) middleware.Responder
+	Handle(ConnectCoreV1PostNodeProxyParams) middleware.Responder
 }
 
 // NewConnectCoreV1PostNodeProxy creates a new http.Handler for the connect core v1 post node proxy operation
@@ -46,25 +46,12 @@ func (o *ConnectCoreV1PostNodeProxy) ServeHTTP(rw http.ResponseWriter, r *http.R
 	}
 	var Params = NewConnectCoreV1PostNodeProxyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

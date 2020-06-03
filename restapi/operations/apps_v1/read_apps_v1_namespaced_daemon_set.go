@@ -12,16 +12,16 @@ import (
 )
 
 // ReadAppsV1NamespacedDaemonSetHandlerFunc turns a function with the right signature into a read apps v1 namespaced daemon set handler
-type ReadAppsV1NamespacedDaemonSetHandlerFunc func(ReadAppsV1NamespacedDaemonSetParams, interface{}) middleware.Responder
+type ReadAppsV1NamespacedDaemonSetHandlerFunc func(ReadAppsV1NamespacedDaemonSetParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadAppsV1NamespacedDaemonSetHandlerFunc) Handle(params ReadAppsV1NamespacedDaemonSetParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadAppsV1NamespacedDaemonSetHandlerFunc) Handle(params ReadAppsV1NamespacedDaemonSetParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadAppsV1NamespacedDaemonSetHandler interface for that can handle valid read apps v1 namespaced daemon set params
 type ReadAppsV1NamespacedDaemonSetHandler interface {
-	Handle(ReadAppsV1NamespacedDaemonSetParams, interface{}) middleware.Responder
+	Handle(ReadAppsV1NamespacedDaemonSetParams) middleware.Responder
 }
 
 // NewReadAppsV1NamespacedDaemonSet creates a new http.Handler for the read apps v1 namespaced daemon set operation
@@ -46,25 +46,12 @@ func (o *ReadAppsV1NamespacedDaemonSet) ServeHTTP(rw http.ResponseWriter, r *htt
 	}
 	var Params = NewReadAppsV1NamespacedDaemonSetParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // WatchCertificatesV1beta1CertificateSigningRequestListHandlerFunc turns a function with the right signature into a watch certificates v1beta1 certificate signing request list handler
-type WatchCertificatesV1beta1CertificateSigningRequestListHandlerFunc func(WatchCertificatesV1beta1CertificateSigningRequestListParams, interface{}) middleware.Responder
+type WatchCertificatesV1beta1CertificateSigningRequestListHandlerFunc func(WatchCertificatesV1beta1CertificateSigningRequestListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchCertificatesV1beta1CertificateSigningRequestListHandlerFunc) Handle(params WatchCertificatesV1beta1CertificateSigningRequestListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchCertificatesV1beta1CertificateSigningRequestListHandlerFunc) Handle(params WatchCertificatesV1beta1CertificateSigningRequestListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchCertificatesV1beta1CertificateSigningRequestListHandler interface for that can handle valid watch certificates v1beta1 certificate signing request list params
 type WatchCertificatesV1beta1CertificateSigningRequestListHandler interface {
-	Handle(WatchCertificatesV1beta1CertificateSigningRequestListParams, interface{}) middleware.Responder
+	Handle(WatchCertificatesV1beta1CertificateSigningRequestListParams) middleware.Responder
 }
 
 // NewWatchCertificatesV1beta1CertificateSigningRequestList creates a new http.Handler for the watch certificates v1beta1 certificate signing request list operation
@@ -46,25 +46,12 @@ func (o *WatchCertificatesV1beta1CertificateSigningRequestList) ServeHTTP(rw htt
 	}
 	var Params = NewWatchCertificatesV1beta1CertificateSigningRequestListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

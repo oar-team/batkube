@@ -12,16 +12,16 @@ import (
 )
 
 // GetAuthenticationAPIGroupHandlerFunc turns a function with the right signature into a get authentication API group handler
-type GetAuthenticationAPIGroupHandlerFunc func(GetAuthenticationAPIGroupParams, interface{}) middleware.Responder
+type GetAuthenticationAPIGroupHandlerFunc func(GetAuthenticationAPIGroupParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetAuthenticationAPIGroupHandlerFunc) Handle(params GetAuthenticationAPIGroupParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetAuthenticationAPIGroupHandlerFunc) Handle(params GetAuthenticationAPIGroupParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetAuthenticationAPIGroupHandler interface for that can handle valid get authentication API group params
 type GetAuthenticationAPIGroupHandler interface {
-	Handle(GetAuthenticationAPIGroupParams, interface{}) middleware.Responder
+	Handle(GetAuthenticationAPIGroupParams) middleware.Responder
 }
 
 // NewGetAuthenticationAPIGroup creates a new http.Handler for the get authentication API group operation
@@ -46,25 +46,12 @@ func (o *GetAuthenticationAPIGroup) ServeHTTP(rw http.ResponseWriter, r *http.Re
 	}
 	var Params = NewGetAuthenticationAPIGroupParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

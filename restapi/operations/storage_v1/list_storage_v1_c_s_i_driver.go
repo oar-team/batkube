@@ -12,16 +12,16 @@ import (
 )
 
 // ListStorageV1CSIDriverHandlerFunc turns a function with the right signature into a list storage v1 c s i driver handler
-type ListStorageV1CSIDriverHandlerFunc func(ListStorageV1CSIDriverParams, interface{}) middleware.Responder
+type ListStorageV1CSIDriverHandlerFunc func(ListStorageV1CSIDriverParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListStorageV1CSIDriverHandlerFunc) Handle(params ListStorageV1CSIDriverParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListStorageV1CSIDriverHandlerFunc) Handle(params ListStorageV1CSIDriverParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListStorageV1CSIDriverHandler interface for that can handle valid list storage v1 c s i driver params
 type ListStorageV1CSIDriverHandler interface {
-	Handle(ListStorageV1CSIDriverParams, interface{}) middleware.Responder
+	Handle(ListStorageV1CSIDriverParams) middleware.Responder
 }
 
 // NewListStorageV1CSIDriver creates a new http.Handler for the list storage v1 c s i driver operation
@@ -46,25 +46,12 @@ func (o *ListStorageV1CSIDriver) ServeHTTP(rw http.ResponseWriter, r *http.Reque
 	}
 	var Params = NewListStorageV1CSIDriverParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

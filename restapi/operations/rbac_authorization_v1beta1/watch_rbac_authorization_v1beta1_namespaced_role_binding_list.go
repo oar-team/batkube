@@ -12,16 +12,16 @@ import (
 )
 
 // WatchRbacAuthorizationV1beta1NamespacedRoleBindingListHandlerFunc turns a function with the right signature into a watch rbac authorization v1beta1 namespaced role binding list handler
-type WatchRbacAuthorizationV1beta1NamespacedRoleBindingListHandlerFunc func(WatchRbacAuthorizationV1beta1NamespacedRoleBindingListParams, interface{}) middleware.Responder
+type WatchRbacAuthorizationV1beta1NamespacedRoleBindingListHandlerFunc func(WatchRbacAuthorizationV1beta1NamespacedRoleBindingListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchRbacAuthorizationV1beta1NamespacedRoleBindingListHandlerFunc) Handle(params WatchRbacAuthorizationV1beta1NamespacedRoleBindingListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchRbacAuthorizationV1beta1NamespacedRoleBindingListHandlerFunc) Handle(params WatchRbacAuthorizationV1beta1NamespacedRoleBindingListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchRbacAuthorizationV1beta1NamespacedRoleBindingListHandler interface for that can handle valid watch rbac authorization v1beta1 namespaced role binding list params
 type WatchRbacAuthorizationV1beta1NamespacedRoleBindingListHandler interface {
-	Handle(WatchRbacAuthorizationV1beta1NamespacedRoleBindingListParams, interface{}) middleware.Responder
+	Handle(WatchRbacAuthorizationV1beta1NamespacedRoleBindingListParams) middleware.Responder
 }
 
 // NewWatchRbacAuthorizationV1beta1NamespacedRoleBindingList creates a new http.Handler for the watch rbac authorization v1beta1 namespaced role binding list operation
@@ -46,25 +46,12 @@ func (o *WatchRbacAuthorizationV1beta1NamespacedRoleBindingList) ServeHTTP(rw ht
 	}
 	var Params = NewWatchRbacAuthorizationV1beta1NamespacedRoleBindingListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

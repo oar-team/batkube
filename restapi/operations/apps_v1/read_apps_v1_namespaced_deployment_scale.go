@@ -12,16 +12,16 @@ import (
 )
 
 // ReadAppsV1NamespacedDeploymentScaleHandlerFunc turns a function with the right signature into a read apps v1 namespaced deployment scale handler
-type ReadAppsV1NamespacedDeploymentScaleHandlerFunc func(ReadAppsV1NamespacedDeploymentScaleParams, interface{}) middleware.Responder
+type ReadAppsV1NamespacedDeploymentScaleHandlerFunc func(ReadAppsV1NamespacedDeploymentScaleParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadAppsV1NamespacedDeploymentScaleHandlerFunc) Handle(params ReadAppsV1NamespacedDeploymentScaleParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadAppsV1NamespacedDeploymentScaleHandlerFunc) Handle(params ReadAppsV1NamespacedDeploymentScaleParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadAppsV1NamespacedDeploymentScaleHandler interface for that can handle valid read apps v1 namespaced deployment scale params
 type ReadAppsV1NamespacedDeploymentScaleHandler interface {
-	Handle(ReadAppsV1NamespacedDeploymentScaleParams, interface{}) middleware.Responder
+	Handle(ReadAppsV1NamespacedDeploymentScaleParams) middleware.Responder
 }
 
 // NewReadAppsV1NamespacedDeploymentScale creates a new http.Handler for the read apps v1 namespaced deployment scale operation
@@ -46,25 +46,12 @@ func (o *ReadAppsV1NamespacedDeploymentScale) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewReadAppsV1NamespacedDeploymentScaleParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

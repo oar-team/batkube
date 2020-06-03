@@ -12,16 +12,16 @@ import (
 )
 
 // WatchNodeV1beta1RuntimeClassListHandlerFunc turns a function with the right signature into a watch node v1beta1 runtime class list handler
-type WatchNodeV1beta1RuntimeClassListHandlerFunc func(WatchNodeV1beta1RuntimeClassListParams, interface{}) middleware.Responder
+type WatchNodeV1beta1RuntimeClassListHandlerFunc func(WatchNodeV1beta1RuntimeClassListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchNodeV1beta1RuntimeClassListHandlerFunc) Handle(params WatchNodeV1beta1RuntimeClassListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchNodeV1beta1RuntimeClassListHandlerFunc) Handle(params WatchNodeV1beta1RuntimeClassListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchNodeV1beta1RuntimeClassListHandler interface for that can handle valid watch node v1beta1 runtime class list params
 type WatchNodeV1beta1RuntimeClassListHandler interface {
-	Handle(WatchNodeV1beta1RuntimeClassListParams, interface{}) middleware.Responder
+	Handle(WatchNodeV1beta1RuntimeClassListParams) middleware.Responder
 }
 
 // NewWatchNodeV1beta1RuntimeClassList creates a new http.Handler for the watch node v1beta1 runtime class list operation
@@ -46,25 +46,12 @@ func (o *WatchNodeV1beta1RuntimeClassList) ServeHTTP(rw http.ResponseWriter, r *
 	}
 	var Params = NewWatchNodeV1beta1RuntimeClassListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

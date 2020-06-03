@@ -12,16 +12,16 @@ import (
 )
 
 // CreateCoreV1NamespacedPodTemplateHandlerFunc turns a function with the right signature into a create core v1 namespaced pod template handler
-type CreateCoreV1NamespacedPodTemplateHandlerFunc func(CreateCoreV1NamespacedPodTemplateParams, interface{}) middleware.Responder
+type CreateCoreV1NamespacedPodTemplateHandlerFunc func(CreateCoreV1NamespacedPodTemplateParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateCoreV1NamespacedPodTemplateHandlerFunc) Handle(params CreateCoreV1NamespacedPodTemplateParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateCoreV1NamespacedPodTemplateHandlerFunc) Handle(params CreateCoreV1NamespacedPodTemplateParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateCoreV1NamespacedPodTemplateHandler interface for that can handle valid create core v1 namespaced pod template params
 type CreateCoreV1NamespacedPodTemplateHandler interface {
-	Handle(CreateCoreV1NamespacedPodTemplateParams, interface{}) middleware.Responder
+	Handle(CreateCoreV1NamespacedPodTemplateParams) middleware.Responder
 }
 
 // NewCreateCoreV1NamespacedPodTemplate creates a new http.Handler for the create core v1 namespaced pod template operation
@@ -46,25 +46,12 @@ func (o *CreateCoreV1NamespacedPodTemplate) ServeHTTP(rw http.ResponseWriter, r 
 	}
 	var Params = NewCreateCoreV1NamespacedPodTemplateParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

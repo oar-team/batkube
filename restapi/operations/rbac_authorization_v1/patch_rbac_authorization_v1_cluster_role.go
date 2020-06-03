@@ -12,16 +12,16 @@ import (
 )
 
 // PatchRbacAuthorizationV1ClusterRoleHandlerFunc turns a function with the right signature into a patch rbac authorization v1 cluster role handler
-type PatchRbacAuthorizationV1ClusterRoleHandlerFunc func(PatchRbacAuthorizationV1ClusterRoleParams, interface{}) middleware.Responder
+type PatchRbacAuthorizationV1ClusterRoleHandlerFunc func(PatchRbacAuthorizationV1ClusterRoleParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchRbacAuthorizationV1ClusterRoleHandlerFunc) Handle(params PatchRbacAuthorizationV1ClusterRoleParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchRbacAuthorizationV1ClusterRoleHandlerFunc) Handle(params PatchRbacAuthorizationV1ClusterRoleParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchRbacAuthorizationV1ClusterRoleHandler interface for that can handle valid patch rbac authorization v1 cluster role params
 type PatchRbacAuthorizationV1ClusterRoleHandler interface {
-	Handle(PatchRbacAuthorizationV1ClusterRoleParams, interface{}) middleware.Responder
+	Handle(PatchRbacAuthorizationV1ClusterRoleParams) middleware.Responder
 }
 
 // NewPatchRbacAuthorizationV1ClusterRole creates a new http.Handler for the patch rbac authorization v1 cluster role operation
@@ -46,25 +46,12 @@ func (o *PatchRbacAuthorizationV1ClusterRole) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewPatchRbacAuthorizationV1ClusterRoleParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // GetBatchV2alpha1APIResourcesHandlerFunc turns a function with the right signature into a get batch v2alpha1 API resources handler
-type GetBatchV2alpha1APIResourcesHandlerFunc func(GetBatchV2alpha1APIResourcesParams, interface{}) middleware.Responder
+type GetBatchV2alpha1APIResourcesHandlerFunc func(GetBatchV2alpha1APIResourcesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetBatchV2alpha1APIResourcesHandlerFunc) Handle(params GetBatchV2alpha1APIResourcesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetBatchV2alpha1APIResourcesHandlerFunc) Handle(params GetBatchV2alpha1APIResourcesParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetBatchV2alpha1APIResourcesHandler interface for that can handle valid get batch v2alpha1 API resources params
 type GetBatchV2alpha1APIResourcesHandler interface {
-	Handle(GetBatchV2alpha1APIResourcesParams, interface{}) middleware.Responder
+	Handle(GetBatchV2alpha1APIResourcesParams) middleware.Responder
 }
 
 // NewGetBatchV2alpha1APIResources creates a new http.Handler for the get batch v2alpha1 API resources operation
@@ -46,25 +46,12 @@ func (o *GetBatchV2alpha1APIResources) ServeHTTP(rw http.ResponseWriter, r *http
 	}
 	var Params = NewGetBatchV2alpha1APIResourcesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

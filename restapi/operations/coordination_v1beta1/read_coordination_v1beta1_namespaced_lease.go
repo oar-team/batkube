@@ -12,16 +12,16 @@ import (
 )
 
 // ReadCoordinationV1beta1NamespacedLeaseHandlerFunc turns a function with the right signature into a read coordination v1beta1 namespaced lease handler
-type ReadCoordinationV1beta1NamespacedLeaseHandlerFunc func(ReadCoordinationV1beta1NamespacedLeaseParams, interface{}) middleware.Responder
+type ReadCoordinationV1beta1NamespacedLeaseHandlerFunc func(ReadCoordinationV1beta1NamespacedLeaseParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadCoordinationV1beta1NamespacedLeaseHandlerFunc) Handle(params ReadCoordinationV1beta1NamespacedLeaseParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadCoordinationV1beta1NamespacedLeaseHandlerFunc) Handle(params ReadCoordinationV1beta1NamespacedLeaseParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadCoordinationV1beta1NamespacedLeaseHandler interface for that can handle valid read coordination v1beta1 namespaced lease params
 type ReadCoordinationV1beta1NamespacedLeaseHandler interface {
-	Handle(ReadCoordinationV1beta1NamespacedLeaseParams, interface{}) middleware.Responder
+	Handle(ReadCoordinationV1beta1NamespacedLeaseParams) middleware.Responder
 }
 
 // NewReadCoordinationV1beta1NamespacedLease creates a new http.Handler for the read coordination v1beta1 namespaced lease operation
@@ -46,25 +46,12 @@ func (o *ReadCoordinationV1beta1NamespacedLease) ServeHTTP(rw http.ResponseWrite
 	}
 	var Params = NewReadCoordinationV1beta1NamespacedLeaseParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

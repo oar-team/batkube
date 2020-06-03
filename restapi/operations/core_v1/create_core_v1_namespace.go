@@ -12,16 +12,16 @@ import (
 )
 
 // CreateCoreV1NamespaceHandlerFunc turns a function with the right signature into a create core v1 namespace handler
-type CreateCoreV1NamespaceHandlerFunc func(CreateCoreV1NamespaceParams, interface{}) middleware.Responder
+type CreateCoreV1NamespaceHandlerFunc func(CreateCoreV1NamespaceParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateCoreV1NamespaceHandlerFunc) Handle(params CreateCoreV1NamespaceParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateCoreV1NamespaceHandlerFunc) Handle(params CreateCoreV1NamespaceParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateCoreV1NamespaceHandler interface for that can handle valid create core v1 namespace params
 type CreateCoreV1NamespaceHandler interface {
-	Handle(CreateCoreV1NamespaceParams, interface{}) middleware.Responder
+	Handle(CreateCoreV1NamespaceParams) middleware.Responder
 }
 
 // NewCreateCoreV1Namespace creates a new http.Handler for the create core v1 namespace operation
@@ -46,25 +46,12 @@ func (o *CreateCoreV1Namespace) ServeHTTP(rw http.ResponseWriter, r *http.Reques
 	}
 	var Params = NewCreateCoreV1NamespaceParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

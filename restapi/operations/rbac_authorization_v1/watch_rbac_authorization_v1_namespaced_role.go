@@ -12,16 +12,16 @@ import (
 )
 
 // WatchRbacAuthorizationV1NamespacedRoleHandlerFunc turns a function with the right signature into a watch rbac authorization v1 namespaced role handler
-type WatchRbacAuthorizationV1NamespacedRoleHandlerFunc func(WatchRbacAuthorizationV1NamespacedRoleParams, interface{}) middleware.Responder
+type WatchRbacAuthorizationV1NamespacedRoleHandlerFunc func(WatchRbacAuthorizationV1NamespacedRoleParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchRbacAuthorizationV1NamespacedRoleHandlerFunc) Handle(params WatchRbacAuthorizationV1NamespacedRoleParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchRbacAuthorizationV1NamespacedRoleHandlerFunc) Handle(params WatchRbacAuthorizationV1NamespacedRoleParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchRbacAuthorizationV1NamespacedRoleHandler interface for that can handle valid watch rbac authorization v1 namespaced role params
 type WatchRbacAuthorizationV1NamespacedRoleHandler interface {
-	Handle(WatchRbacAuthorizationV1NamespacedRoleParams, interface{}) middleware.Responder
+	Handle(WatchRbacAuthorizationV1NamespacedRoleParams) middleware.Responder
 }
 
 // NewWatchRbacAuthorizationV1NamespacedRole creates a new http.Handler for the watch rbac authorization v1 namespaced role operation
@@ -46,25 +46,12 @@ func (o *WatchRbacAuthorizationV1NamespacedRole) ServeHTTP(rw http.ResponseWrite
 	}
 	var Params = NewWatchRbacAuthorizationV1NamespacedRoleParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

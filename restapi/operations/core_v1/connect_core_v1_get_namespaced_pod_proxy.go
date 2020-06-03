@@ -12,16 +12,16 @@ import (
 )
 
 // ConnectCoreV1GetNamespacedPodProxyHandlerFunc turns a function with the right signature into a connect core v1 get namespaced pod proxy handler
-type ConnectCoreV1GetNamespacedPodProxyHandlerFunc func(ConnectCoreV1GetNamespacedPodProxyParams, interface{}) middleware.Responder
+type ConnectCoreV1GetNamespacedPodProxyHandlerFunc func(ConnectCoreV1GetNamespacedPodProxyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ConnectCoreV1GetNamespacedPodProxyHandlerFunc) Handle(params ConnectCoreV1GetNamespacedPodProxyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ConnectCoreV1GetNamespacedPodProxyHandlerFunc) Handle(params ConnectCoreV1GetNamespacedPodProxyParams) middleware.Responder {
+	return fn(params)
 }
 
 // ConnectCoreV1GetNamespacedPodProxyHandler interface for that can handle valid connect core v1 get namespaced pod proxy params
 type ConnectCoreV1GetNamespacedPodProxyHandler interface {
-	Handle(ConnectCoreV1GetNamespacedPodProxyParams, interface{}) middleware.Responder
+	Handle(ConnectCoreV1GetNamespacedPodProxyParams) middleware.Responder
 }
 
 // NewConnectCoreV1GetNamespacedPodProxy creates a new http.Handler for the connect core v1 get namespaced pod proxy operation
@@ -46,25 +46,12 @@ func (o *ConnectCoreV1GetNamespacedPodProxy) ServeHTTP(rw http.ResponseWriter, r
 	}
 	var Params = NewConnectCoreV1GetNamespacedPodProxyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

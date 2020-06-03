@@ -12,16 +12,16 @@ import (
 )
 
 // WatchSettingsV1alpha1NamespacedPodPresetHandlerFunc turns a function with the right signature into a watch settings v1alpha1 namespaced pod preset handler
-type WatchSettingsV1alpha1NamespacedPodPresetHandlerFunc func(WatchSettingsV1alpha1NamespacedPodPresetParams, interface{}) middleware.Responder
+type WatchSettingsV1alpha1NamespacedPodPresetHandlerFunc func(WatchSettingsV1alpha1NamespacedPodPresetParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchSettingsV1alpha1NamespacedPodPresetHandlerFunc) Handle(params WatchSettingsV1alpha1NamespacedPodPresetParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchSettingsV1alpha1NamespacedPodPresetHandlerFunc) Handle(params WatchSettingsV1alpha1NamespacedPodPresetParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchSettingsV1alpha1NamespacedPodPresetHandler interface for that can handle valid watch settings v1alpha1 namespaced pod preset params
 type WatchSettingsV1alpha1NamespacedPodPresetHandler interface {
-	Handle(WatchSettingsV1alpha1NamespacedPodPresetParams, interface{}) middleware.Responder
+	Handle(WatchSettingsV1alpha1NamespacedPodPresetParams) middleware.Responder
 }
 
 // NewWatchSettingsV1alpha1NamespacedPodPreset creates a new http.Handler for the watch settings v1alpha1 namespaced pod preset operation
@@ -46,25 +46,12 @@ func (o *WatchSettingsV1alpha1NamespacedPodPreset) ServeHTTP(rw http.ResponseWri
 	}
 	var Params = NewWatchSettingsV1alpha1NamespacedPodPresetParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // ListAutoscalingV1NamespacedHorizontalPodAutoscalerHandlerFunc turns a function with the right signature into a list autoscaling v1 namespaced horizontal pod autoscaler handler
-type ListAutoscalingV1NamespacedHorizontalPodAutoscalerHandlerFunc func(ListAutoscalingV1NamespacedHorizontalPodAutoscalerParams, interface{}) middleware.Responder
+type ListAutoscalingV1NamespacedHorizontalPodAutoscalerHandlerFunc func(ListAutoscalingV1NamespacedHorizontalPodAutoscalerParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListAutoscalingV1NamespacedHorizontalPodAutoscalerHandlerFunc) Handle(params ListAutoscalingV1NamespacedHorizontalPodAutoscalerParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListAutoscalingV1NamespacedHorizontalPodAutoscalerHandlerFunc) Handle(params ListAutoscalingV1NamespacedHorizontalPodAutoscalerParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListAutoscalingV1NamespacedHorizontalPodAutoscalerHandler interface for that can handle valid list autoscaling v1 namespaced horizontal pod autoscaler params
 type ListAutoscalingV1NamespacedHorizontalPodAutoscalerHandler interface {
-	Handle(ListAutoscalingV1NamespacedHorizontalPodAutoscalerParams, interface{}) middleware.Responder
+	Handle(ListAutoscalingV1NamespacedHorizontalPodAutoscalerParams) middleware.Responder
 }
 
 // NewListAutoscalingV1NamespacedHorizontalPodAutoscaler creates a new http.Handler for the list autoscaling v1 namespaced horizontal pod autoscaler operation
@@ -46,25 +46,12 @@ func (o *ListAutoscalingV1NamespacedHorizontalPodAutoscaler) ServeHTTP(rw http.R
 	}
 	var Params = NewListAutoscalingV1NamespacedHorizontalPodAutoscalerParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

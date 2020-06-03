@@ -12,16 +12,16 @@ import (
 )
 
 // GetDiscoveryV1beta1APIResourcesHandlerFunc turns a function with the right signature into a get discovery v1beta1 API resources handler
-type GetDiscoveryV1beta1APIResourcesHandlerFunc func(GetDiscoveryV1beta1APIResourcesParams, interface{}) middleware.Responder
+type GetDiscoveryV1beta1APIResourcesHandlerFunc func(GetDiscoveryV1beta1APIResourcesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetDiscoveryV1beta1APIResourcesHandlerFunc) Handle(params GetDiscoveryV1beta1APIResourcesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetDiscoveryV1beta1APIResourcesHandlerFunc) Handle(params GetDiscoveryV1beta1APIResourcesParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetDiscoveryV1beta1APIResourcesHandler interface for that can handle valid get discovery v1beta1 API resources params
 type GetDiscoveryV1beta1APIResourcesHandler interface {
-	Handle(GetDiscoveryV1beta1APIResourcesParams, interface{}) middleware.Responder
+	Handle(GetDiscoveryV1beta1APIResourcesParams) middleware.Responder
 }
 
 // NewGetDiscoveryV1beta1APIResources creates a new http.Handler for the get discovery v1beta1 API resources operation
@@ -46,25 +46,12 @@ func (o *GetDiscoveryV1beta1APIResources) ServeHTTP(rw http.ResponseWriter, r *h
 	}
 	var Params = NewGetDiscoveryV1beta1APIResourcesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

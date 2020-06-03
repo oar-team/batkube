@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingHandlerFunc turns a function with the right signature into a delete rbac authorization v1alpha1 collection namespaced role binding handler
-type DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingHandlerFunc func(DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingParams, interface{}) middleware.Responder
+type DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingHandlerFunc func(DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingHandlerFunc) Handle(params DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingHandlerFunc) Handle(params DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingHandler interface for that can handle valid delete rbac authorization v1alpha1 collection namespaced role binding params
 type DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingHandler interface {
-	Handle(DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingParams, interface{}) middleware.Responder
+	Handle(DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingParams) middleware.Responder
 }
 
 // NewDeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBinding creates a new http.Handler for the delete rbac authorization v1alpha1 collection namespaced role binding operation
@@ -46,25 +46,12 @@ func (o *DeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBinding) ServeHT
 	}
 	var Params = NewDeleteRbacAuthorizationV1alpha1CollectionNamespacedRoleBindingParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

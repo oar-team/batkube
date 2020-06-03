@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteRbacAuthorizationV1CollectionClusterRoleHandlerFunc turns a function with the right signature into a delete rbac authorization v1 collection cluster role handler
-type DeleteRbacAuthorizationV1CollectionClusterRoleHandlerFunc func(DeleteRbacAuthorizationV1CollectionClusterRoleParams, interface{}) middleware.Responder
+type DeleteRbacAuthorizationV1CollectionClusterRoleHandlerFunc func(DeleteRbacAuthorizationV1CollectionClusterRoleParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteRbacAuthorizationV1CollectionClusterRoleHandlerFunc) Handle(params DeleteRbacAuthorizationV1CollectionClusterRoleParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteRbacAuthorizationV1CollectionClusterRoleHandlerFunc) Handle(params DeleteRbacAuthorizationV1CollectionClusterRoleParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteRbacAuthorizationV1CollectionClusterRoleHandler interface for that can handle valid delete rbac authorization v1 collection cluster role params
 type DeleteRbacAuthorizationV1CollectionClusterRoleHandler interface {
-	Handle(DeleteRbacAuthorizationV1CollectionClusterRoleParams, interface{}) middleware.Responder
+	Handle(DeleteRbacAuthorizationV1CollectionClusterRoleParams) middleware.Responder
 }
 
 // NewDeleteRbacAuthorizationV1CollectionClusterRole creates a new http.Handler for the delete rbac authorization v1 collection cluster role operation
@@ -46,25 +46,12 @@ func (o *DeleteRbacAuthorizationV1CollectionClusterRole) ServeHTTP(rw http.Respo
 	}
 	var Params = NewDeleteRbacAuthorizationV1CollectionClusterRoleParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

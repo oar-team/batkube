@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteNodeV1beta1RuntimeClassHandlerFunc turns a function with the right signature into a delete node v1beta1 runtime class handler
-type DeleteNodeV1beta1RuntimeClassHandlerFunc func(DeleteNodeV1beta1RuntimeClassParams, interface{}) middleware.Responder
+type DeleteNodeV1beta1RuntimeClassHandlerFunc func(DeleteNodeV1beta1RuntimeClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteNodeV1beta1RuntimeClassHandlerFunc) Handle(params DeleteNodeV1beta1RuntimeClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteNodeV1beta1RuntimeClassHandlerFunc) Handle(params DeleteNodeV1beta1RuntimeClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteNodeV1beta1RuntimeClassHandler interface for that can handle valid delete node v1beta1 runtime class params
 type DeleteNodeV1beta1RuntimeClassHandler interface {
-	Handle(DeleteNodeV1beta1RuntimeClassParams, interface{}) middleware.Responder
+	Handle(DeleteNodeV1beta1RuntimeClassParams) middleware.Responder
 }
 
 // NewDeleteNodeV1beta1RuntimeClass creates a new http.Handler for the delete node v1beta1 runtime class operation
@@ -46,25 +46,12 @@ func (o *DeleteNodeV1beta1RuntimeClass) ServeHTTP(rw http.ResponseWriter, r *htt
 	}
 	var Params = NewDeleteNodeV1beta1RuntimeClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

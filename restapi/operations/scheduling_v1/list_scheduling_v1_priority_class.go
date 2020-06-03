@@ -12,16 +12,16 @@ import (
 )
 
 // ListSchedulingV1PriorityClassHandlerFunc turns a function with the right signature into a list scheduling v1 priority class handler
-type ListSchedulingV1PriorityClassHandlerFunc func(ListSchedulingV1PriorityClassParams, interface{}) middleware.Responder
+type ListSchedulingV1PriorityClassHandlerFunc func(ListSchedulingV1PriorityClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListSchedulingV1PriorityClassHandlerFunc) Handle(params ListSchedulingV1PriorityClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListSchedulingV1PriorityClassHandlerFunc) Handle(params ListSchedulingV1PriorityClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListSchedulingV1PriorityClassHandler interface for that can handle valid list scheduling v1 priority class params
 type ListSchedulingV1PriorityClassHandler interface {
-	Handle(ListSchedulingV1PriorityClassParams, interface{}) middleware.Responder
+	Handle(ListSchedulingV1PriorityClassParams) middleware.Responder
 }
 
 // NewListSchedulingV1PriorityClass creates a new http.Handler for the list scheduling v1 priority class operation
@@ -46,25 +46,12 @@ func (o *ListSchedulingV1PriorityClass) ServeHTTP(rw http.ResponseWriter, r *htt
 	}
 	var Params = NewListSchedulingV1PriorityClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

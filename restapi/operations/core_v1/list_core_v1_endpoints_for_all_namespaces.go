@@ -12,16 +12,16 @@ import (
 )
 
 // ListCoreV1EndpointsForAllNamespacesHandlerFunc turns a function with the right signature into a list core v1 endpoints for all namespaces handler
-type ListCoreV1EndpointsForAllNamespacesHandlerFunc func(ListCoreV1EndpointsForAllNamespacesParams, interface{}) middleware.Responder
+type ListCoreV1EndpointsForAllNamespacesHandlerFunc func(ListCoreV1EndpointsForAllNamespacesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListCoreV1EndpointsForAllNamespacesHandlerFunc) Handle(params ListCoreV1EndpointsForAllNamespacesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListCoreV1EndpointsForAllNamespacesHandlerFunc) Handle(params ListCoreV1EndpointsForAllNamespacesParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListCoreV1EndpointsForAllNamespacesHandler interface for that can handle valid list core v1 endpoints for all namespaces params
 type ListCoreV1EndpointsForAllNamespacesHandler interface {
-	Handle(ListCoreV1EndpointsForAllNamespacesParams, interface{}) middleware.Responder
+	Handle(ListCoreV1EndpointsForAllNamespacesParams) middleware.Responder
 }
 
 // NewListCoreV1EndpointsForAllNamespaces creates a new http.Handler for the list core v1 endpoints for all namespaces operation
@@ -46,25 +46,12 @@ func (o *ListCoreV1EndpointsForAllNamespaces) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewListCoreV1EndpointsForAllNamespacesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

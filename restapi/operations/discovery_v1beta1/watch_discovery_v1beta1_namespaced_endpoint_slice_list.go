@@ -12,16 +12,16 @@ import (
 )
 
 // WatchDiscoveryV1beta1NamespacedEndpointSliceListHandlerFunc turns a function with the right signature into a watch discovery v1beta1 namespaced endpoint slice list handler
-type WatchDiscoveryV1beta1NamespacedEndpointSliceListHandlerFunc func(WatchDiscoveryV1beta1NamespacedEndpointSliceListParams, interface{}) middleware.Responder
+type WatchDiscoveryV1beta1NamespacedEndpointSliceListHandlerFunc func(WatchDiscoveryV1beta1NamespacedEndpointSliceListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchDiscoveryV1beta1NamespacedEndpointSliceListHandlerFunc) Handle(params WatchDiscoveryV1beta1NamespacedEndpointSliceListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchDiscoveryV1beta1NamespacedEndpointSliceListHandlerFunc) Handle(params WatchDiscoveryV1beta1NamespacedEndpointSliceListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchDiscoveryV1beta1NamespacedEndpointSliceListHandler interface for that can handle valid watch discovery v1beta1 namespaced endpoint slice list params
 type WatchDiscoveryV1beta1NamespacedEndpointSliceListHandler interface {
-	Handle(WatchDiscoveryV1beta1NamespacedEndpointSliceListParams, interface{}) middleware.Responder
+	Handle(WatchDiscoveryV1beta1NamespacedEndpointSliceListParams) middleware.Responder
 }
 
 // NewWatchDiscoveryV1beta1NamespacedEndpointSliceList creates a new http.Handler for the watch discovery v1beta1 namespaced endpoint slice list operation
@@ -46,25 +46,12 @@ func (o *WatchDiscoveryV1beta1NamespacedEndpointSliceList) ServeHTTP(rw http.Res
 	}
 	var Params = NewWatchDiscoveryV1beta1NamespacedEndpointSliceListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

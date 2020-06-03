@@ -12,16 +12,16 @@ import (
 )
 
 // CreateAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc turns a function with the right signature into a create admissionregistration v1 validating webhook configuration handler
-type CreateAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc func(CreateAdmissionregistrationV1ValidatingWebhookConfigurationParams, interface{}) middleware.Responder
+type CreateAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc func(CreateAdmissionregistrationV1ValidatingWebhookConfigurationParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc) Handle(params CreateAdmissionregistrationV1ValidatingWebhookConfigurationParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateAdmissionregistrationV1ValidatingWebhookConfigurationHandlerFunc) Handle(params CreateAdmissionregistrationV1ValidatingWebhookConfigurationParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateAdmissionregistrationV1ValidatingWebhookConfigurationHandler interface for that can handle valid create admissionregistration v1 validating webhook configuration params
 type CreateAdmissionregistrationV1ValidatingWebhookConfigurationHandler interface {
-	Handle(CreateAdmissionregistrationV1ValidatingWebhookConfigurationParams, interface{}) middleware.Responder
+	Handle(CreateAdmissionregistrationV1ValidatingWebhookConfigurationParams) middleware.Responder
 }
 
 // NewCreateAdmissionregistrationV1ValidatingWebhookConfiguration creates a new http.Handler for the create admissionregistration v1 validating webhook configuration operation
@@ -46,25 +46,12 @@ func (o *CreateAdmissionregistrationV1ValidatingWebhookConfiguration) ServeHTTP(
 	}
 	var Params = NewCreateAdmissionregistrationV1ValidatingWebhookConfigurationParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

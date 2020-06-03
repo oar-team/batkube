@@ -12,16 +12,16 @@ import (
 )
 
 // ConnectCoreV1PutNamespacedServiceProxyHandlerFunc turns a function with the right signature into a connect core v1 put namespaced service proxy handler
-type ConnectCoreV1PutNamespacedServiceProxyHandlerFunc func(ConnectCoreV1PutNamespacedServiceProxyParams, interface{}) middleware.Responder
+type ConnectCoreV1PutNamespacedServiceProxyHandlerFunc func(ConnectCoreV1PutNamespacedServiceProxyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ConnectCoreV1PutNamespacedServiceProxyHandlerFunc) Handle(params ConnectCoreV1PutNamespacedServiceProxyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ConnectCoreV1PutNamespacedServiceProxyHandlerFunc) Handle(params ConnectCoreV1PutNamespacedServiceProxyParams) middleware.Responder {
+	return fn(params)
 }
 
 // ConnectCoreV1PutNamespacedServiceProxyHandler interface for that can handle valid connect core v1 put namespaced service proxy params
 type ConnectCoreV1PutNamespacedServiceProxyHandler interface {
-	Handle(ConnectCoreV1PutNamespacedServiceProxyParams, interface{}) middleware.Responder
+	Handle(ConnectCoreV1PutNamespacedServiceProxyParams) middleware.Responder
 }
 
 // NewConnectCoreV1PutNamespacedServiceProxy creates a new http.Handler for the connect core v1 put namespaced service proxy operation
@@ -46,25 +46,12 @@ func (o *ConnectCoreV1PutNamespacedServiceProxy) ServeHTTP(rw http.ResponseWrite
 	}
 	var Params = NewConnectCoreV1PutNamespacedServiceProxyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

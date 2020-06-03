@@ -12,16 +12,16 @@ import (
 )
 
 // WatchApiextensionsV1beta1CustomResourceDefinitionListHandlerFunc turns a function with the right signature into a watch apiextensions v1beta1 custom resource definition list handler
-type WatchApiextensionsV1beta1CustomResourceDefinitionListHandlerFunc func(WatchApiextensionsV1beta1CustomResourceDefinitionListParams, interface{}) middleware.Responder
+type WatchApiextensionsV1beta1CustomResourceDefinitionListHandlerFunc func(WatchApiextensionsV1beta1CustomResourceDefinitionListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchApiextensionsV1beta1CustomResourceDefinitionListHandlerFunc) Handle(params WatchApiextensionsV1beta1CustomResourceDefinitionListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchApiextensionsV1beta1CustomResourceDefinitionListHandlerFunc) Handle(params WatchApiextensionsV1beta1CustomResourceDefinitionListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchApiextensionsV1beta1CustomResourceDefinitionListHandler interface for that can handle valid watch apiextensions v1beta1 custom resource definition list params
 type WatchApiextensionsV1beta1CustomResourceDefinitionListHandler interface {
-	Handle(WatchApiextensionsV1beta1CustomResourceDefinitionListParams, interface{}) middleware.Responder
+	Handle(WatchApiextensionsV1beta1CustomResourceDefinitionListParams) middleware.Responder
 }
 
 // NewWatchApiextensionsV1beta1CustomResourceDefinitionList creates a new http.Handler for the watch apiextensions v1beta1 custom resource definition list operation
@@ -46,25 +46,12 @@ func (o *WatchApiextensionsV1beta1CustomResourceDefinitionList) ServeHTTP(rw htt
 	}
 	var Params = NewWatchApiextensionsV1beta1CustomResourceDefinitionListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

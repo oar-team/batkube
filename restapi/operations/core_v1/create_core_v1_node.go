@@ -12,16 +12,16 @@ import (
 )
 
 // CreateCoreV1NodeHandlerFunc turns a function with the right signature into a create core v1 node handler
-type CreateCoreV1NodeHandlerFunc func(CreateCoreV1NodeParams, interface{}) middleware.Responder
+type CreateCoreV1NodeHandlerFunc func(CreateCoreV1NodeParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateCoreV1NodeHandlerFunc) Handle(params CreateCoreV1NodeParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateCoreV1NodeHandlerFunc) Handle(params CreateCoreV1NodeParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateCoreV1NodeHandler interface for that can handle valid create core v1 node params
 type CreateCoreV1NodeHandler interface {
-	Handle(CreateCoreV1NodeParams, interface{}) middleware.Responder
+	Handle(CreateCoreV1NodeParams) middleware.Responder
 }
 
 // NewCreateCoreV1Node creates a new http.Handler for the create core v1 node operation
@@ -46,25 +46,12 @@ func (o *CreateCoreV1Node) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var Params = NewCreateCoreV1NodeParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

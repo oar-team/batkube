@@ -12,16 +12,16 @@ import (
 )
 
 // ReadAppsV1NamespacedReplicaSetScaleHandlerFunc turns a function with the right signature into a read apps v1 namespaced replica set scale handler
-type ReadAppsV1NamespacedReplicaSetScaleHandlerFunc func(ReadAppsV1NamespacedReplicaSetScaleParams, interface{}) middleware.Responder
+type ReadAppsV1NamespacedReplicaSetScaleHandlerFunc func(ReadAppsV1NamespacedReplicaSetScaleParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadAppsV1NamespacedReplicaSetScaleHandlerFunc) Handle(params ReadAppsV1NamespacedReplicaSetScaleParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadAppsV1NamespacedReplicaSetScaleHandlerFunc) Handle(params ReadAppsV1NamespacedReplicaSetScaleParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadAppsV1NamespacedReplicaSetScaleHandler interface for that can handle valid read apps v1 namespaced replica set scale params
 type ReadAppsV1NamespacedReplicaSetScaleHandler interface {
-	Handle(ReadAppsV1NamespacedReplicaSetScaleParams, interface{}) middleware.Responder
+	Handle(ReadAppsV1NamespacedReplicaSetScaleParams) middleware.Responder
 }
 
 // NewReadAppsV1NamespacedReplicaSetScale creates a new http.Handler for the read apps v1 namespaced replica set scale operation
@@ -46,25 +46,12 @@ func (o *ReadAppsV1NamespacedReplicaSetScale) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewReadAppsV1NamespacedReplicaSetScaleParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

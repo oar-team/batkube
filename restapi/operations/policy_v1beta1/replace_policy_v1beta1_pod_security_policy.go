@@ -12,16 +12,16 @@ import (
 )
 
 // ReplacePolicyV1beta1PodSecurityPolicyHandlerFunc turns a function with the right signature into a replace policy v1beta1 pod security policy handler
-type ReplacePolicyV1beta1PodSecurityPolicyHandlerFunc func(ReplacePolicyV1beta1PodSecurityPolicyParams, interface{}) middleware.Responder
+type ReplacePolicyV1beta1PodSecurityPolicyHandlerFunc func(ReplacePolicyV1beta1PodSecurityPolicyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplacePolicyV1beta1PodSecurityPolicyHandlerFunc) Handle(params ReplacePolicyV1beta1PodSecurityPolicyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplacePolicyV1beta1PodSecurityPolicyHandlerFunc) Handle(params ReplacePolicyV1beta1PodSecurityPolicyParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplacePolicyV1beta1PodSecurityPolicyHandler interface for that can handle valid replace policy v1beta1 pod security policy params
 type ReplacePolicyV1beta1PodSecurityPolicyHandler interface {
-	Handle(ReplacePolicyV1beta1PodSecurityPolicyParams, interface{}) middleware.Responder
+	Handle(ReplacePolicyV1beta1PodSecurityPolicyParams) middleware.Responder
 }
 
 // NewReplacePolicyV1beta1PodSecurityPolicy creates a new http.Handler for the replace policy v1beta1 pod security policy operation
@@ -46,25 +46,12 @@ func (o *ReplacePolicyV1beta1PodSecurityPolicy) ServeHTTP(rw http.ResponseWriter
 	}
 	var Params = NewReplacePolicyV1beta1PodSecurityPolicyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

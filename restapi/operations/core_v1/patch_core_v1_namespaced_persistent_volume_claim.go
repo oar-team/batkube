@@ -12,16 +12,16 @@ import (
 )
 
 // PatchCoreV1NamespacedPersistentVolumeClaimHandlerFunc turns a function with the right signature into a patch core v1 namespaced persistent volume claim handler
-type PatchCoreV1NamespacedPersistentVolumeClaimHandlerFunc func(PatchCoreV1NamespacedPersistentVolumeClaimParams, interface{}) middleware.Responder
+type PatchCoreV1NamespacedPersistentVolumeClaimHandlerFunc func(PatchCoreV1NamespacedPersistentVolumeClaimParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchCoreV1NamespacedPersistentVolumeClaimHandlerFunc) Handle(params PatchCoreV1NamespacedPersistentVolumeClaimParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchCoreV1NamespacedPersistentVolumeClaimHandlerFunc) Handle(params PatchCoreV1NamespacedPersistentVolumeClaimParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchCoreV1NamespacedPersistentVolumeClaimHandler interface for that can handle valid patch core v1 namespaced persistent volume claim params
 type PatchCoreV1NamespacedPersistentVolumeClaimHandler interface {
-	Handle(PatchCoreV1NamespacedPersistentVolumeClaimParams, interface{}) middleware.Responder
+	Handle(PatchCoreV1NamespacedPersistentVolumeClaimParams) middleware.Responder
 }
 
 // NewPatchCoreV1NamespacedPersistentVolumeClaim creates a new http.Handler for the patch core v1 namespaced persistent volume claim operation
@@ -46,25 +46,12 @@ func (o *PatchCoreV1NamespacedPersistentVolumeClaim) ServeHTTP(rw http.ResponseW
 	}
 	var Params = NewPatchCoreV1NamespacedPersistentVolumeClaimParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

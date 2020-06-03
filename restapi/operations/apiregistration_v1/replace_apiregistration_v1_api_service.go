@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceApiregistrationV1APIServiceHandlerFunc turns a function with the right signature into a replace apiregistration v1 API service handler
-type ReplaceApiregistrationV1APIServiceHandlerFunc func(ReplaceApiregistrationV1APIServiceParams, interface{}) middleware.Responder
+type ReplaceApiregistrationV1APIServiceHandlerFunc func(ReplaceApiregistrationV1APIServiceParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceApiregistrationV1APIServiceHandlerFunc) Handle(params ReplaceApiregistrationV1APIServiceParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceApiregistrationV1APIServiceHandlerFunc) Handle(params ReplaceApiregistrationV1APIServiceParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceApiregistrationV1APIServiceHandler interface for that can handle valid replace apiregistration v1 API service params
 type ReplaceApiregistrationV1APIServiceHandler interface {
-	Handle(ReplaceApiregistrationV1APIServiceParams, interface{}) middleware.Responder
+	Handle(ReplaceApiregistrationV1APIServiceParams) middleware.Responder
 }
 
 // NewReplaceApiregistrationV1APIService creates a new http.Handler for the replace apiregistration v1 API service operation
@@ -46,25 +46,12 @@ func (o *ReplaceApiregistrationV1APIService) ServeHTTP(rw http.ResponseWriter, r
 	}
 	var Params = NewReplaceApiregistrationV1APIServiceParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

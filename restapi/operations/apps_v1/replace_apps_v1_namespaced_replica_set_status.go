@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceAppsV1NamespacedReplicaSetStatusHandlerFunc turns a function with the right signature into a replace apps v1 namespaced replica set status handler
-type ReplaceAppsV1NamespacedReplicaSetStatusHandlerFunc func(ReplaceAppsV1NamespacedReplicaSetStatusParams, interface{}) middleware.Responder
+type ReplaceAppsV1NamespacedReplicaSetStatusHandlerFunc func(ReplaceAppsV1NamespacedReplicaSetStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceAppsV1NamespacedReplicaSetStatusHandlerFunc) Handle(params ReplaceAppsV1NamespacedReplicaSetStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceAppsV1NamespacedReplicaSetStatusHandlerFunc) Handle(params ReplaceAppsV1NamespacedReplicaSetStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceAppsV1NamespacedReplicaSetStatusHandler interface for that can handle valid replace apps v1 namespaced replica set status params
 type ReplaceAppsV1NamespacedReplicaSetStatusHandler interface {
-	Handle(ReplaceAppsV1NamespacedReplicaSetStatusParams, interface{}) middleware.Responder
+	Handle(ReplaceAppsV1NamespacedReplicaSetStatusParams) middleware.Responder
 }
 
 // NewReplaceAppsV1NamespacedReplicaSetStatus creates a new http.Handler for the replace apps v1 namespaced replica set status operation
@@ -46,25 +46,12 @@ func (o *ReplaceAppsV1NamespacedReplicaSetStatus) ServeHTTP(rw http.ResponseWrit
 	}
 	var Params = NewReplaceAppsV1NamespacedReplicaSetStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

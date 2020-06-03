@@ -12,16 +12,16 @@ import (
 )
 
 // ListCoreV1PersistentVolumeHandlerFunc turns a function with the right signature into a list core v1 persistent volume handler
-type ListCoreV1PersistentVolumeHandlerFunc func(ListCoreV1PersistentVolumeParams, interface{}) middleware.Responder
+type ListCoreV1PersistentVolumeHandlerFunc func(ListCoreV1PersistentVolumeParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListCoreV1PersistentVolumeHandlerFunc) Handle(params ListCoreV1PersistentVolumeParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListCoreV1PersistentVolumeHandlerFunc) Handle(params ListCoreV1PersistentVolumeParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListCoreV1PersistentVolumeHandler interface for that can handle valid list core v1 persistent volume params
 type ListCoreV1PersistentVolumeHandler interface {
-	Handle(ListCoreV1PersistentVolumeParams, interface{}) middleware.Responder
+	Handle(ListCoreV1PersistentVolumeParams) middleware.Responder
 }
 
 // NewListCoreV1PersistentVolume creates a new http.Handler for the list core v1 persistent volume operation
@@ -46,25 +46,12 @@ func (o *ListCoreV1PersistentVolume) ServeHTTP(rw http.ResponseWriter, r *http.R
 	}
 	var Params = NewListCoreV1PersistentVolumeParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

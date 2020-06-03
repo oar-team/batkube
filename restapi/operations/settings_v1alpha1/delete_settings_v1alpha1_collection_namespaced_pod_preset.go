@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteSettingsV1alpha1CollectionNamespacedPodPresetHandlerFunc turns a function with the right signature into a delete settings v1alpha1 collection namespaced pod preset handler
-type DeleteSettingsV1alpha1CollectionNamespacedPodPresetHandlerFunc func(DeleteSettingsV1alpha1CollectionNamespacedPodPresetParams, interface{}) middleware.Responder
+type DeleteSettingsV1alpha1CollectionNamespacedPodPresetHandlerFunc func(DeleteSettingsV1alpha1CollectionNamespacedPodPresetParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteSettingsV1alpha1CollectionNamespacedPodPresetHandlerFunc) Handle(params DeleteSettingsV1alpha1CollectionNamespacedPodPresetParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteSettingsV1alpha1CollectionNamespacedPodPresetHandlerFunc) Handle(params DeleteSettingsV1alpha1CollectionNamespacedPodPresetParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteSettingsV1alpha1CollectionNamespacedPodPresetHandler interface for that can handle valid delete settings v1alpha1 collection namespaced pod preset params
 type DeleteSettingsV1alpha1CollectionNamespacedPodPresetHandler interface {
-	Handle(DeleteSettingsV1alpha1CollectionNamespacedPodPresetParams, interface{}) middleware.Responder
+	Handle(DeleteSettingsV1alpha1CollectionNamespacedPodPresetParams) middleware.Responder
 }
 
 // NewDeleteSettingsV1alpha1CollectionNamespacedPodPreset creates a new http.Handler for the delete settings v1alpha1 collection namespaced pod preset operation
@@ -46,25 +46,12 @@ func (o *DeleteSettingsV1alpha1CollectionNamespacedPodPreset) ServeHTTP(rw http.
 	}
 	var Params = NewDeleteSettingsV1alpha1CollectionNamespacedPodPresetParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

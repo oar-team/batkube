@@ -12,16 +12,16 @@ import (
 )
 
 // CreateAppsV1NamespacedStatefulSetHandlerFunc turns a function with the right signature into a create apps v1 namespaced stateful set handler
-type CreateAppsV1NamespacedStatefulSetHandlerFunc func(CreateAppsV1NamespacedStatefulSetParams, interface{}) middleware.Responder
+type CreateAppsV1NamespacedStatefulSetHandlerFunc func(CreateAppsV1NamespacedStatefulSetParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateAppsV1NamespacedStatefulSetHandlerFunc) Handle(params CreateAppsV1NamespacedStatefulSetParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateAppsV1NamespacedStatefulSetHandlerFunc) Handle(params CreateAppsV1NamespacedStatefulSetParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateAppsV1NamespacedStatefulSetHandler interface for that can handle valid create apps v1 namespaced stateful set params
 type CreateAppsV1NamespacedStatefulSetHandler interface {
-	Handle(CreateAppsV1NamespacedStatefulSetParams, interface{}) middleware.Responder
+	Handle(CreateAppsV1NamespacedStatefulSetParams) middleware.Responder
 }
 
 // NewCreateAppsV1NamespacedStatefulSet creates a new http.Handler for the create apps v1 namespaced stateful set operation
@@ -46,25 +46,12 @@ func (o *CreateAppsV1NamespacedStatefulSet) ServeHTTP(rw http.ResponseWriter, r 
 	}
 	var Params = NewCreateAppsV1NamespacedStatefulSetParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

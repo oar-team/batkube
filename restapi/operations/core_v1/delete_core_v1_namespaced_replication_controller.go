@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteCoreV1NamespacedReplicationControllerHandlerFunc turns a function with the right signature into a delete core v1 namespaced replication controller handler
-type DeleteCoreV1NamespacedReplicationControllerHandlerFunc func(DeleteCoreV1NamespacedReplicationControllerParams, interface{}) middleware.Responder
+type DeleteCoreV1NamespacedReplicationControllerHandlerFunc func(DeleteCoreV1NamespacedReplicationControllerParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteCoreV1NamespacedReplicationControllerHandlerFunc) Handle(params DeleteCoreV1NamespacedReplicationControllerParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteCoreV1NamespacedReplicationControllerHandlerFunc) Handle(params DeleteCoreV1NamespacedReplicationControllerParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteCoreV1NamespacedReplicationControllerHandler interface for that can handle valid delete core v1 namespaced replication controller params
 type DeleteCoreV1NamespacedReplicationControllerHandler interface {
-	Handle(DeleteCoreV1NamespacedReplicationControllerParams, interface{}) middleware.Responder
+	Handle(DeleteCoreV1NamespacedReplicationControllerParams) middleware.Responder
 }
 
 // NewDeleteCoreV1NamespacedReplicationController creates a new http.Handler for the delete core v1 namespaced replication controller operation
@@ -46,25 +46,12 @@ func (o *DeleteCoreV1NamespacedReplicationController) ServeHTTP(rw http.Response
 	}
 	var Params = NewDeleteCoreV1NamespacedReplicationControllerParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

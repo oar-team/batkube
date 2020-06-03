@@ -12,16 +12,16 @@ import (
 )
 
 // ReadNetworkingV1beta1NamespacedIngressStatusHandlerFunc turns a function with the right signature into a read networking v1beta1 namespaced ingress status handler
-type ReadNetworkingV1beta1NamespacedIngressStatusHandlerFunc func(ReadNetworkingV1beta1NamespacedIngressStatusParams, interface{}) middleware.Responder
+type ReadNetworkingV1beta1NamespacedIngressStatusHandlerFunc func(ReadNetworkingV1beta1NamespacedIngressStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadNetworkingV1beta1NamespacedIngressStatusHandlerFunc) Handle(params ReadNetworkingV1beta1NamespacedIngressStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadNetworkingV1beta1NamespacedIngressStatusHandlerFunc) Handle(params ReadNetworkingV1beta1NamespacedIngressStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadNetworkingV1beta1NamespacedIngressStatusHandler interface for that can handle valid read networking v1beta1 namespaced ingress status params
 type ReadNetworkingV1beta1NamespacedIngressStatusHandler interface {
-	Handle(ReadNetworkingV1beta1NamespacedIngressStatusParams, interface{}) middleware.Responder
+	Handle(ReadNetworkingV1beta1NamespacedIngressStatusParams) middleware.Responder
 }
 
 // NewReadNetworkingV1beta1NamespacedIngressStatus creates a new http.Handler for the read networking v1beta1 namespaced ingress status operation
@@ -46,25 +46,12 @@ func (o *ReadNetworkingV1beta1NamespacedIngressStatus) ServeHTTP(rw http.Respons
 	}
 	var Params = NewReadNetworkingV1beta1NamespacedIngressStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteCoreV1CollectionNamespacedPodHandlerFunc turns a function with the right signature into a delete core v1 collection namespaced pod handler
-type DeleteCoreV1CollectionNamespacedPodHandlerFunc func(DeleteCoreV1CollectionNamespacedPodParams, interface{}) middleware.Responder
+type DeleteCoreV1CollectionNamespacedPodHandlerFunc func(DeleteCoreV1CollectionNamespacedPodParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteCoreV1CollectionNamespacedPodHandlerFunc) Handle(params DeleteCoreV1CollectionNamespacedPodParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteCoreV1CollectionNamespacedPodHandlerFunc) Handle(params DeleteCoreV1CollectionNamespacedPodParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteCoreV1CollectionNamespacedPodHandler interface for that can handle valid delete core v1 collection namespaced pod params
 type DeleteCoreV1CollectionNamespacedPodHandler interface {
-	Handle(DeleteCoreV1CollectionNamespacedPodParams, interface{}) middleware.Responder
+	Handle(DeleteCoreV1CollectionNamespacedPodParams) middleware.Responder
 }
 
 // NewDeleteCoreV1CollectionNamespacedPod creates a new http.Handler for the delete core v1 collection namespaced pod operation
@@ -46,25 +46,12 @@ func (o *DeleteCoreV1CollectionNamespacedPod) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewDeleteCoreV1CollectionNamespacedPodParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

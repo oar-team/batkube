@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationHandlerFunc turns a function with the right signature into a replace admissionregistration v1beta1 mutating webhook configuration handler
-type ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationHandlerFunc func(ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationParams, interface{}) middleware.Responder
+type ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationHandlerFunc func(ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationHandlerFunc) Handle(params ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationHandlerFunc) Handle(params ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationHandler interface for that can handle valid replace admissionregistration v1beta1 mutating webhook configuration params
 type ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationHandler interface {
-	Handle(ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationParams, interface{}) middleware.Responder
+	Handle(ReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationParams) middleware.Responder
 }
 
 // NewReplaceAdmissionregistrationV1beta1MutatingWebhookConfiguration creates a new http.Handler for the replace admissionregistration v1beta1 mutating webhook configuration operation
@@ -46,25 +46,12 @@ func (o *ReplaceAdmissionregistrationV1beta1MutatingWebhookConfiguration) ServeH
 	}
 	var Params = NewReplaceAdmissionregistrationV1beta1MutatingWebhookConfigurationParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

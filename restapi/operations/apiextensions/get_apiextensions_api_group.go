@@ -12,16 +12,16 @@ import (
 )
 
 // GetApiextensionsAPIGroupHandlerFunc turns a function with the right signature into a get apiextensions API group handler
-type GetApiextensionsAPIGroupHandlerFunc func(GetApiextensionsAPIGroupParams, interface{}) middleware.Responder
+type GetApiextensionsAPIGroupHandlerFunc func(GetApiextensionsAPIGroupParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetApiextensionsAPIGroupHandlerFunc) Handle(params GetApiextensionsAPIGroupParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetApiextensionsAPIGroupHandlerFunc) Handle(params GetApiextensionsAPIGroupParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetApiextensionsAPIGroupHandler interface for that can handle valid get apiextensions API group params
 type GetApiextensionsAPIGroupHandler interface {
-	Handle(GetApiextensionsAPIGroupParams, interface{}) middleware.Responder
+	Handle(GetApiextensionsAPIGroupParams) middleware.Responder
 }
 
 // NewGetApiextensionsAPIGroup creates a new http.Handler for the get apiextensions API group operation
@@ -46,25 +46,12 @@ func (o *GetApiextensionsAPIGroup) ServeHTTP(rw http.ResponseWriter, r *http.Req
 	}
 	var Params = NewGetApiextensionsAPIGroupParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

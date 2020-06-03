@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteSchedulingV1beta1CollectionPriorityClassHandlerFunc turns a function with the right signature into a delete scheduling v1beta1 collection priority class handler
-type DeleteSchedulingV1beta1CollectionPriorityClassHandlerFunc func(DeleteSchedulingV1beta1CollectionPriorityClassParams, interface{}) middleware.Responder
+type DeleteSchedulingV1beta1CollectionPriorityClassHandlerFunc func(DeleteSchedulingV1beta1CollectionPriorityClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteSchedulingV1beta1CollectionPriorityClassHandlerFunc) Handle(params DeleteSchedulingV1beta1CollectionPriorityClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteSchedulingV1beta1CollectionPriorityClassHandlerFunc) Handle(params DeleteSchedulingV1beta1CollectionPriorityClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteSchedulingV1beta1CollectionPriorityClassHandler interface for that can handle valid delete scheduling v1beta1 collection priority class params
 type DeleteSchedulingV1beta1CollectionPriorityClassHandler interface {
-	Handle(DeleteSchedulingV1beta1CollectionPriorityClassParams, interface{}) middleware.Responder
+	Handle(DeleteSchedulingV1beta1CollectionPriorityClassParams) middleware.Responder
 }
 
 // NewDeleteSchedulingV1beta1CollectionPriorityClass creates a new http.Handler for the delete scheduling v1beta1 collection priority class operation
@@ -46,25 +46,12 @@ func (o *DeleteSchedulingV1beta1CollectionPriorityClass) ServeHTTP(rw http.Respo
 	}
 	var Params = NewDeleteSchedulingV1beta1CollectionPriorityClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // PatchCoordinationV1NamespacedLeaseHandlerFunc turns a function with the right signature into a patch coordination v1 namespaced lease handler
-type PatchCoordinationV1NamespacedLeaseHandlerFunc func(PatchCoordinationV1NamespacedLeaseParams, interface{}) middleware.Responder
+type PatchCoordinationV1NamespacedLeaseHandlerFunc func(PatchCoordinationV1NamespacedLeaseParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchCoordinationV1NamespacedLeaseHandlerFunc) Handle(params PatchCoordinationV1NamespacedLeaseParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchCoordinationV1NamespacedLeaseHandlerFunc) Handle(params PatchCoordinationV1NamespacedLeaseParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchCoordinationV1NamespacedLeaseHandler interface for that can handle valid patch coordination v1 namespaced lease params
 type PatchCoordinationV1NamespacedLeaseHandler interface {
-	Handle(PatchCoordinationV1NamespacedLeaseParams, interface{}) middleware.Responder
+	Handle(PatchCoordinationV1NamespacedLeaseParams) middleware.Responder
 }
 
 // NewPatchCoordinationV1NamespacedLease creates a new http.Handler for the patch coordination v1 namespaced lease operation
@@ -46,25 +46,12 @@ func (o *PatchCoordinationV1NamespacedLease) ServeHTTP(rw http.ResponseWriter, r
 	}
 	var Params = NewPatchCoordinationV1NamespacedLeaseParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

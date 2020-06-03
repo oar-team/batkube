@@ -12,16 +12,16 @@ import (
 )
 
 // PatchNetworkingV1NamespacedNetworkPolicyHandlerFunc turns a function with the right signature into a patch networking v1 namespaced network policy handler
-type PatchNetworkingV1NamespacedNetworkPolicyHandlerFunc func(PatchNetworkingV1NamespacedNetworkPolicyParams, interface{}) middleware.Responder
+type PatchNetworkingV1NamespacedNetworkPolicyHandlerFunc func(PatchNetworkingV1NamespacedNetworkPolicyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchNetworkingV1NamespacedNetworkPolicyHandlerFunc) Handle(params PatchNetworkingV1NamespacedNetworkPolicyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchNetworkingV1NamespacedNetworkPolicyHandlerFunc) Handle(params PatchNetworkingV1NamespacedNetworkPolicyParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchNetworkingV1NamespacedNetworkPolicyHandler interface for that can handle valid patch networking v1 namespaced network policy params
 type PatchNetworkingV1NamespacedNetworkPolicyHandler interface {
-	Handle(PatchNetworkingV1NamespacedNetworkPolicyParams, interface{}) middleware.Responder
+	Handle(PatchNetworkingV1NamespacedNetworkPolicyParams) middleware.Responder
 }
 
 // NewPatchNetworkingV1NamespacedNetworkPolicy creates a new http.Handler for the patch networking v1 namespaced network policy operation
@@ -46,25 +46,12 @@ func (o *PatchNetworkingV1NamespacedNetworkPolicy) ServeHTTP(rw http.ResponseWri
 	}
 	var Params = NewPatchNetworkingV1NamespacedNetworkPolicyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // WatchCoreV1NamespacedConfigMapHandlerFunc turns a function with the right signature into a watch core v1 namespaced config map handler
-type WatchCoreV1NamespacedConfigMapHandlerFunc func(WatchCoreV1NamespacedConfigMapParams, interface{}) middleware.Responder
+type WatchCoreV1NamespacedConfigMapHandlerFunc func(WatchCoreV1NamespacedConfigMapParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchCoreV1NamespacedConfigMapHandlerFunc) Handle(params WatchCoreV1NamespacedConfigMapParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchCoreV1NamespacedConfigMapHandlerFunc) Handle(params WatchCoreV1NamespacedConfigMapParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchCoreV1NamespacedConfigMapHandler interface for that can handle valid watch core v1 namespaced config map params
 type WatchCoreV1NamespacedConfigMapHandler interface {
-	Handle(WatchCoreV1NamespacedConfigMapParams, interface{}) middleware.Responder
+	Handle(WatchCoreV1NamespacedConfigMapParams) middleware.Responder
 }
 
 // NewWatchCoreV1NamespacedConfigMap creates a new http.Handler for the watch core v1 namespaced config map operation
@@ -46,25 +46,12 @@ func (o *WatchCoreV1NamespacedConfigMap) ServeHTTP(rw http.ResponseWriter, r *ht
 	}
 	var Params = NewWatchCoreV1NamespacedConfigMapParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

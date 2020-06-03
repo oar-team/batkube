@@ -12,16 +12,16 @@ import (
 )
 
 // WatchCoreV1NamespacedSecretListHandlerFunc turns a function with the right signature into a watch core v1 namespaced secret list handler
-type WatchCoreV1NamespacedSecretListHandlerFunc func(WatchCoreV1NamespacedSecretListParams, interface{}) middleware.Responder
+type WatchCoreV1NamespacedSecretListHandlerFunc func(WatchCoreV1NamespacedSecretListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchCoreV1NamespacedSecretListHandlerFunc) Handle(params WatchCoreV1NamespacedSecretListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchCoreV1NamespacedSecretListHandlerFunc) Handle(params WatchCoreV1NamespacedSecretListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchCoreV1NamespacedSecretListHandler interface for that can handle valid watch core v1 namespaced secret list params
 type WatchCoreV1NamespacedSecretListHandler interface {
-	Handle(WatchCoreV1NamespacedSecretListParams, interface{}) middleware.Responder
+	Handle(WatchCoreV1NamespacedSecretListParams) middleware.Responder
 }
 
 // NewWatchCoreV1NamespacedSecretList creates a new http.Handler for the watch core v1 namespaced secret list operation
@@ -46,25 +46,12 @@ func (o *WatchCoreV1NamespacedSecretList) ServeHTTP(rw http.ResponseWriter, r *h
 	}
 	var Params = NewWatchCoreV1NamespacedSecretListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

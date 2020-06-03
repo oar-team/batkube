@@ -12,16 +12,16 @@ import (
 )
 
 // WatchCoreV1NamespacedLimitRangeListHandlerFunc turns a function with the right signature into a watch core v1 namespaced limit range list handler
-type WatchCoreV1NamespacedLimitRangeListHandlerFunc func(WatchCoreV1NamespacedLimitRangeListParams, interface{}) middleware.Responder
+type WatchCoreV1NamespacedLimitRangeListHandlerFunc func(WatchCoreV1NamespacedLimitRangeListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchCoreV1NamespacedLimitRangeListHandlerFunc) Handle(params WatchCoreV1NamespacedLimitRangeListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchCoreV1NamespacedLimitRangeListHandlerFunc) Handle(params WatchCoreV1NamespacedLimitRangeListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchCoreV1NamespacedLimitRangeListHandler interface for that can handle valid watch core v1 namespaced limit range list params
 type WatchCoreV1NamespacedLimitRangeListHandler interface {
-	Handle(WatchCoreV1NamespacedLimitRangeListParams, interface{}) middleware.Responder
+	Handle(WatchCoreV1NamespacedLimitRangeListParams) middleware.Responder
 }
 
 // NewWatchCoreV1NamespacedLimitRangeList creates a new http.Handler for the watch core v1 namespaced limit range list operation
@@ -46,25 +46,12 @@ func (o *WatchCoreV1NamespacedLimitRangeList) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewWatchCoreV1NamespacedLimitRangeListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

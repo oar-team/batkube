@@ -12,16 +12,16 @@ import (
 )
 
 // WatchAppsV1NamespacedStatefulSetHandlerFunc turns a function with the right signature into a watch apps v1 namespaced stateful set handler
-type WatchAppsV1NamespacedStatefulSetHandlerFunc func(WatchAppsV1NamespacedStatefulSetParams, interface{}) middleware.Responder
+type WatchAppsV1NamespacedStatefulSetHandlerFunc func(WatchAppsV1NamespacedStatefulSetParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchAppsV1NamespacedStatefulSetHandlerFunc) Handle(params WatchAppsV1NamespacedStatefulSetParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchAppsV1NamespacedStatefulSetHandlerFunc) Handle(params WatchAppsV1NamespacedStatefulSetParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchAppsV1NamespacedStatefulSetHandler interface for that can handle valid watch apps v1 namespaced stateful set params
 type WatchAppsV1NamespacedStatefulSetHandler interface {
-	Handle(WatchAppsV1NamespacedStatefulSetParams, interface{}) middleware.Responder
+	Handle(WatchAppsV1NamespacedStatefulSetParams) middleware.Responder
 }
 
 // NewWatchAppsV1NamespacedStatefulSet creates a new http.Handler for the watch apps v1 namespaced stateful set operation
@@ -46,25 +46,12 @@ func (o *WatchAppsV1NamespacedStatefulSet) ServeHTTP(rw http.ResponseWriter, r *
 	}
 	var Params = NewWatchAppsV1NamespacedStatefulSetParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

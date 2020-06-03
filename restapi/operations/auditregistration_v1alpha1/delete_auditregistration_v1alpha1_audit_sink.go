@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteAuditregistrationV1alpha1AuditSinkHandlerFunc turns a function with the right signature into a delete auditregistration v1alpha1 audit sink handler
-type DeleteAuditregistrationV1alpha1AuditSinkHandlerFunc func(DeleteAuditregistrationV1alpha1AuditSinkParams, interface{}) middleware.Responder
+type DeleteAuditregistrationV1alpha1AuditSinkHandlerFunc func(DeleteAuditregistrationV1alpha1AuditSinkParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteAuditregistrationV1alpha1AuditSinkHandlerFunc) Handle(params DeleteAuditregistrationV1alpha1AuditSinkParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteAuditregistrationV1alpha1AuditSinkHandlerFunc) Handle(params DeleteAuditregistrationV1alpha1AuditSinkParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteAuditregistrationV1alpha1AuditSinkHandler interface for that can handle valid delete auditregistration v1alpha1 audit sink params
 type DeleteAuditregistrationV1alpha1AuditSinkHandler interface {
-	Handle(DeleteAuditregistrationV1alpha1AuditSinkParams, interface{}) middleware.Responder
+	Handle(DeleteAuditregistrationV1alpha1AuditSinkParams) middleware.Responder
 }
 
 // NewDeleteAuditregistrationV1alpha1AuditSink creates a new http.Handler for the delete auditregistration v1alpha1 audit sink operation
@@ -46,25 +46,12 @@ func (o *DeleteAuditregistrationV1alpha1AuditSink) ServeHTTP(rw http.ResponseWri
 	}
 	var Params = NewDeleteAuditregistrationV1alpha1AuditSinkParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

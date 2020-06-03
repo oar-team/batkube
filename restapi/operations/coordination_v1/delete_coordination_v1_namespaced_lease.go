@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteCoordinationV1NamespacedLeaseHandlerFunc turns a function with the right signature into a delete coordination v1 namespaced lease handler
-type DeleteCoordinationV1NamespacedLeaseHandlerFunc func(DeleteCoordinationV1NamespacedLeaseParams, interface{}) middleware.Responder
+type DeleteCoordinationV1NamespacedLeaseHandlerFunc func(DeleteCoordinationV1NamespacedLeaseParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteCoordinationV1NamespacedLeaseHandlerFunc) Handle(params DeleteCoordinationV1NamespacedLeaseParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteCoordinationV1NamespacedLeaseHandlerFunc) Handle(params DeleteCoordinationV1NamespacedLeaseParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteCoordinationV1NamespacedLeaseHandler interface for that can handle valid delete coordination v1 namespaced lease params
 type DeleteCoordinationV1NamespacedLeaseHandler interface {
-	Handle(DeleteCoordinationV1NamespacedLeaseParams, interface{}) middleware.Responder
+	Handle(DeleteCoordinationV1NamespacedLeaseParams) middleware.Responder
 }
 
 // NewDeleteCoordinationV1NamespacedLease creates a new http.Handler for the delete coordination v1 namespaced lease operation
@@ -46,25 +46,12 @@ func (o *DeleteCoordinationV1NamespacedLease) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewDeleteCoordinationV1NamespacedLeaseParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

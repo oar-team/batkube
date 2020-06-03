@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceCertificatesV1beta1CertificateSigningRequestApprovalHandlerFunc turns a function with the right signature into a replace certificates v1beta1 certificate signing request approval handler
-type ReplaceCertificatesV1beta1CertificateSigningRequestApprovalHandlerFunc func(ReplaceCertificatesV1beta1CertificateSigningRequestApprovalParams, interface{}) middleware.Responder
+type ReplaceCertificatesV1beta1CertificateSigningRequestApprovalHandlerFunc func(ReplaceCertificatesV1beta1CertificateSigningRequestApprovalParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceCertificatesV1beta1CertificateSigningRequestApprovalHandlerFunc) Handle(params ReplaceCertificatesV1beta1CertificateSigningRequestApprovalParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceCertificatesV1beta1CertificateSigningRequestApprovalHandlerFunc) Handle(params ReplaceCertificatesV1beta1CertificateSigningRequestApprovalParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceCertificatesV1beta1CertificateSigningRequestApprovalHandler interface for that can handle valid replace certificates v1beta1 certificate signing request approval params
 type ReplaceCertificatesV1beta1CertificateSigningRequestApprovalHandler interface {
-	Handle(ReplaceCertificatesV1beta1CertificateSigningRequestApprovalParams, interface{}) middleware.Responder
+	Handle(ReplaceCertificatesV1beta1CertificateSigningRequestApprovalParams) middleware.Responder
 }
 
 // NewReplaceCertificatesV1beta1CertificateSigningRequestApproval creates a new http.Handler for the replace certificates v1beta1 certificate signing request approval operation
@@ -46,25 +46,12 @@ func (o *ReplaceCertificatesV1beta1CertificateSigningRequestApproval) ServeHTTP(
 	}
 	var Params = NewReplaceCertificatesV1beta1CertificateSigningRequestApprovalParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // GetEventsAPIGroupHandlerFunc turns a function with the right signature into a get events API group handler
-type GetEventsAPIGroupHandlerFunc func(GetEventsAPIGroupParams, interface{}) middleware.Responder
+type GetEventsAPIGroupHandlerFunc func(GetEventsAPIGroupParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetEventsAPIGroupHandlerFunc) Handle(params GetEventsAPIGroupParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetEventsAPIGroupHandlerFunc) Handle(params GetEventsAPIGroupParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetEventsAPIGroupHandler interface for that can handle valid get events API group params
 type GetEventsAPIGroupHandler interface {
-	Handle(GetEventsAPIGroupParams, interface{}) middleware.Responder
+	Handle(GetEventsAPIGroupParams) middleware.Responder
 }
 
 // NewGetEventsAPIGroup creates a new http.Handler for the get events API group operation
@@ -46,25 +46,12 @@ func (o *GetEventsAPIGroup) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	var Params = NewGetEventsAPIGroupParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

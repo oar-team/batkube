@@ -12,16 +12,16 @@ import (
 )
 
 // CreateStorageV1beta1CSIDriverHandlerFunc turns a function with the right signature into a create storage v1beta1 c s i driver handler
-type CreateStorageV1beta1CSIDriverHandlerFunc func(CreateStorageV1beta1CSIDriverParams, interface{}) middleware.Responder
+type CreateStorageV1beta1CSIDriverHandlerFunc func(CreateStorageV1beta1CSIDriverParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateStorageV1beta1CSIDriverHandlerFunc) Handle(params CreateStorageV1beta1CSIDriverParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateStorageV1beta1CSIDriverHandlerFunc) Handle(params CreateStorageV1beta1CSIDriverParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateStorageV1beta1CSIDriverHandler interface for that can handle valid create storage v1beta1 c s i driver params
 type CreateStorageV1beta1CSIDriverHandler interface {
-	Handle(CreateStorageV1beta1CSIDriverParams, interface{}) middleware.Responder
+	Handle(CreateStorageV1beta1CSIDriverParams) middleware.Responder
 }
 
 // NewCreateStorageV1beta1CSIDriver creates a new http.Handler for the create storage v1beta1 c s i driver operation
@@ -46,25 +46,12 @@ func (o *CreateStorageV1beta1CSIDriver) ServeHTTP(rw http.ResponseWriter, r *htt
 	}
 	var Params = NewCreateStorageV1beta1CSIDriverParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // ConnectCoreV1DeleteNamespacedPodProxyHandlerFunc turns a function with the right signature into a connect core v1 delete namespaced pod proxy handler
-type ConnectCoreV1DeleteNamespacedPodProxyHandlerFunc func(ConnectCoreV1DeleteNamespacedPodProxyParams, interface{}) middleware.Responder
+type ConnectCoreV1DeleteNamespacedPodProxyHandlerFunc func(ConnectCoreV1DeleteNamespacedPodProxyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ConnectCoreV1DeleteNamespacedPodProxyHandlerFunc) Handle(params ConnectCoreV1DeleteNamespacedPodProxyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ConnectCoreV1DeleteNamespacedPodProxyHandlerFunc) Handle(params ConnectCoreV1DeleteNamespacedPodProxyParams) middleware.Responder {
+	return fn(params)
 }
 
 // ConnectCoreV1DeleteNamespacedPodProxyHandler interface for that can handle valid connect core v1 delete namespaced pod proxy params
 type ConnectCoreV1DeleteNamespacedPodProxyHandler interface {
-	Handle(ConnectCoreV1DeleteNamespacedPodProxyParams, interface{}) middleware.Responder
+	Handle(ConnectCoreV1DeleteNamespacedPodProxyParams) middleware.Responder
 }
 
 // NewConnectCoreV1DeleteNamespacedPodProxy creates a new http.Handler for the connect core v1 delete namespaced pod proxy operation
@@ -46,25 +46,12 @@ func (o *ConnectCoreV1DeleteNamespacedPodProxy) ServeHTTP(rw http.ResponseWriter
 	}
 	var Params = NewConnectCoreV1DeleteNamespacedPodProxyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

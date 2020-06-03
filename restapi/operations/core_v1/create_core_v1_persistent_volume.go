@@ -12,16 +12,16 @@ import (
 )
 
 // CreateCoreV1PersistentVolumeHandlerFunc turns a function with the right signature into a create core v1 persistent volume handler
-type CreateCoreV1PersistentVolumeHandlerFunc func(CreateCoreV1PersistentVolumeParams, interface{}) middleware.Responder
+type CreateCoreV1PersistentVolumeHandlerFunc func(CreateCoreV1PersistentVolumeParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateCoreV1PersistentVolumeHandlerFunc) Handle(params CreateCoreV1PersistentVolumeParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateCoreV1PersistentVolumeHandlerFunc) Handle(params CreateCoreV1PersistentVolumeParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateCoreV1PersistentVolumeHandler interface for that can handle valid create core v1 persistent volume params
 type CreateCoreV1PersistentVolumeHandler interface {
-	Handle(CreateCoreV1PersistentVolumeParams, interface{}) middleware.Responder
+	Handle(CreateCoreV1PersistentVolumeParams) middleware.Responder
 }
 
 // NewCreateCoreV1PersistentVolume creates a new http.Handler for the create core v1 persistent volume operation
@@ -46,25 +46,12 @@ func (o *CreateCoreV1PersistentVolume) ServeHTTP(rw http.ResponseWriter, r *http
 	}
 	var Params = NewCreateCoreV1PersistentVolumeParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

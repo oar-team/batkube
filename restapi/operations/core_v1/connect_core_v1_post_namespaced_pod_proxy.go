@@ -12,16 +12,16 @@ import (
 )
 
 // ConnectCoreV1PostNamespacedPodProxyHandlerFunc turns a function with the right signature into a connect core v1 post namespaced pod proxy handler
-type ConnectCoreV1PostNamespacedPodProxyHandlerFunc func(ConnectCoreV1PostNamespacedPodProxyParams, interface{}) middleware.Responder
+type ConnectCoreV1PostNamespacedPodProxyHandlerFunc func(ConnectCoreV1PostNamespacedPodProxyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ConnectCoreV1PostNamespacedPodProxyHandlerFunc) Handle(params ConnectCoreV1PostNamespacedPodProxyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ConnectCoreV1PostNamespacedPodProxyHandlerFunc) Handle(params ConnectCoreV1PostNamespacedPodProxyParams) middleware.Responder {
+	return fn(params)
 }
 
 // ConnectCoreV1PostNamespacedPodProxyHandler interface for that can handle valid connect core v1 post namespaced pod proxy params
 type ConnectCoreV1PostNamespacedPodProxyHandler interface {
-	Handle(ConnectCoreV1PostNamespacedPodProxyParams, interface{}) middleware.Responder
+	Handle(ConnectCoreV1PostNamespacedPodProxyParams) middleware.Responder
 }
 
 // NewConnectCoreV1PostNamespacedPodProxy creates a new http.Handler for the connect core v1 post namespaced pod proxy operation
@@ -46,25 +46,12 @@ func (o *ConnectCoreV1PostNamespacedPodProxy) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewConnectCoreV1PostNamespacedPodProxyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

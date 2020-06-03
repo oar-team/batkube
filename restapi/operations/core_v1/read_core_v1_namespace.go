@@ -12,16 +12,16 @@ import (
 )
 
 // ReadCoreV1NamespaceHandlerFunc turns a function with the right signature into a read core v1 namespace handler
-type ReadCoreV1NamespaceHandlerFunc func(ReadCoreV1NamespaceParams, interface{}) middleware.Responder
+type ReadCoreV1NamespaceHandlerFunc func(ReadCoreV1NamespaceParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadCoreV1NamespaceHandlerFunc) Handle(params ReadCoreV1NamespaceParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadCoreV1NamespaceHandlerFunc) Handle(params ReadCoreV1NamespaceParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadCoreV1NamespaceHandler interface for that can handle valid read core v1 namespace params
 type ReadCoreV1NamespaceHandler interface {
-	Handle(ReadCoreV1NamespaceParams, interface{}) middleware.Responder
+	Handle(ReadCoreV1NamespaceParams) middleware.Responder
 }
 
 // NewReadCoreV1Namespace creates a new http.Handler for the read core v1 namespace operation
@@ -46,25 +46,12 @@ func (o *ReadCoreV1Namespace) ServeHTTP(rw http.ResponseWriter, r *http.Request)
 	}
 	var Params = NewReadCoreV1NamespaceParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

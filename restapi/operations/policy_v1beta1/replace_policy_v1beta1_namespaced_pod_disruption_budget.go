@@ -12,16 +12,16 @@ import (
 )
 
 // ReplacePolicyV1beta1NamespacedPodDisruptionBudgetHandlerFunc turns a function with the right signature into a replace policy v1beta1 namespaced pod disruption budget handler
-type ReplacePolicyV1beta1NamespacedPodDisruptionBudgetHandlerFunc func(ReplacePolicyV1beta1NamespacedPodDisruptionBudgetParams, interface{}) middleware.Responder
+type ReplacePolicyV1beta1NamespacedPodDisruptionBudgetHandlerFunc func(ReplacePolicyV1beta1NamespacedPodDisruptionBudgetParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplacePolicyV1beta1NamespacedPodDisruptionBudgetHandlerFunc) Handle(params ReplacePolicyV1beta1NamespacedPodDisruptionBudgetParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplacePolicyV1beta1NamespacedPodDisruptionBudgetHandlerFunc) Handle(params ReplacePolicyV1beta1NamespacedPodDisruptionBudgetParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplacePolicyV1beta1NamespacedPodDisruptionBudgetHandler interface for that can handle valid replace policy v1beta1 namespaced pod disruption budget params
 type ReplacePolicyV1beta1NamespacedPodDisruptionBudgetHandler interface {
-	Handle(ReplacePolicyV1beta1NamespacedPodDisruptionBudgetParams, interface{}) middleware.Responder
+	Handle(ReplacePolicyV1beta1NamespacedPodDisruptionBudgetParams) middleware.Responder
 }
 
 // NewReplacePolicyV1beta1NamespacedPodDisruptionBudget creates a new http.Handler for the replace policy v1beta1 namespaced pod disruption budget operation
@@ -46,25 +46,12 @@ func (o *ReplacePolicyV1beta1NamespacedPodDisruptionBudget) ServeHTTP(rw http.Re
 	}
 	var Params = NewReplacePolicyV1beta1NamespacedPodDisruptionBudgetParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

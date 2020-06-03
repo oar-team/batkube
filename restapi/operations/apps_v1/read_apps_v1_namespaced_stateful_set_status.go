@@ -12,16 +12,16 @@ import (
 )
 
 // ReadAppsV1NamespacedStatefulSetStatusHandlerFunc turns a function with the right signature into a read apps v1 namespaced stateful set status handler
-type ReadAppsV1NamespacedStatefulSetStatusHandlerFunc func(ReadAppsV1NamespacedStatefulSetStatusParams, interface{}) middleware.Responder
+type ReadAppsV1NamespacedStatefulSetStatusHandlerFunc func(ReadAppsV1NamespacedStatefulSetStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadAppsV1NamespacedStatefulSetStatusHandlerFunc) Handle(params ReadAppsV1NamespacedStatefulSetStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadAppsV1NamespacedStatefulSetStatusHandlerFunc) Handle(params ReadAppsV1NamespacedStatefulSetStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadAppsV1NamespacedStatefulSetStatusHandler interface for that can handle valid read apps v1 namespaced stateful set status params
 type ReadAppsV1NamespacedStatefulSetStatusHandler interface {
-	Handle(ReadAppsV1NamespacedStatefulSetStatusParams, interface{}) middleware.Responder
+	Handle(ReadAppsV1NamespacedStatefulSetStatusParams) middleware.Responder
 }
 
 // NewReadAppsV1NamespacedStatefulSetStatus creates a new http.Handler for the read apps v1 namespaced stateful set status operation
@@ -46,25 +46,12 @@ func (o *ReadAppsV1NamespacedStatefulSetStatus) ServeHTTP(rw http.ResponseWriter
 	}
 	var Params = NewReadAppsV1NamespacedStatefulSetStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

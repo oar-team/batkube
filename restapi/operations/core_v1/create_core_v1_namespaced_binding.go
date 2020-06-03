@@ -12,16 +12,16 @@ import (
 )
 
 // CreateCoreV1NamespacedBindingHandlerFunc turns a function with the right signature into a create core v1 namespaced binding handler
-type CreateCoreV1NamespacedBindingHandlerFunc func(CreateCoreV1NamespacedBindingParams, interface{}) middleware.Responder
+type CreateCoreV1NamespacedBindingHandlerFunc func(CreateCoreV1NamespacedBindingParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateCoreV1NamespacedBindingHandlerFunc) Handle(params CreateCoreV1NamespacedBindingParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateCoreV1NamespacedBindingHandlerFunc) Handle(params CreateCoreV1NamespacedBindingParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateCoreV1NamespacedBindingHandler interface for that can handle valid create core v1 namespaced binding params
 type CreateCoreV1NamespacedBindingHandler interface {
-	Handle(CreateCoreV1NamespacedBindingParams, interface{}) middleware.Responder
+	Handle(CreateCoreV1NamespacedBindingParams) middleware.Responder
 }
 
 // NewCreateCoreV1NamespacedBinding creates a new http.Handler for the create core v1 namespaced binding operation
@@ -46,25 +46,12 @@ func (o *CreateCoreV1NamespacedBinding) ServeHTTP(rw http.ResponseWriter, r *htt
 	}
 	var Params = NewCreateCoreV1NamespacedBindingParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

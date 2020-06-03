@@ -12,16 +12,16 @@ import (
 )
 
 // WatchNetworkingV1beta1IngressClassListHandlerFunc turns a function with the right signature into a watch networking v1beta1 ingress class list handler
-type WatchNetworkingV1beta1IngressClassListHandlerFunc func(WatchNetworkingV1beta1IngressClassListParams, interface{}) middleware.Responder
+type WatchNetworkingV1beta1IngressClassListHandlerFunc func(WatchNetworkingV1beta1IngressClassListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchNetworkingV1beta1IngressClassListHandlerFunc) Handle(params WatchNetworkingV1beta1IngressClassListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchNetworkingV1beta1IngressClassListHandlerFunc) Handle(params WatchNetworkingV1beta1IngressClassListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchNetworkingV1beta1IngressClassListHandler interface for that can handle valid watch networking v1beta1 ingress class list params
 type WatchNetworkingV1beta1IngressClassListHandler interface {
-	Handle(WatchNetworkingV1beta1IngressClassListParams, interface{}) middleware.Responder
+	Handle(WatchNetworkingV1beta1IngressClassListParams) middleware.Responder
 }
 
 // NewWatchNetworkingV1beta1IngressClassList creates a new http.Handler for the watch networking v1beta1 ingress class list operation
@@ -46,25 +46,12 @@ func (o *WatchNetworkingV1beta1IngressClassList) ServeHTTP(rw http.ResponseWrite
 	}
 	var Params = NewWatchNetworkingV1beta1IngressClassListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

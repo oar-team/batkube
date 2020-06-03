@@ -12,16 +12,16 @@ import (
 )
 
 // PatchSchedulingV1alpha1PriorityClassHandlerFunc turns a function with the right signature into a patch scheduling v1alpha1 priority class handler
-type PatchSchedulingV1alpha1PriorityClassHandlerFunc func(PatchSchedulingV1alpha1PriorityClassParams, interface{}) middleware.Responder
+type PatchSchedulingV1alpha1PriorityClassHandlerFunc func(PatchSchedulingV1alpha1PriorityClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchSchedulingV1alpha1PriorityClassHandlerFunc) Handle(params PatchSchedulingV1alpha1PriorityClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchSchedulingV1alpha1PriorityClassHandlerFunc) Handle(params PatchSchedulingV1alpha1PriorityClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchSchedulingV1alpha1PriorityClassHandler interface for that can handle valid patch scheduling v1alpha1 priority class params
 type PatchSchedulingV1alpha1PriorityClassHandler interface {
-	Handle(PatchSchedulingV1alpha1PriorityClassParams, interface{}) middleware.Responder
+	Handle(PatchSchedulingV1alpha1PriorityClassParams) middleware.Responder
 }
 
 // NewPatchSchedulingV1alpha1PriorityClass creates a new http.Handler for the patch scheduling v1alpha1 priority class operation
@@ -46,25 +46,12 @@ func (o *PatchSchedulingV1alpha1PriorityClass) ServeHTTP(rw http.ResponseWriter,
 	}
 	var Params = NewPatchSchedulingV1alpha1PriorityClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // WatchStorageV1CSINodeListHandlerFunc turns a function with the right signature into a watch storage v1 c s i node list handler
-type WatchStorageV1CSINodeListHandlerFunc func(WatchStorageV1CSINodeListParams, interface{}) middleware.Responder
+type WatchStorageV1CSINodeListHandlerFunc func(WatchStorageV1CSINodeListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchStorageV1CSINodeListHandlerFunc) Handle(params WatchStorageV1CSINodeListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchStorageV1CSINodeListHandlerFunc) Handle(params WatchStorageV1CSINodeListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchStorageV1CSINodeListHandler interface for that can handle valid watch storage v1 c s i node list params
 type WatchStorageV1CSINodeListHandler interface {
-	Handle(WatchStorageV1CSINodeListParams, interface{}) middleware.Responder
+	Handle(WatchStorageV1CSINodeListParams) middleware.Responder
 }
 
 // NewWatchStorageV1CSINodeList creates a new http.Handler for the watch storage v1 c s i node list operation
@@ -46,25 +46,12 @@ func (o *WatchStorageV1CSINodeList) ServeHTTP(rw http.ResponseWriter, r *http.Re
 	}
 	var Params = NewWatchStorageV1CSINodeListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

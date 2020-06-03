@@ -12,16 +12,16 @@ import (
 )
 
 // ReadBatchV2alpha1NamespacedCronJobHandlerFunc turns a function with the right signature into a read batch v2alpha1 namespaced cron job handler
-type ReadBatchV2alpha1NamespacedCronJobHandlerFunc func(ReadBatchV2alpha1NamespacedCronJobParams, interface{}) middleware.Responder
+type ReadBatchV2alpha1NamespacedCronJobHandlerFunc func(ReadBatchV2alpha1NamespacedCronJobParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadBatchV2alpha1NamespacedCronJobHandlerFunc) Handle(params ReadBatchV2alpha1NamespacedCronJobParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadBatchV2alpha1NamespacedCronJobHandlerFunc) Handle(params ReadBatchV2alpha1NamespacedCronJobParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadBatchV2alpha1NamespacedCronJobHandler interface for that can handle valid read batch v2alpha1 namespaced cron job params
 type ReadBatchV2alpha1NamespacedCronJobHandler interface {
-	Handle(ReadBatchV2alpha1NamespacedCronJobParams, interface{}) middleware.Responder
+	Handle(ReadBatchV2alpha1NamespacedCronJobParams) middleware.Responder
 }
 
 // NewReadBatchV2alpha1NamespacedCronJob creates a new http.Handler for the read batch v2alpha1 namespaced cron job operation
@@ -46,25 +46,12 @@ func (o *ReadBatchV2alpha1NamespacedCronJob) ServeHTTP(rw http.ResponseWriter, r
 	}
 	var Params = NewReadBatchV2alpha1NamespacedCronJobParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceCoreV1PersistentVolumeHandlerFunc turns a function with the right signature into a replace core v1 persistent volume handler
-type ReplaceCoreV1PersistentVolumeHandlerFunc func(ReplaceCoreV1PersistentVolumeParams, interface{}) middleware.Responder
+type ReplaceCoreV1PersistentVolumeHandlerFunc func(ReplaceCoreV1PersistentVolumeParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceCoreV1PersistentVolumeHandlerFunc) Handle(params ReplaceCoreV1PersistentVolumeParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceCoreV1PersistentVolumeHandlerFunc) Handle(params ReplaceCoreV1PersistentVolumeParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceCoreV1PersistentVolumeHandler interface for that can handle valid replace core v1 persistent volume params
 type ReplaceCoreV1PersistentVolumeHandler interface {
-	Handle(ReplaceCoreV1PersistentVolumeParams, interface{}) middleware.Responder
+	Handle(ReplaceCoreV1PersistentVolumeParams) middleware.Responder
 }
 
 // NewReplaceCoreV1PersistentVolume creates a new http.Handler for the replace core v1 persistent volume operation
@@ -46,25 +46,12 @@ func (o *ReplaceCoreV1PersistentVolume) ServeHTTP(rw http.ResponseWriter, r *htt
 	}
 	var Params = NewReplaceCoreV1PersistentVolumeParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

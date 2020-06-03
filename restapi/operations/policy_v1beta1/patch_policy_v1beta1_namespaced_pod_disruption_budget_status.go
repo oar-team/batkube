@@ -12,16 +12,16 @@ import (
 )
 
 // PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusHandlerFunc turns a function with the right signature into a patch policy v1beta1 namespaced pod disruption budget status handler
-type PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusHandlerFunc func(PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusParams, interface{}) middleware.Responder
+type PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusHandlerFunc func(PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusHandlerFunc) Handle(params PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusHandlerFunc) Handle(params PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusHandler interface for that can handle valid patch policy v1beta1 namespaced pod disruption budget status params
 type PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusHandler interface {
-	Handle(PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusParams, interface{}) middleware.Responder
+	Handle(PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusParams) middleware.Responder
 }
 
 // NewPatchPolicyV1beta1NamespacedPodDisruptionBudgetStatus creates a new http.Handler for the patch policy v1beta1 namespaced pod disruption budget status operation
@@ -46,25 +46,12 @@ func (o *PatchPolicyV1beta1NamespacedPodDisruptionBudgetStatus) ServeHTTP(rw htt
 	}
 	var Params = NewPatchPolicyV1beta1NamespacedPodDisruptionBudgetStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

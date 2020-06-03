@@ -157,8 +157,9 @@ func Run(batEndpoint string) {
 		// Get pending events to send to Batsim
 		elapsedSinceLastMessage := time.Duration(0)
 		lastMessageTime := time.Now()
-		timeout := 1000 * time.Millisecond
+		timeout := 500 * time.Millisecond
 		stopReceivingEvents := false
+		stopCondition := "non-empty"
 		for !stopReceivingEvents {
 			updateNow(now, batMsg.Now)
 			select {
@@ -178,9 +179,17 @@ func Run(batEndpoint string) {
 				batMsg.Events = append(batMsg.Events, executeJob)
 				log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
 			default:
-				elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
-				if elapsedSinceLastMessage >= timeout {
-					stopReceivingEvents = true
+				// TODO : use masks to parameterize stop conditions.
+				switch stopCondition {
+				case "non-empty":
+					if len(batMsg.Events) > 0 {
+						stopReceivingEvents = true
+					}
+				case "timeout":
+					elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
+					if elapsedSinceLastMessage >= timeout {
+						stopReceivingEvents = true
+					}
 				}
 			}
 		}

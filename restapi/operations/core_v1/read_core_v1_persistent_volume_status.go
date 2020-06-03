@@ -12,16 +12,16 @@ import (
 )
 
 // ReadCoreV1PersistentVolumeStatusHandlerFunc turns a function with the right signature into a read core v1 persistent volume status handler
-type ReadCoreV1PersistentVolumeStatusHandlerFunc func(ReadCoreV1PersistentVolumeStatusParams, interface{}) middleware.Responder
+type ReadCoreV1PersistentVolumeStatusHandlerFunc func(ReadCoreV1PersistentVolumeStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadCoreV1PersistentVolumeStatusHandlerFunc) Handle(params ReadCoreV1PersistentVolumeStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadCoreV1PersistentVolumeStatusHandlerFunc) Handle(params ReadCoreV1PersistentVolumeStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadCoreV1PersistentVolumeStatusHandler interface for that can handle valid read core v1 persistent volume status params
 type ReadCoreV1PersistentVolumeStatusHandler interface {
-	Handle(ReadCoreV1PersistentVolumeStatusParams, interface{}) middleware.Responder
+	Handle(ReadCoreV1PersistentVolumeStatusParams) middleware.Responder
 }
 
 // NewReadCoreV1PersistentVolumeStatus creates a new http.Handler for the read core v1 persistent volume status operation
@@ -46,25 +46,12 @@ func (o *ReadCoreV1PersistentVolumeStatus) ServeHTTP(rw http.ResponseWriter, r *
 	}
 	var Params = NewReadCoreV1PersistentVolumeStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

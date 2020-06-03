@@ -12,16 +12,16 @@ import (
 )
 
 // PatchCoreV1PersistentVolumeStatusHandlerFunc turns a function with the right signature into a patch core v1 persistent volume status handler
-type PatchCoreV1PersistentVolumeStatusHandlerFunc func(PatchCoreV1PersistentVolumeStatusParams, interface{}) middleware.Responder
+type PatchCoreV1PersistentVolumeStatusHandlerFunc func(PatchCoreV1PersistentVolumeStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchCoreV1PersistentVolumeStatusHandlerFunc) Handle(params PatchCoreV1PersistentVolumeStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchCoreV1PersistentVolumeStatusHandlerFunc) Handle(params PatchCoreV1PersistentVolumeStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchCoreV1PersistentVolumeStatusHandler interface for that can handle valid patch core v1 persistent volume status params
 type PatchCoreV1PersistentVolumeStatusHandler interface {
-	Handle(PatchCoreV1PersistentVolumeStatusParams, interface{}) middleware.Responder
+	Handle(PatchCoreV1PersistentVolumeStatusParams) middleware.Responder
 }
 
 // NewPatchCoreV1PersistentVolumeStatus creates a new http.Handler for the patch core v1 persistent volume status operation
@@ -46,25 +46,12 @@ func (o *PatchCoreV1PersistentVolumeStatus) ServeHTTP(rw http.ResponseWriter, r 
 	}
 	var Params = NewPatchCoreV1PersistentVolumeStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

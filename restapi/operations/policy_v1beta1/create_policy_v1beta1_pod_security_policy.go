@@ -12,16 +12,16 @@ import (
 )
 
 // CreatePolicyV1beta1PodSecurityPolicyHandlerFunc turns a function with the right signature into a create policy v1beta1 pod security policy handler
-type CreatePolicyV1beta1PodSecurityPolicyHandlerFunc func(CreatePolicyV1beta1PodSecurityPolicyParams, interface{}) middleware.Responder
+type CreatePolicyV1beta1PodSecurityPolicyHandlerFunc func(CreatePolicyV1beta1PodSecurityPolicyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreatePolicyV1beta1PodSecurityPolicyHandlerFunc) Handle(params CreatePolicyV1beta1PodSecurityPolicyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreatePolicyV1beta1PodSecurityPolicyHandlerFunc) Handle(params CreatePolicyV1beta1PodSecurityPolicyParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreatePolicyV1beta1PodSecurityPolicyHandler interface for that can handle valid create policy v1beta1 pod security policy params
 type CreatePolicyV1beta1PodSecurityPolicyHandler interface {
-	Handle(CreatePolicyV1beta1PodSecurityPolicyParams, interface{}) middleware.Responder
+	Handle(CreatePolicyV1beta1PodSecurityPolicyParams) middleware.Responder
 }
 
 // NewCreatePolicyV1beta1PodSecurityPolicy creates a new http.Handler for the create policy v1beta1 pod security policy operation
@@ -46,25 +46,12 @@ func (o *CreatePolicyV1beta1PodSecurityPolicy) ServeHTTP(rw http.ResponseWriter,
 	}
 	var Params = NewCreatePolicyV1beta1PodSecurityPolicyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

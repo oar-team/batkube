@@ -12,16 +12,16 @@ import (
 )
 
 // WatchCoreV1NamespacedConfigMapListHandlerFunc turns a function with the right signature into a watch core v1 namespaced config map list handler
-type WatchCoreV1NamespacedConfigMapListHandlerFunc func(WatchCoreV1NamespacedConfigMapListParams, interface{}) middleware.Responder
+type WatchCoreV1NamespacedConfigMapListHandlerFunc func(WatchCoreV1NamespacedConfigMapListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchCoreV1NamespacedConfigMapListHandlerFunc) Handle(params WatchCoreV1NamespacedConfigMapListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchCoreV1NamespacedConfigMapListHandlerFunc) Handle(params WatchCoreV1NamespacedConfigMapListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchCoreV1NamespacedConfigMapListHandler interface for that can handle valid watch core v1 namespaced config map list params
 type WatchCoreV1NamespacedConfigMapListHandler interface {
-	Handle(WatchCoreV1NamespacedConfigMapListParams, interface{}) middleware.Responder
+	Handle(WatchCoreV1NamespacedConfigMapListParams) middleware.Responder
 }
 
 // NewWatchCoreV1NamespacedConfigMapList creates a new http.Handler for the watch core v1 namespaced config map list operation
@@ -46,25 +46,12 @@ func (o *WatchCoreV1NamespacedConfigMapList) ServeHTTP(rw http.ResponseWriter, r
 	}
 	var Params = NewWatchCoreV1NamespacedConfigMapListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

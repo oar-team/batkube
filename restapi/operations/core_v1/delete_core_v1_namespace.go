@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteCoreV1NamespaceHandlerFunc turns a function with the right signature into a delete core v1 namespace handler
-type DeleteCoreV1NamespaceHandlerFunc func(DeleteCoreV1NamespaceParams, interface{}) middleware.Responder
+type DeleteCoreV1NamespaceHandlerFunc func(DeleteCoreV1NamespaceParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteCoreV1NamespaceHandlerFunc) Handle(params DeleteCoreV1NamespaceParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteCoreV1NamespaceHandlerFunc) Handle(params DeleteCoreV1NamespaceParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteCoreV1NamespaceHandler interface for that can handle valid delete core v1 namespace params
 type DeleteCoreV1NamespaceHandler interface {
-	Handle(DeleteCoreV1NamespaceParams, interface{}) middleware.Responder
+	Handle(DeleteCoreV1NamespaceParams) middleware.Responder
 }
 
 // NewDeleteCoreV1Namespace creates a new http.Handler for the delete core v1 namespace operation
@@ -46,25 +46,12 @@ func (o *DeleteCoreV1Namespace) ServeHTTP(rw http.ResponseWriter, r *http.Reques
 	}
 	var Params = NewDeleteCoreV1NamespaceParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

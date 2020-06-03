@@ -12,16 +12,16 @@ import (
 )
 
 // PatchApiextensionsV1CustomResourceDefinitionStatusHandlerFunc turns a function with the right signature into a patch apiextensions v1 custom resource definition status handler
-type PatchApiextensionsV1CustomResourceDefinitionStatusHandlerFunc func(PatchApiextensionsV1CustomResourceDefinitionStatusParams, interface{}) middleware.Responder
+type PatchApiextensionsV1CustomResourceDefinitionStatusHandlerFunc func(PatchApiextensionsV1CustomResourceDefinitionStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchApiextensionsV1CustomResourceDefinitionStatusHandlerFunc) Handle(params PatchApiextensionsV1CustomResourceDefinitionStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchApiextensionsV1CustomResourceDefinitionStatusHandlerFunc) Handle(params PatchApiextensionsV1CustomResourceDefinitionStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchApiextensionsV1CustomResourceDefinitionStatusHandler interface for that can handle valid patch apiextensions v1 custom resource definition status params
 type PatchApiextensionsV1CustomResourceDefinitionStatusHandler interface {
-	Handle(PatchApiextensionsV1CustomResourceDefinitionStatusParams, interface{}) middleware.Responder
+	Handle(PatchApiextensionsV1CustomResourceDefinitionStatusParams) middleware.Responder
 }
 
 // NewPatchApiextensionsV1CustomResourceDefinitionStatus creates a new http.Handler for the patch apiextensions v1 custom resource definition status operation
@@ -46,25 +46,12 @@ func (o *PatchApiextensionsV1CustomResourceDefinitionStatus) ServeHTTP(rw http.R
 	}
 	var Params = NewPatchApiextensionsV1CustomResourceDefinitionStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

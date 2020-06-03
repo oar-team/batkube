@@ -12,16 +12,16 @@ import (
 )
 
 // CreateBatchV1NamespacedJobHandlerFunc turns a function with the right signature into a create batch v1 namespaced job handler
-type CreateBatchV1NamespacedJobHandlerFunc func(CreateBatchV1NamespacedJobParams, interface{}) middleware.Responder
+type CreateBatchV1NamespacedJobHandlerFunc func(CreateBatchV1NamespacedJobParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateBatchV1NamespacedJobHandlerFunc) Handle(params CreateBatchV1NamespacedJobParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateBatchV1NamespacedJobHandlerFunc) Handle(params CreateBatchV1NamespacedJobParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateBatchV1NamespacedJobHandler interface for that can handle valid create batch v1 namespaced job params
 type CreateBatchV1NamespacedJobHandler interface {
-	Handle(CreateBatchV1NamespacedJobParams, interface{}) middleware.Responder
+	Handle(CreateBatchV1NamespacedJobParams) middleware.Responder
 }
 
 // NewCreateBatchV1NamespacedJob creates a new http.Handler for the create batch v1 namespaced job operation
@@ -46,25 +46,12 @@ func (o *CreateBatchV1NamespacedJob) ServeHTTP(rw http.ResponseWriter, r *http.R
 	}
 	var Params = NewCreateBatchV1NamespacedJobParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

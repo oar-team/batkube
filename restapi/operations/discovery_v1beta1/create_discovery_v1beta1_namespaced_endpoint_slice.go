@@ -12,16 +12,16 @@ import (
 )
 
 // CreateDiscoveryV1beta1NamespacedEndpointSliceHandlerFunc turns a function with the right signature into a create discovery v1beta1 namespaced endpoint slice handler
-type CreateDiscoveryV1beta1NamespacedEndpointSliceHandlerFunc func(CreateDiscoveryV1beta1NamespacedEndpointSliceParams, interface{}) middleware.Responder
+type CreateDiscoveryV1beta1NamespacedEndpointSliceHandlerFunc func(CreateDiscoveryV1beta1NamespacedEndpointSliceParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateDiscoveryV1beta1NamespacedEndpointSliceHandlerFunc) Handle(params CreateDiscoveryV1beta1NamespacedEndpointSliceParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateDiscoveryV1beta1NamespacedEndpointSliceHandlerFunc) Handle(params CreateDiscoveryV1beta1NamespacedEndpointSliceParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateDiscoveryV1beta1NamespacedEndpointSliceHandler interface for that can handle valid create discovery v1beta1 namespaced endpoint slice params
 type CreateDiscoveryV1beta1NamespacedEndpointSliceHandler interface {
-	Handle(CreateDiscoveryV1beta1NamespacedEndpointSliceParams, interface{}) middleware.Responder
+	Handle(CreateDiscoveryV1beta1NamespacedEndpointSliceParams) middleware.Responder
 }
 
 // NewCreateDiscoveryV1beta1NamespacedEndpointSlice creates a new http.Handler for the create discovery v1beta1 namespaced endpoint slice operation
@@ -46,25 +46,12 @@ func (o *CreateDiscoveryV1beta1NamespacedEndpointSlice) ServeHTTP(rw http.Respon
 	}
 	var Params = NewCreateDiscoveryV1beta1NamespacedEndpointSliceParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

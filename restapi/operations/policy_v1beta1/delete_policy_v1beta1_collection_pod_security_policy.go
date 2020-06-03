@@ -12,16 +12,16 @@ import (
 )
 
 // DeletePolicyV1beta1CollectionPodSecurityPolicyHandlerFunc turns a function with the right signature into a delete policy v1beta1 collection pod security policy handler
-type DeletePolicyV1beta1CollectionPodSecurityPolicyHandlerFunc func(DeletePolicyV1beta1CollectionPodSecurityPolicyParams, interface{}) middleware.Responder
+type DeletePolicyV1beta1CollectionPodSecurityPolicyHandlerFunc func(DeletePolicyV1beta1CollectionPodSecurityPolicyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeletePolicyV1beta1CollectionPodSecurityPolicyHandlerFunc) Handle(params DeletePolicyV1beta1CollectionPodSecurityPolicyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeletePolicyV1beta1CollectionPodSecurityPolicyHandlerFunc) Handle(params DeletePolicyV1beta1CollectionPodSecurityPolicyParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeletePolicyV1beta1CollectionPodSecurityPolicyHandler interface for that can handle valid delete policy v1beta1 collection pod security policy params
 type DeletePolicyV1beta1CollectionPodSecurityPolicyHandler interface {
-	Handle(DeletePolicyV1beta1CollectionPodSecurityPolicyParams, interface{}) middleware.Responder
+	Handle(DeletePolicyV1beta1CollectionPodSecurityPolicyParams) middleware.Responder
 }
 
 // NewDeletePolicyV1beta1CollectionPodSecurityPolicy creates a new http.Handler for the delete policy v1beta1 collection pod security policy operation
@@ -46,25 +46,12 @@ func (o *DeletePolicyV1beta1CollectionPodSecurityPolicy) ServeHTTP(rw http.Respo
 	}
 	var Params = NewDeletePolicyV1beta1CollectionPodSecurityPolicyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

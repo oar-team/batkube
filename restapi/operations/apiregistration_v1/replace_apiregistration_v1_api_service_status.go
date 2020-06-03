@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceApiregistrationV1APIServiceStatusHandlerFunc turns a function with the right signature into a replace apiregistration v1 API service status handler
-type ReplaceApiregistrationV1APIServiceStatusHandlerFunc func(ReplaceApiregistrationV1APIServiceStatusParams, interface{}) middleware.Responder
+type ReplaceApiregistrationV1APIServiceStatusHandlerFunc func(ReplaceApiregistrationV1APIServiceStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceApiregistrationV1APIServiceStatusHandlerFunc) Handle(params ReplaceApiregistrationV1APIServiceStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceApiregistrationV1APIServiceStatusHandlerFunc) Handle(params ReplaceApiregistrationV1APIServiceStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceApiregistrationV1APIServiceStatusHandler interface for that can handle valid replace apiregistration v1 API service status params
 type ReplaceApiregistrationV1APIServiceStatusHandler interface {
-	Handle(ReplaceApiregistrationV1APIServiceStatusParams, interface{}) middleware.Responder
+	Handle(ReplaceApiregistrationV1APIServiceStatusParams) middleware.Responder
 }
 
 // NewReplaceApiregistrationV1APIServiceStatus creates a new http.Handler for the replace apiregistration v1 API service status operation
@@ -46,25 +46,12 @@ func (o *ReplaceApiregistrationV1APIServiceStatus) ServeHTTP(rw http.ResponseWri
 	}
 	var Params = NewReplaceApiregistrationV1APIServiceStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

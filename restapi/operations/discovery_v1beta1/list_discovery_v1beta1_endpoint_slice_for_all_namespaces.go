@@ -12,16 +12,16 @@ import (
 )
 
 // ListDiscoveryV1beta1EndpointSliceForAllNamespacesHandlerFunc turns a function with the right signature into a list discovery v1beta1 endpoint slice for all namespaces handler
-type ListDiscoveryV1beta1EndpointSliceForAllNamespacesHandlerFunc func(ListDiscoveryV1beta1EndpointSliceForAllNamespacesParams, interface{}) middleware.Responder
+type ListDiscoveryV1beta1EndpointSliceForAllNamespacesHandlerFunc func(ListDiscoveryV1beta1EndpointSliceForAllNamespacesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListDiscoveryV1beta1EndpointSliceForAllNamespacesHandlerFunc) Handle(params ListDiscoveryV1beta1EndpointSliceForAllNamespacesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListDiscoveryV1beta1EndpointSliceForAllNamespacesHandlerFunc) Handle(params ListDiscoveryV1beta1EndpointSliceForAllNamespacesParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListDiscoveryV1beta1EndpointSliceForAllNamespacesHandler interface for that can handle valid list discovery v1beta1 endpoint slice for all namespaces params
 type ListDiscoveryV1beta1EndpointSliceForAllNamespacesHandler interface {
-	Handle(ListDiscoveryV1beta1EndpointSliceForAllNamespacesParams, interface{}) middleware.Responder
+	Handle(ListDiscoveryV1beta1EndpointSliceForAllNamespacesParams) middleware.Responder
 }
 
 // NewListDiscoveryV1beta1EndpointSliceForAllNamespaces creates a new http.Handler for the list discovery v1beta1 endpoint slice for all namespaces operation
@@ -46,25 +46,12 @@ func (o *ListDiscoveryV1beta1EndpointSliceForAllNamespaces) ServeHTTP(rw http.Re
 	}
 	var Params = NewListDiscoveryV1beta1EndpointSliceForAllNamespacesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

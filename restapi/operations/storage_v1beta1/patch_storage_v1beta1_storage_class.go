@@ -12,16 +12,16 @@ import (
 )
 
 // PatchStorageV1beta1StorageClassHandlerFunc turns a function with the right signature into a patch storage v1beta1 storage class handler
-type PatchStorageV1beta1StorageClassHandlerFunc func(PatchStorageV1beta1StorageClassParams, interface{}) middleware.Responder
+type PatchStorageV1beta1StorageClassHandlerFunc func(PatchStorageV1beta1StorageClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchStorageV1beta1StorageClassHandlerFunc) Handle(params PatchStorageV1beta1StorageClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchStorageV1beta1StorageClassHandlerFunc) Handle(params PatchStorageV1beta1StorageClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchStorageV1beta1StorageClassHandler interface for that can handle valid patch storage v1beta1 storage class params
 type PatchStorageV1beta1StorageClassHandler interface {
-	Handle(PatchStorageV1beta1StorageClassParams, interface{}) middleware.Responder
+	Handle(PatchStorageV1beta1StorageClassParams) middleware.Responder
 }
 
 // NewPatchStorageV1beta1StorageClass creates a new http.Handler for the patch storage v1beta1 storage class operation
@@ -46,25 +46,12 @@ func (o *PatchStorageV1beta1StorageClass) ServeHTTP(rw http.ResponseWriter, r *h
 	}
 	var Params = NewPatchStorageV1beta1StorageClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

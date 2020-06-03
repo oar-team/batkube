@@ -12,16 +12,16 @@ import (
 )
 
 // ListCoreV1NamespacedServiceHandlerFunc turns a function with the right signature into a list core v1 namespaced service handler
-type ListCoreV1NamespacedServiceHandlerFunc func(ListCoreV1NamespacedServiceParams, interface{}) middleware.Responder
+type ListCoreV1NamespacedServiceHandlerFunc func(ListCoreV1NamespacedServiceParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListCoreV1NamespacedServiceHandlerFunc) Handle(params ListCoreV1NamespacedServiceParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListCoreV1NamespacedServiceHandlerFunc) Handle(params ListCoreV1NamespacedServiceParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListCoreV1NamespacedServiceHandler interface for that can handle valid list core v1 namespaced service params
 type ListCoreV1NamespacedServiceHandler interface {
-	Handle(ListCoreV1NamespacedServiceParams, interface{}) middleware.Responder
+	Handle(ListCoreV1NamespacedServiceParams) middleware.Responder
 }
 
 // NewListCoreV1NamespacedService creates a new http.Handler for the list core v1 namespaced service operation
@@ -46,25 +46,12 @@ func (o *ListCoreV1NamespacedService) ServeHTTP(rw http.ResponseWriter, r *http.
 	}
 	var Params = NewListCoreV1NamespacedServiceParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceRbacAuthorizationV1beta1ClusterRoleBindingHandlerFunc turns a function with the right signature into a replace rbac authorization v1beta1 cluster role binding handler
-type ReplaceRbacAuthorizationV1beta1ClusterRoleBindingHandlerFunc func(ReplaceRbacAuthorizationV1beta1ClusterRoleBindingParams, interface{}) middleware.Responder
+type ReplaceRbacAuthorizationV1beta1ClusterRoleBindingHandlerFunc func(ReplaceRbacAuthorizationV1beta1ClusterRoleBindingParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceRbacAuthorizationV1beta1ClusterRoleBindingHandlerFunc) Handle(params ReplaceRbacAuthorizationV1beta1ClusterRoleBindingParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceRbacAuthorizationV1beta1ClusterRoleBindingHandlerFunc) Handle(params ReplaceRbacAuthorizationV1beta1ClusterRoleBindingParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceRbacAuthorizationV1beta1ClusterRoleBindingHandler interface for that can handle valid replace rbac authorization v1beta1 cluster role binding params
 type ReplaceRbacAuthorizationV1beta1ClusterRoleBindingHandler interface {
-	Handle(ReplaceRbacAuthorizationV1beta1ClusterRoleBindingParams, interface{}) middleware.Responder
+	Handle(ReplaceRbacAuthorizationV1beta1ClusterRoleBindingParams) middleware.Responder
 }
 
 // NewReplaceRbacAuthorizationV1beta1ClusterRoleBinding creates a new http.Handler for the replace rbac authorization v1beta1 cluster role binding operation
@@ -46,25 +46,12 @@ func (o *ReplaceRbacAuthorizationV1beta1ClusterRoleBinding) ServeHTTP(rw http.Re
 	}
 	var Params = NewReplaceRbacAuthorizationV1beta1ClusterRoleBindingParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

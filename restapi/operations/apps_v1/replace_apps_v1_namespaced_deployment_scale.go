@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceAppsV1NamespacedDeploymentScaleHandlerFunc turns a function with the right signature into a replace apps v1 namespaced deployment scale handler
-type ReplaceAppsV1NamespacedDeploymentScaleHandlerFunc func(ReplaceAppsV1NamespacedDeploymentScaleParams, interface{}) middleware.Responder
+type ReplaceAppsV1NamespacedDeploymentScaleHandlerFunc func(ReplaceAppsV1NamespacedDeploymentScaleParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceAppsV1NamespacedDeploymentScaleHandlerFunc) Handle(params ReplaceAppsV1NamespacedDeploymentScaleParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceAppsV1NamespacedDeploymentScaleHandlerFunc) Handle(params ReplaceAppsV1NamespacedDeploymentScaleParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceAppsV1NamespacedDeploymentScaleHandler interface for that can handle valid replace apps v1 namespaced deployment scale params
 type ReplaceAppsV1NamespacedDeploymentScaleHandler interface {
-	Handle(ReplaceAppsV1NamespacedDeploymentScaleParams, interface{}) middleware.Responder
+	Handle(ReplaceAppsV1NamespacedDeploymentScaleParams) middleware.Responder
 }
 
 // NewReplaceAppsV1NamespacedDeploymentScale creates a new http.Handler for the replace apps v1 namespaced deployment scale operation
@@ -46,25 +46,12 @@ func (o *ReplaceAppsV1NamespacedDeploymentScale) ServeHTTP(rw http.ResponseWrite
 	}
 	var Params = NewReplaceAppsV1NamespacedDeploymentScaleParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // WatchPolicyV1beta1PodSecurityPolicyListHandlerFunc turns a function with the right signature into a watch policy v1beta1 pod security policy list handler
-type WatchPolicyV1beta1PodSecurityPolicyListHandlerFunc func(WatchPolicyV1beta1PodSecurityPolicyListParams, interface{}) middleware.Responder
+type WatchPolicyV1beta1PodSecurityPolicyListHandlerFunc func(WatchPolicyV1beta1PodSecurityPolicyListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchPolicyV1beta1PodSecurityPolicyListHandlerFunc) Handle(params WatchPolicyV1beta1PodSecurityPolicyListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchPolicyV1beta1PodSecurityPolicyListHandlerFunc) Handle(params WatchPolicyV1beta1PodSecurityPolicyListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchPolicyV1beta1PodSecurityPolicyListHandler interface for that can handle valid watch policy v1beta1 pod security policy list params
 type WatchPolicyV1beta1PodSecurityPolicyListHandler interface {
-	Handle(WatchPolicyV1beta1PodSecurityPolicyListParams, interface{}) middleware.Responder
+	Handle(WatchPolicyV1beta1PodSecurityPolicyListParams) middleware.Responder
 }
 
 // NewWatchPolicyV1beta1PodSecurityPolicyList creates a new http.Handler for the watch policy v1beta1 pod security policy list operation
@@ -46,25 +46,12 @@ func (o *WatchPolicyV1beta1PodSecurityPolicyList) ServeHTTP(rw http.ResponseWrit
 	}
 	var Params = NewWatchPolicyV1beta1PodSecurityPolicyListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

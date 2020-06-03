@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteNetworkingV1CollectionNamespacedNetworkPolicyHandlerFunc turns a function with the right signature into a delete networking v1 collection namespaced network policy handler
-type DeleteNetworkingV1CollectionNamespacedNetworkPolicyHandlerFunc func(DeleteNetworkingV1CollectionNamespacedNetworkPolicyParams, interface{}) middleware.Responder
+type DeleteNetworkingV1CollectionNamespacedNetworkPolicyHandlerFunc func(DeleteNetworkingV1CollectionNamespacedNetworkPolicyParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteNetworkingV1CollectionNamespacedNetworkPolicyHandlerFunc) Handle(params DeleteNetworkingV1CollectionNamespacedNetworkPolicyParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteNetworkingV1CollectionNamespacedNetworkPolicyHandlerFunc) Handle(params DeleteNetworkingV1CollectionNamespacedNetworkPolicyParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteNetworkingV1CollectionNamespacedNetworkPolicyHandler interface for that can handle valid delete networking v1 collection namespaced network policy params
 type DeleteNetworkingV1CollectionNamespacedNetworkPolicyHandler interface {
-	Handle(DeleteNetworkingV1CollectionNamespacedNetworkPolicyParams, interface{}) middleware.Responder
+	Handle(DeleteNetworkingV1CollectionNamespacedNetworkPolicyParams) middleware.Responder
 }
 
 // NewDeleteNetworkingV1CollectionNamespacedNetworkPolicy creates a new http.Handler for the delete networking v1 collection namespaced network policy operation
@@ -46,25 +46,12 @@ func (o *DeleteNetworkingV1CollectionNamespacedNetworkPolicy) ServeHTTP(rw http.
 	}
 	var Params = NewDeleteNetworkingV1CollectionNamespacedNetworkPolicyParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

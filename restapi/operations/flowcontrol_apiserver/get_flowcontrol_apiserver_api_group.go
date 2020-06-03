@@ -12,16 +12,16 @@ import (
 )
 
 // GetFlowcontrolApiserverAPIGroupHandlerFunc turns a function with the right signature into a get flowcontrol apiserver API group handler
-type GetFlowcontrolApiserverAPIGroupHandlerFunc func(GetFlowcontrolApiserverAPIGroupParams, interface{}) middleware.Responder
+type GetFlowcontrolApiserverAPIGroupHandlerFunc func(GetFlowcontrolApiserverAPIGroupParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn GetFlowcontrolApiserverAPIGroupHandlerFunc) Handle(params GetFlowcontrolApiserverAPIGroupParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn GetFlowcontrolApiserverAPIGroupHandlerFunc) Handle(params GetFlowcontrolApiserverAPIGroupParams) middleware.Responder {
+	return fn(params)
 }
 
 // GetFlowcontrolApiserverAPIGroupHandler interface for that can handle valid get flowcontrol apiserver API group params
 type GetFlowcontrolApiserverAPIGroupHandler interface {
-	Handle(GetFlowcontrolApiserverAPIGroupParams, interface{}) middleware.Responder
+	Handle(GetFlowcontrolApiserverAPIGroupParams) middleware.Responder
 }
 
 // NewGetFlowcontrolApiserverAPIGroup creates a new http.Handler for the get flowcontrol apiserver API group operation
@@ -46,25 +46,12 @@ func (o *GetFlowcontrolApiserverAPIGroup) ServeHTTP(rw http.ResponseWriter, r *h
 	}
 	var Params = NewGetFlowcontrolApiserverAPIGroupParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

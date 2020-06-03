@@ -12,16 +12,16 @@ import (
 )
 
 // WatchFlowcontrolApiserverV1alpha1FlowSchemaListHandlerFunc turns a function with the right signature into a watch flowcontrol apiserver v1alpha1 flow schema list handler
-type WatchFlowcontrolApiserverV1alpha1FlowSchemaListHandlerFunc func(WatchFlowcontrolApiserverV1alpha1FlowSchemaListParams, interface{}) middleware.Responder
+type WatchFlowcontrolApiserverV1alpha1FlowSchemaListHandlerFunc func(WatchFlowcontrolApiserverV1alpha1FlowSchemaListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchFlowcontrolApiserverV1alpha1FlowSchemaListHandlerFunc) Handle(params WatchFlowcontrolApiserverV1alpha1FlowSchemaListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchFlowcontrolApiserverV1alpha1FlowSchemaListHandlerFunc) Handle(params WatchFlowcontrolApiserverV1alpha1FlowSchemaListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchFlowcontrolApiserverV1alpha1FlowSchemaListHandler interface for that can handle valid watch flowcontrol apiserver v1alpha1 flow schema list params
 type WatchFlowcontrolApiserverV1alpha1FlowSchemaListHandler interface {
-	Handle(WatchFlowcontrolApiserverV1alpha1FlowSchemaListParams, interface{}) middleware.Responder
+	Handle(WatchFlowcontrolApiserverV1alpha1FlowSchemaListParams) middleware.Responder
 }
 
 // NewWatchFlowcontrolApiserverV1alpha1FlowSchemaList creates a new http.Handler for the watch flowcontrol apiserver v1alpha1 flow schema list operation
@@ -46,25 +46,12 @@ func (o *WatchFlowcontrolApiserverV1alpha1FlowSchemaList) ServeHTTP(rw http.Resp
 	}
 	var Params = NewWatchFlowcontrolApiserverV1alpha1FlowSchemaListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

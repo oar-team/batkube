@@ -12,16 +12,16 @@ import (
 )
 
 // PatchAppsV1NamespacedDaemonSetStatusHandlerFunc turns a function with the right signature into a patch apps v1 namespaced daemon set status handler
-type PatchAppsV1NamespacedDaemonSetStatusHandlerFunc func(PatchAppsV1NamespacedDaemonSetStatusParams, interface{}) middleware.Responder
+type PatchAppsV1NamespacedDaemonSetStatusHandlerFunc func(PatchAppsV1NamespacedDaemonSetStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchAppsV1NamespacedDaemonSetStatusHandlerFunc) Handle(params PatchAppsV1NamespacedDaemonSetStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchAppsV1NamespacedDaemonSetStatusHandlerFunc) Handle(params PatchAppsV1NamespacedDaemonSetStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchAppsV1NamespacedDaemonSetStatusHandler interface for that can handle valid patch apps v1 namespaced daemon set status params
 type PatchAppsV1NamespacedDaemonSetStatusHandler interface {
-	Handle(PatchAppsV1NamespacedDaemonSetStatusParams, interface{}) middleware.Responder
+	Handle(PatchAppsV1NamespacedDaemonSetStatusParams) middleware.Responder
 }
 
 // NewPatchAppsV1NamespacedDaemonSetStatus creates a new http.Handler for the patch apps v1 namespaced daemon set status operation
@@ -46,25 +46,12 @@ func (o *PatchAppsV1NamespacedDaemonSetStatus) ServeHTTP(rw http.ResponseWriter,
 	}
 	var Params = NewPatchAppsV1NamespacedDaemonSetStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

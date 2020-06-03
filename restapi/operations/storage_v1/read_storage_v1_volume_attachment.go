@@ -12,16 +12,16 @@ import (
 )
 
 // ReadStorageV1VolumeAttachmentHandlerFunc turns a function with the right signature into a read storage v1 volume attachment handler
-type ReadStorageV1VolumeAttachmentHandlerFunc func(ReadStorageV1VolumeAttachmentParams, interface{}) middleware.Responder
+type ReadStorageV1VolumeAttachmentHandlerFunc func(ReadStorageV1VolumeAttachmentParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadStorageV1VolumeAttachmentHandlerFunc) Handle(params ReadStorageV1VolumeAttachmentParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadStorageV1VolumeAttachmentHandlerFunc) Handle(params ReadStorageV1VolumeAttachmentParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadStorageV1VolumeAttachmentHandler interface for that can handle valid read storage v1 volume attachment params
 type ReadStorageV1VolumeAttachmentHandler interface {
-	Handle(ReadStorageV1VolumeAttachmentParams, interface{}) middleware.Responder
+	Handle(ReadStorageV1VolumeAttachmentParams) middleware.Responder
 }
 
 // NewReadStorageV1VolumeAttachment creates a new http.Handler for the read storage v1 volume attachment operation
@@ -46,25 +46,12 @@ func (o *ReadStorageV1VolumeAttachment) ServeHTTP(rw http.ResponseWriter, r *htt
 	}
 	var Params = NewReadStorageV1VolumeAttachmentParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

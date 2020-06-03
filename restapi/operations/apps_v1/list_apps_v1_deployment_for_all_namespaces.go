@@ -12,16 +12,16 @@ import (
 )
 
 // ListAppsV1DeploymentForAllNamespacesHandlerFunc turns a function with the right signature into a list apps v1 deployment for all namespaces handler
-type ListAppsV1DeploymentForAllNamespacesHandlerFunc func(ListAppsV1DeploymentForAllNamespacesParams, interface{}) middleware.Responder
+type ListAppsV1DeploymentForAllNamespacesHandlerFunc func(ListAppsV1DeploymentForAllNamespacesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListAppsV1DeploymentForAllNamespacesHandlerFunc) Handle(params ListAppsV1DeploymentForAllNamespacesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListAppsV1DeploymentForAllNamespacesHandlerFunc) Handle(params ListAppsV1DeploymentForAllNamespacesParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListAppsV1DeploymentForAllNamespacesHandler interface for that can handle valid list apps v1 deployment for all namespaces params
 type ListAppsV1DeploymentForAllNamespacesHandler interface {
-	Handle(ListAppsV1DeploymentForAllNamespacesParams, interface{}) middleware.Responder
+	Handle(ListAppsV1DeploymentForAllNamespacesParams) middleware.Responder
 }
 
 // NewListAppsV1DeploymentForAllNamespaces creates a new http.Handler for the list apps v1 deployment for all namespaces operation
@@ -46,25 +46,12 @@ func (o *ListAppsV1DeploymentForAllNamespaces) ServeHTTP(rw http.ResponseWriter,
 	}
 	var Params = NewListAppsV1DeploymentForAllNamespacesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

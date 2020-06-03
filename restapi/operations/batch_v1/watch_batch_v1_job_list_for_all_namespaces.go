@@ -12,16 +12,16 @@ import (
 )
 
 // WatchBatchV1JobListForAllNamespacesHandlerFunc turns a function with the right signature into a watch batch v1 job list for all namespaces handler
-type WatchBatchV1JobListForAllNamespacesHandlerFunc func(WatchBatchV1JobListForAllNamespacesParams, interface{}) middleware.Responder
+type WatchBatchV1JobListForAllNamespacesHandlerFunc func(WatchBatchV1JobListForAllNamespacesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchBatchV1JobListForAllNamespacesHandlerFunc) Handle(params WatchBatchV1JobListForAllNamespacesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchBatchV1JobListForAllNamespacesHandlerFunc) Handle(params WatchBatchV1JobListForAllNamespacesParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchBatchV1JobListForAllNamespacesHandler interface for that can handle valid watch batch v1 job list for all namespaces params
 type WatchBatchV1JobListForAllNamespacesHandler interface {
-	Handle(WatchBatchV1JobListForAllNamespacesParams, interface{}) middleware.Responder
+	Handle(WatchBatchV1JobListForAllNamespacesParams) middleware.Responder
 }
 
 // NewWatchBatchV1JobListForAllNamespaces creates a new http.Handler for the watch batch v1 job list for all namespaces operation
@@ -46,25 +46,12 @@ func (o *WatchBatchV1JobListForAllNamespaces) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewWatchBatchV1JobListForAllNamespacesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

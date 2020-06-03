@@ -12,16 +12,16 @@ import (
 )
 
 // WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesHandlerFunc turns a function with the right signature into a watch discovery v1beta1 endpoint slice list for all namespaces handler
-type WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesHandlerFunc func(WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesParams, interface{}) middleware.Responder
+type WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesHandlerFunc func(WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesHandlerFunc) Handle(params WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesHandlerFunc) Handle(params WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesHandler interface for that can handle valid watch discovery v1beta1 endpoint slice list for all namespaces params
 type WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesHandler interface {
-	Handle(WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesParams, interface{}) middleware.Responder
+	Handle(WatchDiscoveryV1beta1EndpointSliceListForAllNamespacesParams) middleware.Responder
 }
 
 // NewWatchDiscoveryV1beta1EndpointSliceListForAllNamespaces creates a new http.Handler for the watch discovery v1beta1 endpoint slice list for all namespaces operation
@@ -46,25 +46,12 @@ func (o *WatchDiscoveryV1beta1EndpointSliceListForAllNamespaces) ServeHTTP(rw ht
 	}
 	var Params = NewWatchDiscoveryV1beta1EndpointSliceListForAllNamespacesParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

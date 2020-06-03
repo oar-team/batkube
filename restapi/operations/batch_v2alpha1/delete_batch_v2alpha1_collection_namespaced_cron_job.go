@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteBatchV2alpha1CollectionNamespacedCronJobHandlerFunc turns a function with the right signature into a delete batch v2alpha1 collection namespaced cron job handler
-type DeleteBatchV2alpha1CollectionNamespacedCronJobHandlerFunc func(DeleteBatchV2alpha1CollectionNamespacedCronJobParams, interface{}) middleware.Responder
+type DeleteBatchV2alpha1CollectionNamespacedCronJobHandlerFunc func(DeleteBatchV2alpha1CollectionNamespacedCronJobParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteBatchV2alpha1CollectionNamespacedCronJobHandlerFunc) Handle(params DeleteBatchV2alpha1CollectionNamespacedCronJobParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteBatchV2alpha1CollectionNamespacedCronJobHandlerFunc) Handle(params DeleteBatchV2alpha1CollectionNamespacedCronJobParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteBatchV2alpha1CollectionNamespacedCronJobHandler interface for that can handle valid delete batch v2alpha1 collection namespaced cron job params
 type DeleteBatchV2alpha1CollectionNamespacedCronJobHandler interface {
-	Handle(DeleteBatchV2alpha1CollectionNamespacedCronJobParams, interface{}) middleware.Responder
+	Handle(DeleteBatchV2alpha1CollectionNamespacedCronJobParams) middleware.Responder
 }
 
 // NewDeleteBatchV2alpha1CollectionNamespacedCronJob creates a new http.Handler for the delete batch v2alpha1 collection namespaced cron job operation
@@ -46,25 +46,12 @@ func (o *DeleteBatchV2alpha1CollectionNamespacedCronJob) ServeHTTP(rw http.Respo
 	}
 	var Params = NewDeleteBatchV2alpha1CollectionNamespacedCronJobParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

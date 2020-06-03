@@ -12,16 +12,16 @@ import (
 )
 
 // CreateApiregistrationV1APIServiceHandlerFunc turns a function with the right signature into a create apiregistration v1 API service handler
-type CreateApiregistrationV1APIServiceHandlerFunc func(CreateApiregistrationV1APIServiceParams, interface{}) middleware.Responder
+type CreateApiregistrationV1APIServiceHandlerFunc func(CreateApiregistrationV1APIServiceParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateApiregistrationV1APIServiceHandlerFunc) Handle(params CreateApiregistrationV1APIServiceParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateApiregistrationV1APIServiceHandlerFunc) Handle(params CreateApiregistrationV1APIServiceParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateApiregistrationV1APIServiceHandler interface for that can handle valid create apiregistration v1 API service params
 type CreateApiregistrationV1APIServiceHandler interface {
-	Handle(CreateApiregistrationV1APIServiceParams, interface{}) middleware.Responder
+	Handle(CreateApiregistrationV1APIServiceParams) middleware.Responder
 }
 
 // NewCreateApiregistrationV1APIService creates a new http.Handler for the create apiregistration v1 API service operation
@@ -46,25 +46,12 @@ func (o *CreateApiregistrationV1APIService) ServeHTTP(rw http.ResponseWriter, r 
 	}
 	var Params = NewCreateApiregistrationV1APIServiceParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

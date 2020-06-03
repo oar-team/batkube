@@ -12,16 +12,16 @@ import (
 )
 
 // ReadAppsV1NamespacedReplicaSetStatusHandlerFunc turns a function with the right signature into a read apps v1 namespaced replica set status handler
-type ReadAppsV1NamespacedReplicaSetStatusHandlerFunc func(ReadAppsV1NamespacedReplicaSetStatusParams, interface{}) middleware.Responder
+type ReadAppsV1NamespacedReplicaSetStatusHandlerFunc func(ReadAppsV1NamespacedReplicaSetStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadAppsV1NamespacedReplicaSetStatusHandlerFunc) Handle(params ReadAppsV1NamespacedReplicaSetStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadAppsV1NamespacedReplicaSetStatusHandlerFunc) Handle(params ReadAppsV1NamespacedReplicaSetStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadAppsV1NamespacedReplicaSetStatusHandler interface for that can handle valid read apps v1 namespaced replica set status params
 type ReadAppsV1NamespacedReplicaSetStatusHandler interface {
-	Handle(ReadAppsV1NamespacedReplicaSetStatusParams, interface{}) middleware.Responder
+	Handle(ReadAppsV1NamespacedReplicaSetStatusParams) middleware.Responder
 }
 
 // NewReadAppsV1NamespacedReplicaSetStatus creates a new http.Handler for the read apps v1 namespaced replica set status operation
@@ -46,25 +46,12 @@ func (o *ReadAppsV1NamespacedReplicaSetStatus) ServeHTTP(rw http.ResponseWriter,
 	}
 	var Params = NewReadAppsV1NamespacedReplicaSetStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // PatchApiregistrationV1beta1APIServiceStatusHandlerFunc turns a function with the right signature into a patch apiregistration v1beta1 API service status handler
-type PatchApiregistrationV1beta1APIServiceStatusHandlerFunc func(PatchApiregistrationV1beta1APIServiceStatusParams, interface{}) middleware.Responder
+type PatchApiregistrationV1beta1APIServiceStatusHandlerFunc func(PatchApiregistrationV1beta1APIServiceStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn PatchApiregistrationV1beta1APIServiceStatusHandlerFunc) Handle(params PatchApiregistrationV1beta1APIServiceStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn PatchApiregistrationV1beta1APIServiceStatusHandlerFunc) Handle(params PatchApiregistrationV1beta1APIServiceStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // PatchApiregistrationV1beta1APIServiceStatusHandler interface for that can handle valid patch apiregistration v1beta1 API service status params
 type PatchApiregistrationV1beta1APIServiceStatusHandler interface {
-	Handle(PatchApiregistrationV1beta1APIServiceStatusParams, interface{}) middleware.Responder
+	Handle(PatchApiregistrationV1beta1APIServiceStatusParams) middleware.Responder
 }
 
 // NewPatchApiregistrationV1beta1APIServiceStatus creates a new http.Handler for the patch apiregistration v1beta1 API service status operation
@@ -46,25 +46,12 @@ func (o *PatchApiregistrationV1beta1APIServiceStatus) ServeHTTP(rw http.Response
 	}
 	var Params = NewPatchApiregistrationV1beta1APIServiceStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

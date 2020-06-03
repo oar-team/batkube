@@ -12,16 +12,16 @@ import (
 )
 
 // ReadNodeV1alpha1RuntimeClassHandlerFunc turns a function with the right signature into a read node v1alpha1 runtime class handler
-type ReadNodeV1alpha1RuntimeClassHandlerFunc func(ReadNodeV1alpha1RuntimeClassParams, interface{}) middleware.Responder
+type ReadNodeV1alpha1RuntimeClassHandlerFunc func(ReadNodeV1alpha1RuntimeClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadNodeV1alpha1RuntimeClassHandlerFunc) Handle(params ReadNodeV1alpha1RuntimeClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadNodeV1alpha1RuntimeClassHandlerFunc) Handle(params ReadNodeV1alpha1RuntimeClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadNodeV1alpha1RuntimeClassHandler interface for that can handle valid read node v1alpha1 runtime class params
 type ReadNodeV1alpha1RuntimeClassHandler interface {
-	Handle(ReadNodeV1alpha1RuntimeClassParams, interface{}) middleware.Responder
+	Handle(ReadNodeV1alpha1RuntimeClassParams) middleware.Responder
 }
 
 // NewReadNodeV1alpha1RuntimeClass creates a new http.Handler for the read node v1alpha1 runtime class operation
@@ -46,25 +46,12 @@ func (o *ReadNodeV1alpha1RuntimeClass) ServeHTTP(rw http.ResponseWriter, r *http
 	}
 	var Params = NewReadNodeV1alpha1RuntimeClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

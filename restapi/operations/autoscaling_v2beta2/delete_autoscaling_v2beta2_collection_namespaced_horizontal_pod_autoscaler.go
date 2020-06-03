@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerHandlerFunc turns a function with the right signature into a delete autoscaling v2beta2 collection namespaced horizontal pod autoscaler handler
-type DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerHandlerFunc func(DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerParams, interface{}) middleware.Responder
+type DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerHandlerFunc func(DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerHandlerFunc) Handle(params DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerHandlerFunc) Handle(params DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerHandler interface for that can handle valid delete autoscaling v2beta2 collection namespaced horizontal pod autoscaler params
 type DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerHandler interface {
-	Handle(DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerParams, interface{}) middleware.Responder
+	Handle(DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerParams) middleware.Responder
 }
 
 // NewDeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscaler creates a new http.Handler for the delete autoscaling v2beta2 collection namespaced horizontal pod autoscaler operation
@@ -46,25 +46,12 @@ func (o *DeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscaler) Se
 	}
 	var Params = NewDeleteAutoscalingV2beta2CollectionNamespacedHorizontalPodAutoscalerParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

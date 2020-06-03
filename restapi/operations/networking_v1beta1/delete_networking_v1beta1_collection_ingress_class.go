@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteNetworkingV1beta1CollectionIngressClassHandlerFunc turns a function with the right signature into a delete networking v1beta1 collection ingress class handler
-type DeleteNetworkingV1beta1CollectionIngressClassHandlerFunc func(DeleteNetworkingV1beta1CollectionIngressClassParams, interface{}) middleware.Responder
+type DeleteNetworkingV1beta1CollectionIngressClassHandlerFunc func(DeleteNetworkingV1beta1CollectionIngressClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteNetworkingV1beta1CollectionIngressClassHandlerFunc) Handle(params DeleteNetworkingV1beta1CollectionIngressClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteNetworkingV1beta1CollectionIngressClassHandlerFunc) Handle(params DeleteNetworkingV1beta1CollectionIngressClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteNetworkingV1beta1CollectionIngressClassHandler interface for that can handle valid delete networking v1beta1 collection ingress class params
 type DeleteNetworkingV1beta1CollectionIngressClassHandler interface {
-	Handle(DeleteNetworkingV1beta1CollectionIngressClassParams, interface{}) middleware.Responder
+	Handle(DeleteNetworkingV1beta1CollectionIngressClassParams) middleware.Responder
 }
 
 // NewDeleteNetworkingV1beta1CollectionIngressClass creates a new http.Handler for the delete networking v1beta1 collection ingress class operation
@@ -46,25 +46,12 @@ func (o *DeleteNetworkingV1beta1CollectionIngressClass) ServeHTTP(rw http.Respon
 	}
 	var Params = NewDeleteNetworkingV1beta1CollectionIngressClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

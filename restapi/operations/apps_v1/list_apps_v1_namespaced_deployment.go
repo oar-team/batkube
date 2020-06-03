@@ -12,16 +12,16 @@ import (
 )
 
 // ListAppsV1NamespacedDeploymentHandlerFunc turns a function with the right signature into a list apps v1 namespaced deployment handler
-type ListAppsV1NamespacedDeploymentHandlerFunc func(ListAppsV1NamespacedDeploymentParams, interface{}) middleware.Responder
+type ListAppsV1NamespacedDeploymentHandlerFunc func(ListAppsV1NamespacedDeploymentParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListAppsV1NamespacedDeploymentHandlerFunc) Handle(params ListAppsV1NamespacedDeploymentParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListAppsV1NamespacedDeploymentHandlerFunc) Handle(params ListAppsV1NamespacedDeploymentParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListAppsV1NamespacedDeploymentHandler interface for that can handle valid list apps v1 namespaced deployment params
 type ListAppsV1NamespacedDeploymentHandler interface {
-	Handle(ListAppsV1NamespacedDeploymentParams, interface{}) middleware.Responder
+	Handle(ListAppsV1NamespacedDeploymentParams) middleware.Responder
 }
 
 // NewListAppsV1NamespacedDeployment creates a new http.Handler for the list apps v1 namespaced deployment operation
@@ -46,25 +46,12 @@ func (o *ListAppsV1NamespacedDeployment) ServeHTTP(rw http.ResponseWriter, r *ht
 	}
 	var Params = NewListAppsV1NamespacedDeploymentParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

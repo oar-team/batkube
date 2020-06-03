@@ -12,16 +12,16 @@ import (
 )
 
 // ListSchedulingV1beta1PriorityClassHandlerFunc turns a function with the right signature into a list scheduling v1beta1 priority class handler
-type ListSchedulingV1beta1PriorityClassHandlerFunc func(ListSchedulingV1beta1PriorityClassParams, interface{}) middleware.Responder
+type ListSchedulingV1beta1PriorityClassHandlerFunc func(ListSchedulingV1beta1PriorityClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListSchedulingV1beta1PriorityClassHandlerFunc) Handle(params ListSchedulingV1beta1PriorityClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListSchedulingV1beta1PriorityClassHandlerFunc) Handle(params ListSchedulingV1beta1PriorityClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListSchedulingV1beta1PriorityClassHandler interface for that can handle valid list scheduling v1beta1 priority class params
 type ListSchedulingV1beta1PriorityClassHandler interface {
-	Handle(ListSchedulingV1beta1PriorityClassParams, interface{}) middleware.Responder
+	Handle(ListSchedulingV1beta1PriorityClassParams) middleware.Responder
 }
 
 // NewListSchedulingV1beta1PriorityClass creates a new http.Handler for the list scheduling v1beta1 priority class operation
@@ -46,25 +46,12 @@ func (o *ListSchedulingV1beta1PriorityClass) ServeHTTP(rw http.ResponseWriter, r
 	}
 	var Params = NewListSchedulingV1beta1PriorityClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // CreateCoreV1NamespacedPodEvictionHandlerFunc turns a function with the right signature into a create core v1 namespaced pod eviction handler
-type CreateCoreV1NamespacedPodEvictionHandlerFunc func(CreateCoreV1NamespacedPodEvictionParams, interface{}) middleware.Responder
+type CreateCoreV1NamespacedPodEvictionHandlerFunc func(CreateCoreV1NamespacedPodEvictionParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateCoreV1NamespacedPodEvictionHandlerFunc) Handle(params CreateCoreV1NamespacedPodEvictionParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateCoreV1NamespacedPodEvictionHandlerFunc) Handle(params CreateCoreV1NamespacedPodEvictionParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateCoreV1NamespacedPodEvictionHandler interface for that can handle valid create core v1 namespaced pod eviction params
 type CreateCoreV1NamespacedPodEvictionHandler interface {
-	Handle(CreateCoreV1NamespacedPodEvictionParams, interface{}) middleware.Responder
+	Handle(CreateCoreV1NamespacedPodEvictionParams) middleware.Responder
 }
 
 // NewCreateCoreV1NamespacedPodEviction creates a new http.Handler for the create core v1 namespaced pod eviction operation
@@ -46,25 +46,12 @@ func (o *CreateCoreV1NamespacedPodEviction) ServeHTTP(rw http.ResponseWriter, r 
 	}
 	var Params = NewCreateCoreV1NamespacedPodEvictionParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

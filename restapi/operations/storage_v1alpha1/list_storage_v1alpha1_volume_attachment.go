@@ -12,16 +12,16 @@ import (
 )
 
 // ListStorageV1alpha1VolumeAttachmentHandlerFunc turns a function with the right signature into a list storage v1alpha1 volume attachment handler
-type ListStorageV1alpha1VolumeAttachmentHandlerFunc func(ListStorageV1alpha1VolumeAttachmentParams, interface{}) middleware.Responder
+type ListStorageV1alpha1VolumeAttachmentHandlerFunc func(ListStorageV1alpha1VolumeAttachmentParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListStorageV1alpha1VolumeAttachmentHandlerFunc) Handle(params ListStorageV1alpha1VolumeAttachmentParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListStorageV1alpha1VolumeAttachmentHandlerFunc) Handle(params ListStorageV1alpha1VolumeAttachmentParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListStorageV1alpha1VolumeAttachmentHandler interface for that can handle valid list storage v1alpha1 volume attachment params
 type ListStorageV1alpha1VolumeAttachmentHandler interface {
-	Handle(ListStorageV1alpha1VolumeAttachmentParams, interface{}) middleware.Responder
+	Handle(ListStorageV1alpha1VolumeAttachmentParams) middleware.Responder
 }
 
 // NewListStorageV1alpha1VolumeAttachment creates a new http.Handler for the list storage v1alpha1 volume attachment operation
@@ -46,25 +46,12 @@ func (o *ListStorageV1alpha1VolumeAttachment) ServeHTTP(rw http.ResponseWriter, 
 	}
 	var Params = NewListStorageV1alpha1VolumeAttachmentParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

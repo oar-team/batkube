@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceAppsV1NamespacedDaemonSetHandlerFunc turns a function with the right signature into a replace apps v1 namespaced daemon set handler
-type ReplaceAppsV1NamespacedDaemonSetHandlerFunc func(ReplaceAppsV1NamespacedDaemonSetParams, interface{}) middleware.Responder
+type ReplaceAppsV1NamespacedDaemonSetHandlerFunc func(ReplaceAppsV1NamespacedDaemonSetParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceAppsV1NamespacedDaemonSetHandlerFunc) Handle(params ReplaceAppsV1NamespacedDaemonSetParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceAppsV1NamespacedDaemonSetHandlerFunc) Handle(params ReplaceAppsV1NamespacedDaemonSetParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceAppsV1NamespacedDaemonSetHandler interface for that can handle valid replace apps v1 namespaced daemon set params
 type ReplaceAppsV1NamespacedDaemonSetHandler interface {
-	Handle(ReplaceAppsV1NamespacedDaemonSetParams, interface{}) middleware.Responder
+	Handle(ReplaceAppsV1NamespacedDaemonSetParams) middleware.Responder
 }
 
 // NewReplaceAppsV1NamespacedDaemonSet creates a new http.Handler for the replace apps v1 namespaced daemon set operation
@@ -46,25 +46,12 @@ func (o *ReplaceAppsV1NamespacedDaemonSet) ServeHTTP(rw http.ResponseWriter, r *
 	}
 	var Params = NewReplaceAppsV1NamespacedDaemonSetParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

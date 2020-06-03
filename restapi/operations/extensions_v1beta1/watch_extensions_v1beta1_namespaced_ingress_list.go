@@ -12,16 +12,16 @@ import (
 )
 
 // WatchExtensionsV1beta1NamespacedIngressListHandlerFunc turns a function with the right signature into a watch extensions v1beta1 namespaced ingress list handler
-type WatchExtensionsV1beta1NamespacedIngressListHandlerFunc func(WatchExtensionsV1beta1NamespacedIngressListParams, interface{}) middleware.Responder
+type WatchExtensionsV1beta1NamespacedIngressListHandlerFunc func(WatchExtensionsV1beta1NamespacedIngressListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchExtensionsV1beta1NamespacedIngressListHandlerFunc) Handle(params WatchExtensionsV1beta1NamespacedIngressListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchExtensionsV1beta1NamespacedIngressListHandlerFunc) Handle(params WatchExtensionsV1beta1NamespacedIngressListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchExtensionsV1beta1NamespacedIngressListHandler interface for that can handle valid watch extensions v1beta1 namespaced ingress list params
 type WatchExtensionsV1beta1NamespacedIngressListHandler interface {
-	Handle(WatchExtensionsV1beta1NamespacedIngressListParams, interface{}) middleware.Responder
+	Handle(WatchExtensionsV1beta1NamespacedIngressListParams) middleware.Responder
 }
 
 // NewWatchExtensionsV1beta1NamespacedIngressList creates a new http.Handler for the watch extensions v1beta1 namespaced ingress list operation
@@ -46,25 +46,12 @@ func (o *WatchExtensionsV1beta1NamespacedIngressList) ServeHTTP(rw http.Response
 	}
 	var Params = NewWatchExtensionsV1beta1NamespacedIngressListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

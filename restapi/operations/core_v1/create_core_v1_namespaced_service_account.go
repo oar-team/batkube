@@ -12,16 +12,16 @@ import (
 )
 
 // CreateCoreV1NamespacedServiceAccountHandlerFunc turns a function with the right signature into a create core v1 namespaced service account handler
-type CreateCoreV1NamespacedServiceAccountHandlerFunc func(CreateCoreV1NamespacedServiceAccountParams, interface{}) middleware.Responder
+type CreateCoreV1NamespacedServiceAccountHandlerFunc func(CreateCoreV1NamespacedServiceAccountParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateCoreV1NamespacedServiceAccountHandlerFunc) Handle(params CreateCoreV1NamespacedServiceAccountParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateCoreV1NamespacedServiceAccountHandlerFunc) Handle(params CreateCoreV1NamespacedServiceAccountParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateCoreV1NamespacedServiceAccountHandler interface for that can handle valid create core v1 namespaced service account params
 type CreateCoreV1NamespacedServiceAccountHandler interface {
-	Handle(CreateCoreV1NamespacedServiceAccountParams, interface{}) middleware.Responder
+	Handle(CreateCoreV1NamespacedServiceAccountParams) middleware.Responder
 }
 
 // NewCreateCoreV1NamespacedServiceAccount creates a new http.Handler for the create core v1 namespaced service account operation
@@ -46,25 +46,12 @@ func (o *CreateCoreV1NamespacedServiceAccount) ServeHTTP(rw http.ResponseWriter,
 	}
 	var Params = NewCreateCoreV1NamespacedServiceAccountParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

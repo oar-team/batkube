@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteStorageV1alpha1VolumeAttachmentHandlerFunc turns a function with the right signature into a delete storage v1alpha1 volume attachment handler
-type DeleteStorageV1alpha1VolumeAttachmentHandlerFunc func(DeleteStorageV1alpha1VolumeAttachmentParams, interface{}) middleware.Responder
+type DeleteStorageV1alpha1VolumeAttachmentHandlerFunc func(DeleteStorageV1alpha1VolumeAttachmentParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteStorageV1alpha1VolumeAttachmentHandlerFunc) Handle(params DeleteStorageV1alpha1VolumeAttachmentParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteStorageV1alpha1VolumeAttachmentHandlerFunc) Handle(params DeleteStorageV1alpha1VolumeAttachmentParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteStorageV1alpha1VolumeAttachmentHandler interface for that can handle valid delete storage v1alpha1 volume attachment params
 type DeleteStorageV1alpha1VolumeAttachmentHandler interface {
-	Handle(DeleteStorageV1alpha1VolumeAttachmentParams, interface{}) middleware.Responder
+	Handle(DeleteStorageV1alpha1VolumeAttachmentParams) middleware.Responder
 }
 
 // NewDeleteStorageV1alpha1VolumeAttachment creates a new http.Handler for the delete storage v1alpha1 volume attachment operation
@@ -46,25 +46,12 @@ func (o *DeleteStorageV1alpha1VolumeAttachment) ServeHTTP(rw http.ResponseWriter
 	}
 	var Params = NewDeleteStorageV1alpha1VolumeAttachmentParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

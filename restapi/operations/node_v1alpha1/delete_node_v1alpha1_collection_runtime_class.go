@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteNodeV1alpha1CollectionRuntimeClassHandlerFunc turns a function with the right signature into a delete node v1alpha1 collection runtime class handler
-type DeleteNodeV1alpha1CollectionRuntimeClassHandlerFunc func(DeleteNodeV1alpha1CollectionRuntimeClassParams, interface{}) middleware.Responder
+type DeleteNodeV1alpha1CollectionRuntimeClassHandlerFunc func(DeleteNodeV1alpha1CollectionRuntimeClassParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteNodeV1alpha1CollectionRuntimeClassHandlerFunc) Handle(params DeleteNodeV1alpha1CollectionRuntimeClassParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteNodeV1alpha1CollectionRuntimeClassHandlerFunc) Handle(params DeleteNodeV1alpha1CollectionRuntimeClassParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteNodeV1alpha1CollectionRuntimeClassHandler interface for that can handle valid delete node v1alpha1 collection runtime class params
 type DeleteNodeV1alpha1CollectionRuntimeClassHandler interface {
-	Handle(DeleteNodeV1alpha1CollectionRuntimeClassParams, interface{}) middleware.Responder
+	Handle(DeleteNodeV1alpha1CollectionRuntimeClassParams) middleware.Responder
 }
 
 // NewDeleteNodeV1alpha1CollectionRuntimeClass creates a new http.Handler for the delete node v1alpha1 collection runtime class operation
@@ -46,25 +46,12 @@ func (o *DeleteNodeV1alpha1CollectionRuntimeClass) ServeHTTP(rw http.ResponseWri
 	}
 	var Params = NewDeleteNodeV1alpha1CollectionRuntimeClassParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

@@ -12,16 +12,16 @@ import (
 )
 
 // ListCoreV1NamespacedPersistentVolumeClaimHandlerFunc turns a function with the right signature into a list core v1 namespaced persistent volume claim handler
-type ListCoreV1NamespacedPersistentVolumeClaimHandlerFunc func(ListCoreV1NamespacedPersistentVolumeClaimParams, interface{}) middleware.Responder
+type ListCoreV1NamespacedPersistentVolumeClaimHandlerFunc func(ListCoreV1NamespacedPersistentVolumeClaimParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ListCoreV1NamespacedPersistentVolumeClaimHandlerFunc) Handle(params ListCoreV1NamespacedPersistentVolumeClaimParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ListCoreV1NamespacedPersistentVolumeClaimHandlerFunc) Handle(params ListCoreV1NamespacedPersistentVolumeClaimParams) middleware.Responder {
+	return fn(params)
 }
 
 // ListCoreV1NamespacedPersistentVolumeClaimHandler interface for that can handle valid list core v1 namespaced persistent volume claim params
 type ListCoreV1NamespacedPersistentVolumeClaimHandler interface {
-	Handle(ListCoreV1NamespacedPersistentVolumeClaimParams, interface{}) middleware.Responder
+	Handle(ListCoreV1NamespacedPersistentVolumeClaimParams) middleware.Responder
 }
 
 // NewListCoreV1NamespacedPersistentVolumeClaim creates a new http.Handler for the list core v1 namespaced persistent volume claim operation
@@ -46,25 +46,12 @@ func (o *ListCoreV1NamespacedPersistentVolumeClaim) ServeHTTP(rw http.ResponseWr
 	}
 	var Params = NewListCoreV1NamespacedPersistentVolumeClaimParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

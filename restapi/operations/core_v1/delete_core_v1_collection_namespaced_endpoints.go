@@ -12,16 +12,16 @@ import (
 )
 
 // DeleteCoreV1CollectionNamespacedEndpointsHandlerFunc turns a function with the right signature into a delete core v1 collection namespaced endpoints handler
-type DeleteCoreV1CollectionNamespacedEndpointsHandlerFunc func(DeleteCoreV1CollectionNamespacedEndpointsParams, interface{}) middleware.Responder
+type DeleteCoreV1CollectionNamespacedEndpointsHandlerFunc func(DeleteCoreV1CollectionNamespacedEndpointsParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn DeleteCoreV1CollectionNamespacedEndpointsHandlerFunc) Handle(params DeleteCoreV1CollectionNamespacedEndpointsParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn DeleteCoreV1CollectionNamespacedEndpointsHandlerFunc) Handle(params DeleteCoreV1CollectionNamespacedEndpointsParams) middleware.Responder {
+	return fn(params)
 }
 
 // DeleteCoreV1CollectionNamespacedEndpointsHandler interface for that can handle valid delete core v1 collection namespaced endpoints params
 type DeleteCoreV1CollectionNamespacedEndpointsHandler interface {
-	Handle(DeleteCoreV1CollectionNamespacedEndpointsParams, interface{}) middleware.Responder
+	Handle(DeleteCoreV1CollectionNamespacedEndpointsParams) middleware.Responder
 }
 
 // NewDeleteCoreV1CollectionNamespacedEndpoints creates a new http.Handler for the delete core v1 collection namespaced endpoints operation
@@ -46,25 +46,12 @@ func (o *DeleteCoreV1CollectionNamespacedEndpoints) ServeHTTP(rw http.ResponseWr
 	}
 	var Params = NewDeleteCoreV1CollectionNamespacedEndpointsParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

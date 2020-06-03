@@ -12,16 +12,16 @@ import (
 )
 
 // ReadEventsV1beta1NamespacedEventHandlerFunc turns a function with the right signature into a read events v1beta1 namespaced event handler
-type ReadEventsV1beta1NamespacedEventHandlerFunc func(ReadEventsV1beta1NamespacedEventParams, interface{}) middleware.Responder
+type ReadEventsV1beta1NamespacedEventHandlerFunc func(ReadEventsV1beta1NamespacedEventParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReadEventsV1beta1NamespacedEventHandlerFunc) Handle(params ReadEventsV1beta1NamespacedEventParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReadEventsV1beta1NamespacedEventHandlerFunc) Handle(params ReadEventsV1beta1NamespacedEventParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReadEventsV1beta1NamespacedEventHandler interface for that can handle valid read events v1beta1 namespaced event params
 type ReadEventsV1beta1NamespacedEventHandler interface {
-	Handle(ReadEventsV1beta1NamespacedEventParams, interface{}) middleware.Responder
+	Handle(ReadEventsV1beta1NamespacedEventParams) middleware.Responder
 }
 
 // NewReadEventsV1beta1NamespacedEvent creates a new http.Handler for the read events v1beta1 namespaced event operation
@@ -46,25 +46,12 @@ func (o *ReadEventsV1beta1NamespacedEvent) ServeHTTP(rw http.ResponseWriter, r *
 	}
 	var Params = NewReadEventsV1beta1NamespacedEventParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

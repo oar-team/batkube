@@ -12,16 +12,16 @@ import (
 )
 
 // ReplaceCoreV1NodeStatusHandlerFunc turns a function with the right signature into a replace core v1 node status handler
-type ReplaceCoreV1NodeStatusHandlerFunc func(ReplaceCoreV1NodeStatusParams, interface{}) middleware.Responder
+type ReplaceCoreV1NodeStatusHandlerFunc func(ReplaceCoreV1NodeStatusParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ReplaceCoreV1NodeStatusHandlerFunc) Handle(params ReplaceCoreV1NodeStatusParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn ReplaceCoreV1NodeStatusHandlerFunc) Handle(params ReplaceCoreV1NodeStatusParams) middleware.Responder {
+	return fn(params)
 }
 
 // ReplaceCoreV1NodeStatusHandler interface for that can handle valid replace core v1 node status params
 type ReplaceCoreV1NodeStatusHandler interface {
-	Handle(ReplaceCoreV1NodeStatusParams, interface{}) middleware.Responder
+	Handle(ReplaceCoreV1NodeStatusParams) middleware.Responder
 }
 
 // NewReplaceCoreV1NodeStatus creates a new http.Handler for the replace core v1 node status operation
@@ -46,25 +46,12 @@ func (o *ReplaceCoreV1NodeStatus) ServeHTTP(rw http.ResponseWriter, r *http.Requ
 	}
 	var Params = NewReplaceCoreV1NodeStatusParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

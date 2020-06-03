@@ -12,16 +12,16 @@ import (
 )
 
 // CreateAuthorizationV1SelfSubjectRulesReviewHandlerFunc turns a function with the right signature into a create authorization v1 self subject rules review handler
-type CreateAuthorizationV1SelfSubjectRulesReviewHandlerFunc func(CreateAuthorizationV1SelfSubjectRulesReviewParams, interface{}) middleware.Responder
+type CreateAuthorizationV1SelfSubjectRulesReviewHandlerFunc func(CreateAuthorizationV1SelfSubjectRulesReviewParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateAuthorizationV1SelfSubjectRulesReviewHandlerFunc) Handle(params CreateAuthorizationV1SelfSubjectRulesReviewParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateAuthorizationV1SelfSubjectRulesReviewHandlerFunc) Handle(params CreateAuthorizationV1SelfSubjectRulesReviewParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateAuthorizationV1SelfSubjectRulesReviewHandler interface for that can handle valid create authorization v1 self subject rules review params
 type CreateAuthorizationV1SelfSubjectRulesReviewHandler interface {
-	Handle(CreateAuthorizationV1SelfSubjectRulesReviewParams, interface{}) middleware.Responder
+	Handle(CreateAuthorizationV1SelfSubjectRulesReviewParams) middleware.Responder
 }
 
 // NewCreateAuthorizationV1SelfSubjectRulesReview creates a new http.Handler for the create authorization v1 self subject rules review operation
@@ -46,25 +46,12 @@ func (o *CreateAuthorizationV1SelfSubjectRulesReview) ServeHTTP(rw http.Response
 	}
 	var Params = NewCreateAuthorizationV1SelfSubjectRulesReviewParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

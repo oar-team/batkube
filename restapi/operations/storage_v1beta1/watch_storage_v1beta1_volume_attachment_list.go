@@ -12,16 +12,16 @@ import (
 )
 
 // WatchStorageV1beta1VolumeAttachmentListHandlerFunc turns a function with the right signature into a watch storage v1beta1 volume attachment list handler
-type WatchStorageV1beta1VolumeAttachmentListHandlerFunc func(WatchStorageV1beta1VolumeAttachmentListParams, interface{}) middleware.Responder
+type WatchStorageV1beta1VolumeAttachmentListHandlerFunc func(WatchStorageV1beta1VolumeAttachmentListParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchStorageV1beta1VolumeAttachmentListHandlerFunc) Handle(params WatchStorageV1beta1VolumeAttachmentListParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchStorageV1beta1VolumeAttachmentListHandlerFunc) Handle(params WatchStorageV1beta1VolumeAttachmentListParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchStorageV1beta1VolumeAttachmentListHandler interface for that can handle valid watch storage v1beta1 volume attachment list params
 type WatchStorageV1beta1VolumeAttachmentListHandler interface {
-	Handle(WatchStorageV1beta1VolumeAttachmentListParams, interface{}) middleware.Responder
+	Handle(WatchStorageV1beta1VolumeAttachmentListParams) middleware.Responder
 }
 
 // NewWatchStorageV1beta1VolumeAttachmentList creates a new http.Handler for the watch storage v1beta1 volume attachment list operation
@@ -46,25 +46,12 @@ func (o *WatchStorageV1beta1VolumeAttachmentList) ServeHTTP(rw http.ResponseWrit
 	}
 	var Params = NewWatchStorageV1beta1VolumeAttachmentListParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

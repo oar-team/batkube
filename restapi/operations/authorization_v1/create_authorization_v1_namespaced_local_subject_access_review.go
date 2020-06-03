@@ -12,16 +12,16 @@ import (
 )
 
 // CreateAuthorizationV1NamespacedLocalSubjectAccessReviewHandlerFunc turns a function with the right signature into a create authorization v1 namespaced local subject access review handler
-type CreateAuthorizationV1NamespacedLocalSubjectAccessReviewHandlerFunc func(CreateAuthorizationV1NamespacedLocalSubjectAccessReviewParams, interface{}) middleware.Responder
+type CreateAuthorizationV1NamespacedLocalSubjectAccessReviewHandlerFunc func(CreateAuthorizationV1NamespacedLocalSubjectAccessReviewParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn CreateAuthorizationV1NamespacedLocalSubjectAccessReviewHandlerFunc) Handle(params CreateAuthorizationV1NamespacedLocalSubjectAccessReviewParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn CreateAuthorizationV1NamespacedLocalSubjectAccessReviewHandlerFunc) Handle(params CreateAuthorizationV1NamespacedLocalSubjectAccessReviewParams) middleware.Responder {
+	return fn(params)
 }
 
 // CreateAuthorizationV1NamespacedLocalSubjectAccessReviewHandler interface for that can handle valid create authorization v1 namespaced local subject access review params
 type CreateAuthorizationV1NamespacedLocalSubjectAccessReviewHandler interface {
-	Handle(CreateAuthorizationV1NamespacedLocalSubjectAccessReviewParams, interface{}) middleware.Responder
+	Handle(CreateAuthorizationV1NamespacedLocalSubjectAccessReviewParams) middleware.Responder
 }
 
 // NewCreateAuthorizationV1NamespacedLocalSubjectAccessReview creates a new http.Handler for the create authorization v1 namespaced local subject access review operation
@@ -46,25 +46,12 @@ func (o *CreateAuthorizationV1NamespacedLocalSubjectAccessReview) ServeHTTP(rw h
 	}
 	var Params = NewCreateAuthorizationV1NamespacedLocalSubjectAccessReviewParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 

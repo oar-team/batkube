@@ -12,16 +12,16 @@ import (
 )
 
 // WatchCoreV1NamespacedPodTemplateHandlerFunc turns a function with the right signature into a watch core v1 namespaced pod template handler
-type WatchCoreV1NamespacedPodTemplateHandlerFunc func(WatchCoreV1NamespacedPodTemplateParams, interface{}) middleware.Responder
+type WatchCoreV1NamespacedPodTemplateHandlerFunc func(WatchCoreV1NamespacedPodTemplateParams) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn WatchCoreV1NamespacedPodTemplateHandlerFunc) Handle(params WatchCoreV1NamespacedPodTemplateParams, principal interface{}) middleware.Responder {
-	return fn(params, principal)
+func (fn WatchCoreV1NamespacedPodTemplateHandlerFunc) Handle(params WatchCoreV1NamespacedPodTemplateParams) middleware.Responder {
+	return fn(params)
 }
 
 // WatchCoreV1NamespacedPodTemplateHandler interface for that can handle valid watch core v1 namespaced pod template params
 type WatchCoreV1NamespacedPodTemplateHandler interface {
-	Handle(WatchCoreV1NamespacedPodTemplateParams, interface{}) middleware.Responder
+	Handle(WatchCoreV1NamespacedPodTemplateParams) middleware.Responder
 }
 
 // NewWatchCoreV1NamespacedPodTemplate creates a new http.Handler for the watch core v1 namespaced pod template operation
@@ -46,25 +46,12 @@ func (o *WatchCoreV1NamespacedPodTemplate) ServeHTTP(rw http.ResponseWriter, r *
 	}
 	var Params = NewWatchCoreV1NamespacedPodTemplateParams()
 
-	uprinc, aCtx, err := o.Context.Authorize(r, route)
-	if err != nil {
-		o.Context.Respond(rw, r, route.Produces, route, err)
-		return
-	}
-	if aCtx != nil {
-		r = aCtx
-	}
-	var principal interface{}
-	if uprinc != nil {
-		principal = uprinc
-	}
-
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
 
-	res := o.Handler.Handle(Params, principal) // actually handle the request
+	res := o.Handler.Handle(Params) // actually handle the request
 
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
