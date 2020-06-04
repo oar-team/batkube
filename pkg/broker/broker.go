@@ -10,6 +10,9 @@ import (
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
 
+const timeout = 1
+const nonEmpty = 1 << 1
+
 /*
 Handles time requests asynchronously. All sends and receives are non blocking
 
@@ -128,6 +131,10 @@ func Run(batEndpoint string) {
 	var timeEvents = make(chan translate.Event)
 	go handleTimeRequests(timeSock, end, now, timeEvents)
 
+	// condition upon which the broker will stop waiting for new messages
+	stopCondition := timeout
+	timeoutValue := 500 * time.Millisecond
+
 	var batMsg translate.BatMessage
 	var batMsgBytes []byte
 	thisIsTheEnd := false
@@ -157,9 +164,7 @@ func Run(batEndpoint string) {
 		// Get pending events to send to Batsim
 		elapsedSinceLastMessage := time.Duration(0)
 		lastMessageTime := time.Now()
-		timeout := 500 * time.Millisecond
 		stopReceivingEvents := false
-		stopCondition := "non-empty"
 		for !stopReceivingEvents {
 			updateNow(now, batMsg.Now)
 			select {
@@ -179,15 +184,14 @@ func Run(batEndpoint string) {
 				batMsg.Events = append(batMsg.Events, executeJob)
 				log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
 			default:
-				// TODO : use masks to parameterize stop conditions.
-				switch stopCondition {
-				case "non-empty":
+				if stopCondition&nonEmpty != 0 {
 					if len(batMsg.Events) > 0 {
 						stopReceivingEvents = true
 					}
-				case "timeout":
+				}
+				if stopCondition&timeout != 0 {
 					elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
-					if elapsedSinceLastMessage >= timeout {
+					if elapsedSinceLastMessage >= timeoutValue {
 						stopReceivingEvents = true
 					}
 				}
