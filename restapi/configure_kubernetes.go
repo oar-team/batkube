@@ -128,7 +128,9 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		return err
 	})
 	api.TxtProducer = runtime.TextProducer()
-	//api.YamlProducer = yamlpc.YAMLProducer()
+	api.YamlProducer = yamlpc.YAMLProducer()
+
+	//api.RegisterProducer("application/vnd.kubernetes.protobuf", api.ProtobufProducer)
 
 	// Applies when the "authorization" header is set
 	//api.BearerTokenAuth = func(token string) (interface{}, error) {
@@ -140,6 +142,97 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	//
 	// Example:
 	// api.APIAuthorizer = security.Authorized()
+
+	api.StorageV1ListStorageV1StorageClassHandler = storage_v1.ListStorageV1StorageClassHandlerFunc(func(params storage_v1.ListStorageV1StorageClassParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := p.Produce(rw, models.IoK8sAPIStorageV1StorageClassList{
+				Kind:       "StorageClassList",
+				APIVersion: "storage.k8s.io/v1",
+				Items:      []*models.IoK8sAPIStorageV1StorageClass{},
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+	})
+
+	api.StorageV1ListStorageV1CSINodeHandler = storage_v1.ListStorageV1CSINodeHandlerFunc(func(params storage_v1.ListStorageV1CSINodeParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := p.Produce(rw, models.IoK8sAPIStorageV1CSINodeList{
+				Kind:       "CSINodeList",
+				APIVersion: "storage.k8s.io/v1",
+				Items:      []*models.IoK8sAPIStorageV1CSINode{},
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+	})
+
+	api.CoreV1ListCoreV1PersistentVolumeClaimForAllNamespacesHandler = core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := p.Produce(rw, models.IoK8sAPICoreV1PersistentVolumeClaimList{
+				Kind:       "PersistentVolumeClaimList",
+				APIVersion: "v1",
+				Items:      []*models.IoK8sAPICoreV1PersistentVolumeClaim{},
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+	})
+
+	api.CoreV1ListCoreV1PersistentVolumeHandler = core_v1.ListCoreV1PersistentVolumeHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := p.Produce(rw, models.IoK8sAPICoreV1PersistentVolumeList{
+				Kind:       "PersistentVolumeList",
+				APIVersion: "v1",
+				Items:      []*models.IoK8sAPICoreV1PersistentVolume{},
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+	})
+
+	api.CoreV1ListCoreV1ServiceForAllNamespacesHandler = core_v1.ListCoreV1ServiceForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1ServiceForAllNamespacesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := p.Produce(rw, models.IoK8sAPICoreV1ServiceList{
+				Kind:       "ServiceList",
+				APIVersion: "v1",
+				Items:      []*models.IoK8sAPICoreV1Service{},
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+	})
+
+	api.PolicyV1beta1ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandler = policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandlerFunc(func(params policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := p.Produce(rw, models.IoK8sAPIPolicyV1beta1PodDisruptionBudgetList{
+				Kind:       "PodDisruptionBudgetList",
+				APIVersion: "policy/v1beta1",
+				Items:      []*models.IoK8sAPIPolicyV1beta1PodDisruptionBudget{},
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+	})
+
+	api.EventsV1beta1GetEventsV1beta1APIResourcesHandler = events_v1beta1.GetEventsV1beta1APIResourcesHandlerFunc(func(params events_v1beta1.GetEventsV1beta1APIResourcesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1APIResourceList{
+				Kind:       "APIResourceList",
+				APIVersion: "v1",
+				Resources:  []*models.IoK8sApimachineryPkgApisMetaV1APIResource{},
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+	})
 
 	api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
