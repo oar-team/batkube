@@ -13,6 +13,25 @@ import (
 const timeout = 1
 const nonEmpty = 1 << 1
 
+// Stop condition when waiting for new messages to send to Batsim
+var stopCondition = nonEmpty | timeout
+var timeoutValue = 500 * time.Millisecond
+
+/*
+Helper function to remove elements of given indices from the event slice
+*/
+func removeEvents(to_remove_indexes []int, events *[]translate.Event) {
+	// Do a reverse range to avoid index error
+	last := len(to_remove_indexes) - 1
+	for i := range to_remove_indexes {
+		reverse_i := to_remove_indexes[last-i]
+		(*events) = append(
+			(*events)[:reverse_i],
+			(*events)[reverse_i+1:]...,
+		)
+	}
+}
+
 /*
 Handles time requests asynchronously. All sends and receives are non blocking
 
@@ -132,8 +151,6 @@ func Run(batEndpoint string) {
 	go handleTimeRequests(timeSock, end, now, timeEvents)
 
 	// condition upon which the broker will stop waiting for new messages
-	stopCondition := timeout
-	timeoutValue := 500 * time.Millisecond
 
 	var batMsg translate.BatMessage
 	var batMsgBytes []byte
@@ -166,7 +183,7 @@ func Run(batEndpoint string) {
 		lastMessageTime := time.Now()
 		stopReceivingEvents := false
 		for !stopReceivingEvents {
-			updateNow(now, batMsg.Now)
+			updateNow(now, batMsg)
 			select {
 			case event := <-timeEvents:
 				// Call me laters from time requests
@@ -212,7 +229,7 @@ func Run(batEndpoint string) {
 }
 
 // Sync with handleTimeRequests
-func updateNow(now chan float64, nowValue float64) {
+func updateNow(now chan float64, batMsg translate.BatMessage) {
 	// This is a non blocking send because now is buffered
 	if len(now) == cap(now) {
 		select {
@@ -220,7 +237,16 @@ func updateNow(now chan float64, nowValue float64) {
 		default:
 		}
 	}
-	now <- nowValue
+	// Remove any call_me_later that would be outdated
+	toRemove := make([]int, 0)
+	for i, event := range batMsg.Events {
+		if event.Type == "CALL_ME_LATER" && event.Data["timestamp"].(float64) <= batMsg.Now {
+			toRemove = append(toRemove, i)
+		}
+	}
+	removeEvents(toRemove, &batMsg.Events)
+
+	now <- batMsg.Now
 }
 
 func isIn(i int64, s []int64) bool {
