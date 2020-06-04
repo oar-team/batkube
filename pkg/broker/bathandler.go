@@ -7,11 +7,7 @@ import (
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
 
-func handleBatMessage(msg translate.BatMessage) translate.BatMessage {
-	reply := translate.BatMessage{
-		Now:    msg.Now,
-		Events: make([]translate.Event, 0),
-	}
+func handleBatMessage(msg translate.BatMessage) {
 	for _, event := range msg.Events {
 		switch event.Type {
 		case "SIMULATION_BEGINS":
@@ -103,6 +99,4 @@ func handleBatMessage(msg translate.BatMessage) translate.BatMessage {
 			log.Errorf("[broker:bathandler] I don't know about this event type: %s", event.Type)
 		}
 	}
-
-	return reply
 }

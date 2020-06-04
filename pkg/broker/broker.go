@@ -66,7 +66,6 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 			}
 			seen = append(seen, d)
 
-			// conversion from nanoseconds to seconds.milliseconds
 			requested := addAndRound(nowValue, time.Duration(d))
 			// TODO : can the contrary ever happen? What to do if it happens?
 			if requested > nowValue {
@@ -81,7 +80,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 			}
 		}
 
-		// Answer the messages
+		// Answer the time requests
 		nowNano := uint64(nowValue * 1e9)
 		b := make([]byte, 8)
 		binary.LittleEndian.PutUint64(b, nowNano)
@@ -138,8 +137,7 @@ func Run(batEndpoint string) {
 	var timeEvents = make(chan translate.Event)
 	go handleTimeRequests(timeSock, end, now, timeEvents)
 
-	// condition upon which the broker will stop waiting for new messages
-
+	// Main loop
 	var batMsg translate.BatMessage
 	var batMsgBytes []byte
 	thisIsTheEnd := false
@@ -163,8 +161,9 @@ func Run(batEndpoint string) {
 			}
 		}
 
-		// Handle the message, take back the response
-		batMsg = handleBatMessage(batMsg)
+		// Handle the message
+		handleBatMessage(batMsg)
+		batMsg.Events = make([]translate.Event, 0)
 
 		// Get pending events to send to Batsim
 		elapsedSinceLastMessage := time.Duration(0)
@@ -174,7 +173,7 @@ func Run(batEndpoint string) {
 			updateNow(now, batMsg)
 			select {
 			case event := <-timeEvents:
-				// Call me laters from time requests
+				// Call me later events from time requests
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				lastMessageTime = time.Now()
 				batMsg.Events = append(batMsg.Events, event)
