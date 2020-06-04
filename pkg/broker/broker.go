@@ -67,8 +67,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 			seen = append(seen, d)
 
 			// conversion from nanoseconds to seconds.milliseconds
-			df := float64(d) / 1e9
-			requested := nowValue + df
+			requested := addAndRound(nowValue, time.Duration(d))
 			// TODO : can the contrary ever happen? What to do if it happens?
 			if requested > nowValue {
 				err, callMeLater := translate.MakeEvent(nowValue, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: requested})
