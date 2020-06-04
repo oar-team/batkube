@@ -3,6 +3,7 @@ package broker
 import (
 	"encoding/binary"
 	"encoding/json"
+	"math"
 	"time"
 
 	zmq "github.com/pebbe/zmq4"
@@ -14,23 +15,11 @@ const timeout = 1
 const nonEmpty = 1 << 1
 
 // Stop condition when waiting for new messages to send to Batsim
+// ex : stopCondition = nonEmpty | timeout will stop waiting for messages if
+// the waiting time since last message is higher than timeoutValue OR if the
+// Events slice is not empty.
 var stopCondition = nonEmpty | timeout
 var timeoutValue = 500 * time.Millisecond
-
-/*
-Helper function to remove elements of given indices from the event slice
-*/
-func removeEvents(to_remove_indexes []int, events *[]translate.Event) {
-	// Do a reverse range to avoid index error
-	last := len(to_remove_indexes) - 1
-	for i := range to_remove_indexes {
-		reverse_i := to_remove_indexes[last-i]
-		(*events) = append(
-			(*events)[:reverse_i],
-			(*events)[reverse_i+1:]...,
-		)
-	}
-}
 
 /*
 Handles time requests asynchronously. All sends and receives are non blocking
@@ -187,12 +176,12 @@ func Run(batEndpoint string) {
 			select {
 			case event := <-timeEvents:
 				// Call me laters from time requests
-				batMsg.Now += float64(elapsedSinceLastMessage) / 1e9
+				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				lastMessageTime = time.Now()
 				batMsg.Events = append(batMsg.Events, event)
 			case pod := <-ToExecute:
 				// Jobs sent over by the api
-				batMsg.Now += float64(elapsedSinceLastMessage) / 1e9
+				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				lastMessageTime = time.Now()
 				err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
 				if err != nil {
@@ -203,13 +192,13 @@ func Run(batEndpoint string) {
 			default:
 				if stopCondition&nonEmpty != 0 {
 					if len(batMsg.Events) > 0 {
-						stopReceivingEvents = true
+						stopReceivingEvents = !removeOutdatedEvents(&batMsg)
 					}
 				}
 				if stopCondition&timeout != 0 {
 					elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
 					if elapsedSinceLastMessage >= timeoutValue {
-						stopReceivingEvents = true
+						stopReceivingEvents = !removeOutdatedEvents(&batMsg)
 					}
 				}
 			}
@@ -237,15 +226,6 @@ func updateNow(now chan float64, batMsg translate.BatMessage) {
 		default:
 		}
 	}
-	// Remove any call_me_later that would be outdated
-	toRemove := make([]int, 0)
-	for i, event := range batMsg.Events {
-		if event.Type == "CALL_ME_LATER" && event.Data["timestamp"].(float64) <= batMsg.Now {
-			toRemove = append(toRemove, i)
-		}
-	}
-	removeEvents(toRemove, &batMsg.Events)
-
 	now <- batMsg.Now
 }
 
@@ -256,4 +236,34 @@ func isIn(i int64, s []int64) bool {
 		}
 	}
 	return false
+}
+
+/*
+Remove any call_me_later that would be outdated
+
+Returns if events have been removed
+*/
+func removeOutdatedEvents(batMsg *translate.BatMessage) bool {
+	toRemove := make([]int, 0)
+	for i, event := range batMsg.Events {
+		if event.Type == "CALL_ME_LATER" && event.Data["timestamp"].(float64) <= batMsg.Now {
+			toRemove = append(toRemove, i)
+		}
+	}
+
+	// Do a reverse range to avoid index error
+	last := len(toRemove) - 1
+	for i := range toRemove {
+		reverse_i := toRemove[last-i]
+		batMsg.Events = append(
+			batMsg.Events[:reverse_i],
+			batMsg.Events[reverse_i+1:]...,
+		)
+	}
+	return len(toRemove) > 0
+}
+
+func addAndRound(now float64, d time.Duration) float64 {
+	df := float64(d) / 1e9                  // d is in nanoseconds
+	return math.Round((now+df)*1000) / 1000 // we want to round to the closest millisecond
 }
