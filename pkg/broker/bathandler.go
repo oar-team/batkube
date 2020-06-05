@@ -20,13 +20,13 @@ func handleBatMessage(msg translate.BatMessage) {
 			// Translate to nodes objects
 			log.Debugln("[broker:bathandler] Translating compute resources to nodes")
 			err, nodesSlice := translate.ComputeResourcesToNodes(SimData.ComputeResources)
-			Nodes.Items = nodesSlice
+			NodeList.Items = nodesSlice
 			if err != nil {
 				log.Panic("[broker:bathandler] error translating compute resources to nodes: ", err)
 			}
 
 			// Add events to event list
-			for _, node := range Nodes.Items {
+			for _, node := range NodeList.Items {
 				AddEvent(models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
 					Type:   &translate.Added,
 					Object: node,
@@ -34,7 +34,7 @@ func handleBatMessage(msg translate.BatMessage) {
 			}
 
 			var nodeList []string
-			for _, node := range Nodes.Items {
+			for _, node := range NodeList.Items {
 				nodeList = append(nodeList, node.Metadata.Name)
 			}
 			log.Infof("[broker:bathandler] Available nodes : %s", nodeList)
@@ -53,8 +53,8 @@ func handleBatMessage(msg translate.BatMessage) {
 			if err != nil {
 				log.Panic("[broker:bathandler] error translating a job to a pod: ", err)
 			}
-			Pods.Items = append(Pods.Items, &pod)
-			log.Tracef("pods : %s", spew.Sdump(Pods))
+			PodList.Items = append(PodList.Items, &pod)
+			log.Tracef("pods : %s", spew.Sdump(PodList))
 			log.Infof("[broker:bathandler] pod %s is ready to be scheduled", pod.Metadata.Name)
 
 			// Add to event list

@@ -14,7 +14,6 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/yamlpc"
-	"github.com/gogo/protobuf/proto"
 	"github.com/mitchellh/mapstructure"
 
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
@@ -122,11 +121,23 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.JSONProducer = runtime.JSONProducer()
 	api.ProtobufProducer = runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
-		var message proto.Message
-		data = message
-		err := proto.MarshalText(w, message)
-		return err
+		return errors.NotImplemented("protobuf producer has not yet been implemented")
 	})
+	// Some attempt at a general purpose protobuf marshaller
+	//api.ProtobufProducer = runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
+	//	b, err := json.Marshal(data)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	var m proto.Message
+	//	if err = jsonpb.Unmarshal(bytes.NewReader(b), m); err != nil {
+	//		return err
+	//	}
+	//	if err := proto.MarshalText(w, m); err != nil {
+	//		return err
+	//	}
+	//	return nil
+	//})
 	api.TxtProducer = runtime.TextProducer()
 	api.YamlProducer = yamlpc.YAMLProducer()
 
@@ -145,91 +156,56 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 
 	api.StorageV1ListStorageV1StorageClassHandler = storage_v1.ListStorageV1StorageClassHandlerFunc(func(params storage_v1.ListStorageV1StorageClassParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := p.Produce(rw, models.IoK8sAPIStorageV1StorageClassList{
-				Kind:       "StorageClassList",
-				APIVersion: "storage.k8s.io/v1",
-				Items:      []*models.IoK8sAPIStorageV1StorageClass{},
-			}); err != nil {
+			if err := listResource(params.Watch, "StorageClass", &broker.StorageClassList, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
 			}
 		})
 	})
 
 	api.StorageV1ListStorageV1CSINodeHandler = storage_v1.ListStorageV1CSINodeHandlerFunc(func(params storage_v1.ListStorageV1CSINodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := p.Produce(rw, models.IoK8sAPIStorageV1CSINodeList{
-				Kind:       "CSINodeList",
-				APIVersion: "storage.k8s.io/v1",
-				Items:      []*models.IoK8sAPIStorageV1CSINode{},
-			}); err != nil {
+			if err := listResource(params.Watch, "CSINode", &broker.CSINodeList, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
 			}
 		})
 	})
 
 	api.CoreV1ListCoreV1PersistentVolumeClaimForAllNamespacesHandler = core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := p.Produce(rw, models.IoK8sAPICoreV1PersistentVolumeClaimList{
-				Kind:       "PersistentVolumeClaimList",
-				APIVersion: "v1",
-				Items:      []*models.IoK8sAPICoreV1PersistentVolumeClaim{},
-			}); err != nil {
+			if err := listResource(params.Watch, "PersistentVolumeClaim", &broker.PersistentVolumeClaimList, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
 			}
 		})
 	})
 
 	api.CoreV1ListCoreV1PersistentVolumeHandler = core_v1.ListCoreV1PersistentVolumeHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := p.Produce(rw, models.IoK8sAPICoreV1PersistentVolumeList{
-				Kind:       "PersistentVolumeList",
-				APIVersion: "v1",
-				Items:      []*models.IoK8sAPICoreV1PersistentVolume{},
-			}); err != nil {
+			if err := listResource(params.Watch, "PersistentVolume", &broker.PersistentVolumeList, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
 			}
 		})
 	})
 
 	api.CoreV1ListCoreV1ServiceForAllNamespacesHandler = core_v1.ListCoreV1ServiceForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1ServiceForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := p.Produce(rw, models.IoK8sAPICoreV1ServiceList{
-				Kind:       "ServiceList",
-				APIVersion: "v1",
-				Items:      []*models.IoK8sAPICoreV1Service{},
-			}); err != nil {
+			if err := listResource(params.Watch, "Service", &broker.ServiceList, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
 			}
 		})
 	})
 
 	api.PolicyV1beta1ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandler = policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandlerFunc(func(params policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := p.Produce(rw, models.IoK8sAPIPolicyV1beta1PodDisruptionBudgetList{
-				Kind:       "PodDisruptionBudgetList",
-				APIVersion: "policy/v1beta1",
-				Items:      []*models.IoK8sAPIPolicyV1beta1PodDisruptionBudget{},
-			}); err != nil {
+			if err := listResource(params.Watch, "PodDisruptionBudget", &broker.PodDisruptionBudgetList, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
 			}
 		})
 	})
 
 	api.EventsV1beta1GetEventsV1beta1APIResourcesHandler = events_v1beta1.GetEventsV1beta1APIResourcesHandlerFunc(func(params events_v1beta1.GetEventsV1beta1APIResourcesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1APIResourceList{
-				Kind:       "APIResourceList",
-				APIVersion: "v1",
-				Resources:  []*models.IoK8sApimachineryPkgApisMetaV1APIResource{},
-			}); err != nil {
+			if err := listResource(nil, "APIResource", &broker.APIResourceList, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
 			}
 		})
 	})
@@ -242,9 +218,9 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			//	split := strings.Split(*params.FieldSelector, "=")
 			//	selector, value := split[0], split[1]
 			//	tags := strings.Split(selector, ".")
-			//	for _, pod := range broker.Pods.Items {
+			//	for _, pod := range broker.PodList.Items {
 			//		if value == translate.GetValueFromTagsWithPointers(*pod, tags) {
-			//			chosenPods.Items = append(chosenPods.Items, pod)
+			//			chosenPodList.Items = append(chosenPodList.Items, pod)
 			//		}
 			//	}
 			//}
@@ -253,29 +229,16 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 
 			// TODO implement ?resourceVersion
 
-			// TODO
-			if params.Watch != nil && *params.Watch {
-				filteredEvents := translate.FilterEventListOnKind(broker.GetEvents(), "Pod")
-				streamEvents(rw, filteredEvents)
-			} else {
-				err := p.Produce(rw, &broker.Pods)
-				if err != nil {
-					http.Error(rw, err.Error(), http.StatusInternalServerError)
-				}
+			if err := listResource(params.Watch, "Pod", &broker.PodList, rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
 			}
 		})
 	})
 
 	api.CoreV1ListCoreV1NodeHandler = core_v1.ListCoreV1NodeHandlerFunc(func(params core_v1.ListCoreV1NodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if params.Watch != nil && *params.Watch {
-				filteredEvents := translate.FilterEventListOnKind(broker.GetEvents(), "Node")
-				streamEvents(rw, filteredEvents)
-			} else {
-				err := p.Produce(rw, &broker.Nodes)
-				if err != nil {
-					http.Error(rw, err.Error(), http.StatusInternalServerError)
-				}
+			if err := listResource(params.Watch, "Node", &broker.NodeList, rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
 			}
 		})
 	})
@@ -772,11 +735,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation core_v1.CreateCoreV1Namespace has not yet been implemented")
 		})
 	}
-	if api.CoreV1CreateCoreV1NamespacedBindingHandler == nil {
-		api.CoreV1CreateCoreV1NamespacedBindingHandler = core_v1.CreateCoreV1NamespacedBindingHandlerFunc(func(params core_v1.CreateCoreV1NamespacedBindingParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.CreateCoreV1NamespacedBinding has not yet been implemented")
-		})
-	}
 	if api.CoreV1CreateCoreV1NamespacedConfigMapHandler == nil {
 		api.CoreV1CreateCoreV1NamespacedConfigMapHandler = core_v1.CreateCoreV1NamespacedConfigMapHandlerFunc(func(params core_v1.CreateCoreV1NamespacedConfigMapParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.CreateCoreV1NamespacedConfigMap has not yet been implemented")
@@ -805,11 +763,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1CreateCoreV1NamespacedPodHandler == nil {
 		api.CoreV1CreateCoreV1NamespacedPodHandler = core_v1.CreateCoreV1NamespacedPodHandlerFunc(func(params core_v1.CreateCoreV1NamespacedPodParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.CreateCoreV1NamespacedPod has not yet been implemented")
-		})
-	}
-	if api.CoreV1CreateCoreV1NamespacedPodBindingHandler == nil {
-		api.CoreV1CreateCoreV1NamespacedPodBindingHandler = core_v1.CreateCoreV1NamespacedPodBindingHandlerFunc(func(params core_v1.CreateCoreV1NamespacedPodBindingParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.CreateCoreV1NamespacedPodBinding has not yet been implemented")
 		})
 	}
 	if api.CoreV1CreateCoreV1NamespacedPodEvictionHandler == nil {
@@ -1982,11 +1935,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation events.GetEventsAPIGroup has not yet been implemented")
 		})
 	}
-	if api.EventsV1beta1GetEventsV1beta1APIResourcesHandler == nil {
-		api.EventsV1beta1GetEventsV1beta1APIResourcesHandler = events_v1beta1.GetEventsV1beta1APIResourcesHandlerFunc(func(params events_v1beta1.GetEventsV1beta1APIResourcesParams) middleware.Responder {
-			return middleware.NotImplemented("operation events_v1beta1.GetEventsV1beta1APIResources has not yet been implemented")
-		})
-	}
 	if api.ExtensionsGetExtensionsAPIGroupHandler == nil {
 		api.ExtensionsGetExtensionsAPIGroupHandler = extensions.GetExtensionsAPIGroupHandlerFunc(func(params extensions.GetExtensionsAPIGroupParams) middleware.Responder {
 			return middleware.NotImplemented("operation extensions.GetExtensionsAPIGroup has not yet been implemented")
@@ -2387,26 +2335,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedServiceAccount has not yet been implemented")
 		})
 	}
-	if api.CoreV1ListCoreV1NodeHandler == nil {
-		api.CoreV1ListCoreV1NodeHandler = core_v1.ListCoreV1NodeHandlerFunc(func(params core_v1.ListCoreV1NodeParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1Node has not yet been implemented")
-		})
-	}
-	if api.CoreV1ListCoreV1PersistentVolumeHandler == nil {
-		api.CoreV1ListCoreV1PersistentVolumeHandler = core_v1.ListCoreV1PersistentVolumeHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1PersistentVolume has not yet been implemented")
-		})
-	}
-	if api.CoreV1ListCoreV1PersistentVolumeClaimForAllNamespacesHandler == nil {
-		api.CoreV1ListCoreV1PersistentVolumeClaimForAllNamespacesHandler = core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1PersistentVolumeClaimForAllNamespaces has not yet been implemented")
-		})
-	}
-	if api.CoreV1ListCoreV1PodForAllNamespacesHandler == nil {
-		api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1PodForAllNamespaces has not yet been implemented")
-		})
-	}
 	if api.CoreV1ListCoreV1PodTemplateForAllNamespacesHandler == nil {
 		api.CoreV1ListCoreV1PodTemplateForAllNamespacesHandler = core_v1.ListCoreV1PodTemplateForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodTemplateForAllNamespacesParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1PodTemplateForAllNamespaces has not yet been implemented")
@@ -2430,11 +2358,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1ListCoreV1ServiceAccountForAllNamespacesHandler == nil {
 		api.CoreV1ListCoreV1ServiceAccountForAllNamespacesHandler = core_v1.ListCoreV1ServiceAccountForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1ServiceAccountForAllNamespacesParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1ServiceAccountForAllNamespaces has not yet been implemented")
-		})
-	}
-	if api.CoreV1ListCoreV1ServiceForAllNamespacesHandler == nil {
-		api.CoreV1ListCoreV1ServiceForAllNamespacesHandler = core_v1.ListCoreV1ServiceForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1ServiceForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1ServiceForAllNamespaces has not yet been implemented")
 		})
 	}
 	if api.DiscoveryV1beta1ListDiscoveryV1beta1EndpointSliceForAllNamespacesHandler == nil {
@@ -2515,11 +2438,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.PolicyV1beta1ListPolicyV1beta1NamespacedPodDisruptionBudgetHandler == nil {
 		api.PolicyV1beta1ListPolicyV1beta1NamespacedPodDisruptionBudgetHandler = policy_v1beta1.ListPolicyV1beta1NamespacedPodDisruptionBudgetHandlerFunc(func(params policy_v1beta1.ListPolicyV1beta1NamespacedPodDisruptionBudgetParams) middleware.Responder {
 			return middleware.NotImplemented("operation policy_v1beta1.ListPolicyV1beta1NamespacedPodDisruptionBudget has not yet been implemented")
-		})
-	}
-	if api.PolicyV1beta1ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandler == nil {
-		api.PolicyV1beta1ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandler = policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandlerFunc(func(params policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespaces has not yet been implemented")
 		})
 	}
 	if api.PolicyV1beta1ListPolicyV1beta1PodSecurityPolicyHandler == nil {
@@ -2645,11 +2563,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.StorageV1ListStorageV1CSIDriverHandler == nil {
 		api.StorageV1ListStorageV1CSIDriverHandler = storage_v1.ListStorageV1CSIDriverHandlerFunc(func(params storage_v1.ListStorageV1CSIDriverParams) middleware.Responder {
 			return middleware.NotImplemented("operation storage_v1.ListStorageV1CSIDriver has not yet been implemented")
-		})
-	}
-	if api.StorageV1ListStorageV1CSINodeHandler == nil {
-		api.StorageV1ListStorageV1CSINodeHandler = storage_v1.ListStorageV1CSINodeHandlerFunc(func(params storage_v1.ListStorageV1CSINodeParams) middleware.Responder {
-			return middleware.NotImplemented("operation storage_v1.ListStorageV1CSINode has not yet been implemented")
 		})
 	}
 	if api.StorageV1ListStorageV1StorageClassHandler == nil {
@@ -3000,11 +2913,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1PatchCoreV1NamespacedServiceStatusHandler == nil {
 		api.CoreV1PatchCoreV1NamespacedServiceStatusHandler = core_v1.PatchCoreV1NamespacedServiceStatusHandlerFunc(func(params core_v1.PatchCoreV1NamespacedServiceStatusParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.PatchCoreV1NamespacedServiceStatus has not yet been implemented")
-		})
-	}
-	if api.CoreV1PatchCoreV1NodeHandler == nil {
-		api.CoreV1PatchCoreV1NodeHandler = core_v1.PatchCoreV1NodeHandlerFunc(func(params core_v1.PatchCoreV1NodeParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.PatchCoreV1Node has not yet been implemented")
 		})
 	}
 	if api.CoreV1PatchCoreV1NodeStatusHandler == nil {
@@ -5302,7 +5210,7 @@ func configureServer(s *http.Server, scheme, addr string) {
 // The middleware executes after routing but before authentication, binding and validation
 func setupMiddlewares(handler http.Handler) http.Handler {
 	//TODO read from env variables
-	debug := false
+	debug := true
 	if debug {
 		return interpose.NegroniLogrus()(handler)
 	}
@@ -5343,4 +5251,16 @@ func streamEvents(rw http.ResponseWriter, events []models.IoK8sApimachineryPkgAp
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		}
 	}
+}
+
+func listResource(watch *bool, resourceKind string, resourceList interface{}, rw http.ResponseWriter, p runtime.Producer) error {
+	if watch != nil && *watch {
+		filteredEvents := translate.FilterEventListOnKind(broker.GetEvents(), resourceKind)
+		streamEvents(rw, filteredEvents)
+	} else {
+		if err := p.Produce(rw, resourceList); err != nil {
+			return err
+		}
+	}
+	return nil
 }

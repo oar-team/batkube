@@ -15,7 +15,6 @@ require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/swag v0.19.9
 	github.com/go-openapi/validate v0.19.8
-	github.com/gogo/protobuf v1.3.1
 	github.com/goods/httpbuf v0.0.0-20120503183857-5709e9bb814c // indirect
 	github.com/interpose/middleware v0.0.0-20150216143757-05ed56ed52fa // indirect
 	github.com/jessevdk/go-flags v1.4.0
