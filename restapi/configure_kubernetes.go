@@ -154,6 +154,43 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Example:
 	// api.APIAuthorizer = security.Authorized()
 
+	api.CoreV1CreateCoreV1NamespacedEndpointsHandler = core_v1.CreateCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEndpointsParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			broker.EndpointsList.Items = append(broker.EndpointsList.Items, params.Body)
+			if err := success(rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
+
+	api.CoreV1ReadCoreV1NamespacedEndpointsHandler = core_v1.ReadCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ReadCoreV1NamespacedEndpointsParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			endpoints, err := broker.GetEndpoint(params.Name, params.Namespace)
+			if endpoints == nil {
+				if err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
+					Kind:       "Status",
+					APIVersion: "v1",
+					Status:     "Failure",
+					Message:    fmt.Sprintf("endpoints \\\"%s\\\" not found", params.Name),
+					Reason:     "NotFound",
+					Details: &models.IoK8sApimachineryPkgApisMetaV1StatusDetails{
+						Name: params.Name,
+						Kind: "endpoints",
+					},
+					Code: 404,
+				}); err != nil {
+					http.Error(rw, err.Error(), http.StatusInternalServerError)
+				}
+			} else if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			} else {
+				if err = p.Produce(rw, endpoints); err != nil {
+					http.Error(rw, err.Error(), http.StatusInternalServerError)
+				}
+			}
+		})
+	})
+
 	api.StorageV1ListStorageV1StorageClassHandler = storage_v1.ListStorageV1StorageClassHandlerFunc(func(params storage_v1.ListStorageV1StorageClassParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, "StorageClass", &broker.StorageClassList, rw, p); err != nil {
@@ -277,28 +314,22 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			broker.ToExecute <- pod
 
 			// Respond
-			err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
-				Kind:       "Status",
-				APIVersion: "v1",
-				Status:     "Success",
-				Code:       201,
-			})
-			if err != nil {
+			if err = success(rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
 			}
 		})
 	})
 
 	api.CoreV1CreateCoreV1NamespacedBindingHandler = core_v1.CreateCoreV1NamespacedBindingHandlerFunc(func(params core_v1.CreateCoreV1NamespacedBindingParams) middleware.Responder {
-		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
-				Kind:       "Status",
-				APIVersion: "v1",
-				Status:     "Success",
-				Code:       201,
-			})
-		})
+		return middleware.NotImplemented("operation core_v1.CoreV1CreateCoreV1NamespacedBindingHandler has not yet been implemented")
+		//return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+		//	p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
+		//		Kind:       "Status",
+		//		APIVersion: "v1",
+		//		Status:     "Success",
+		//		Code:       201,
+		//	})
+		//})
 	})
 
 	api.CoreV1PatchCoreV1NodeHandler = core_v1.PatchCoreV1NodeHandlerFunc(func(params core_v1.PatchCoreV1NodeParams) middleware.Responder {
@@ -312,12 +343,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				panic(err)
 			}
 
-			if err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
-				Kind:       "Status",
-				APIVersion: "v1",
-				Status:     "Success",
-				Code:       201,
-			}); err != nil {
+			if err = success(rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -738,11 +764,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1CreateCoreV1NamespacedConfigMapHandler == nil {
 		api.CoreV1CreateCoreV1NamespacedConfigMapHandler = core_v1.CreateCoreV1NamespacedConfigMapHandlerFunc(func(params core_v1.CreateCoreV1NamespacedConfigMapParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.CreateCoreV1NamespacedConfigMap has not yet been implemented")
-		})
-	}
-	if api.CoreV1CreateCoreV1NamespacedEndpointsHandler == nil {
-		api.CoreV1CreateCoreV1NamespacedEndpointsHandler = core_v1.CreateCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEndpointsParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.CreateCoreV1NamespacedEndpoints has not yet been implemented")
 		})
 	}
 	if api.CoreV1CreateCoreV1NamespacedEventHandler == nil {
@@ -3370,11 +3391,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation core_v1.ReadCoreV1NamespacedConfigMap has not yet been implemented")
 		})
 	}
-	if api.CoreV1ReadCoreV1NamespacedEndpointsHandler == nil {
-		api.CoreV1ReadCoreV1NamespacedEndpointsHandler = core_v1.ReadCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ReadCoreV1NamespacedEndpointsParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ReadCoreV1NamespacedEndpoints has not yet been implemented")
-		})
-	}
 	if api.CoreV1ReadCoreV1NamespacedEventHandler == nil {
 		api.CoreV1ReadCoreV1NamespacedEventHandler = core_v1.ReadCoreV1NamespacedEventHandlerFunc(func(params core_v1.ReadCoreV1NamespacedEventParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ReadCoreV1NamespacedEvent has not yet been implemented")
@@ -5263,4 +5279,13 @@ func listResource(watch *bool, resourceKind string, resourceList interface{}, rw
 		}
 	}
 	return nil
+}
+
+func success(rw http.ResponseWriter, p runtime.Producer) error {
+	return p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
+		Kind:       "Status",
+		APIVersion: "v1",
+		Status:     "Success",
+		Code:       201,
+	})
 }

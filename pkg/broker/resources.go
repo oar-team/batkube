@@ -45,6 +45,10 @@ var APIResourceList models.IoK8sApimachineryPkgApisMetaV1APIResourceList = model
 	Kind:       "APIResourceList",
 	APIVersion: "v1",
 }
+var EndpointsList models.IoK8sAPICoreV1EndpointsList = models.IoK8sAPICoreV1EndpointsList{
+	Kind:       "EndpointsList",
+	APIVersion: "v1",
+}
 
 var SimData translate.SimulationBeginsData
 
@@ -60,28 +64,41 @@ func GetEvents() []models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	return events
 }
 
-func GetPod(podName string) (*models.IoK8sAPICoreV1Pod, error) {
+func GetPod(name string) (*models.IoK8sAPICoreV1Pod, error) {
 	var pod *models.IoK8sAPICoreV1Pod
 	for _, pod = range PodList.Items {
-		if pod.Metadata.Name == podName {
+		if pod.Metadata.Name == name {
 			break
 		}
 	}
-	if pod == nil || pod.Metadata.Name != podName {
-		return nil, errors.Errorf("Could not find pod %s", podName)
+	if pod == nil || pod.Metadata.Name != name {
+		return nil, errors.Errorf("Could not find pod %s", name)
 	}
 	return pod, nil
 }
 
-func GetNode(nodeName string) (*models.IoK8sAPICoreV1Node, error) {
+func GetNode(name string) (*models.IoK8sAPICoreV1Node, error) {
 	var node *models.IoK8sAPICoreV1Node
 	for _, node = range NodeList.Items {
-		if node.Metadata.Name == nodeName {
+		if node.Metadata.Name == name {
 			break
 		}
 	}
-	if node == nil || node.Metadata.Name != nodeName {
-		return nil, errors.Errorf("Could not find node %s", nodeName)
+	if node == nil || node.Metadata.Name != name {
+		return nil, errors.Errorf("Could not find node %s", name)
 	}
 	return node, nil
+}
+
+func GetEndpoint(name string, namespace string) (*models.IoK8sAPICoreV1Endpoints, error) {
+	var r *models.IoK8sAPICoreV1Endpoints
+	for _, r = range EndpointsList.Items {
+		if r.Metadata.Name == name && r.Metadata.Namespace == namespace {
+			break
+		}
+	}
+	if r == nil || r.Metadata.Name != name || r.Metadata.Namespace != namespace {
+		return nil, errors.Errorf("Could not find enpoints %s", name)
+	}
+	return r, nil
 }
