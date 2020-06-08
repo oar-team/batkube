@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	interpose "github.com/carbocation/interpose/middleware"
 	"github.com/go-openapi/errors"
@@ -295,18 +296,19 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 
 	api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			chosenPods := broker.PodList
+
 			// TODO : handle ?fieldSelectors
-			//if params.FieldSelector != nil {
-			//	chosenPods.Items = make([]*models.IoK8sAPICoreV1Pod, 0)
-			//	split := strings.Split(*params.FieldSelector, "=")
-			//	selector, value := split[0], split[1]
-			//	tags := strings.Split(selector, ".")
-			//	for _, pod := range broker.PodList.Items {
-			//		if value == translate.GetValueFromTagsWithPointers(*pod, tags) {
-			//			chosenPodList.Items = append(chosenPodList.Items, pod)
-			//		}
-			//	}
-			//}
+			if params.FieldSelector != nil {
+				chosenPods.Items = make([]*models.IoK8sAPICoreV1Pod, 0)
+				split := strings.Split(*params.FieldSelector, "=")
+				selector, value := split[0], split[1]
+				for _, pod := range broker.PodList.Items {
+					if value == broker.GetValueFromTag(*pod, selector) {
+						chosenPods.Items = append(chosenPods.Items, pod)
+					}
+				}
+			}
 
 			// TODO implement ?limit
 
@@ -5302,7 +5304,7 @@ func streamEvents(rw http.ResponseWriter, events []models.IoK8sApimachineryPkgAp
 
 func listResource(watch *bool, resourceKind string, resourceList interface{}, rw http.ResponseWriter, p runtime.Producer) error {
 	if watch != nil && *watch {
-		filteredEvents := translate.FilterEventListOnKind(broker.GetEvents(), resourceKind)
+		filteredEvents := broker.FilterEventListOnKind(broker.GetEvents(), resourceKind)
 		streamEvents(rw, filteredEvents)
 	} else {
 		if err := p.Produce(rw, resourceList); err != nil {
