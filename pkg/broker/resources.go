@@ -1,6 +1,8 @@
 package broker
 
 import (
+	"reflect"
+
 	"github.com/pkg/errors"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
@@ -9,6 +11,7 @@ import (
 // Resources protected by getters and setters
 var events []models.IoK8sApimachineryPkgApisMetaV1WatchEvent
 
+// Kubernetes resources
 var NodeList models.IoK8sAPICoreV1NodeList = models.IoK8sAPICoreV1NodeList{
 	Kind:       "NodeList",
 	APIVersion: "v1",
@@ -59,13 +62,18 @@ var EndpointsList models.IoK8sAPICoreV1EndpointsList = models.IoK8sAPICoreV1Endp
 	APIVersion: "v1",
 	Items:      []*models.IoK8sAPICoreV1Endpoints{},
 }
+var LeaseList models.IoK8sAPICoordinationV1LeaseList = models.IoK8sAPICoordinationV1LeaseList{
+	Kind:       "LeaseList",
+	APIVersion: "coordination.k8s.io/v1",
+	Items:      []*models.IoK8sAPICoordinationV1Lease{},
+}
 
 var SimData translate.SimulationBeginsData
 
+// Pods scheduled and ready to be executed are sent over this channel to be
+// retrieved by te broker and sent to Batsim.
 var ToExecute = make(chan *models.IoK8sAPICoreV1Pod)
 
-// TODO AddEvent(type string, object interface{}) pour pouvoir faire un check
-// sur l'event type (et simplifier la procédure)
 func AddEvent(event models.IoK8sApimachineryPkgApisMetaV1WatchEvent) {
 	events = append(events, event)
 }
@@ -74,44 +82,45 @@ func GetEvents() []models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	return events
 }
 
+/*
+TODO : use reflection to factorise all this. At the cost of greater code complexity.
+*/
 func GetPod(name string) (*models.IoK8sAPICoreV1Pod, error) {
-	var pod *models.IoK8sAPICoreV1Pod
-	for _, pod = range PodList.Items {
-		if pod.Metadata.Name == name {
-			break
+	var r *models.IoK8sAPICoreV1Pod
+	for _, r = range PodList.Items {
+		if r.Metadata.Name == name {
+			return r, nil
 		}
 	}
-	if pod == nil || pod.Metadata.Name != name {
-		return nil, errors.Errorf("Could not find pod %s", name)
-	}
-	return pod, nil
+	return nil, errors.Errorf("Could not find %s %s", reflect.TypeOf(r).String(), name)
 }
 
 func GetNode(name string) (*models.IoK8sAPICoreV1Node, error) {
-	var node *models.IoK8sAPICoreV1Node
-	for _, node = range NodeList.Items {
-		if node.Metadata.Name == name {
-			break
+	var r *models.IoK8sAPICoreV1Node
+	for _, r = range NodeList.Items {
+		if r.Metadata.Name == name {
+			return r, nil
 		}
 	}
-	if node == nil || node.Metadata.Name != name {
-		return nil, errors.Errorf("Could not find node %s", name)
-	}
-	return node, nil
+	return nil, errors.Errorf("Could not find %s %s", reflect.TypeOf(r).String(), name)
 }
 
 func GetEndpoint(name string, namespace string) (*models.IoK8sAPICoreV1Endpoints, error) {
-	if EndpointsList.Items == nil {
-		return nil, errors.Errorf("No endpoints yet listed on the API server")
-	}
 	var r *models.IoK8sAPICoreV1Endpoints
 	for _, r = range EndpointsList.Items {
 		if r.Metadata.Name == name && r.Metadata.Namespace == namespace {
-			break
+			return r, nil
 		}
 	}
-	if r == nil || r.Metadata.Name != name || r.Metadata.Namespace != namespace {
-		return nil, errors.Errorf("Could not find enpoints %s", name)
+	return nil, errors.Errorf("Could not find %s %s in namespace %s", reflect.TypeOf(r).String(), name, namespace)
+}
+
+func GetLease(name string, namespace string) (*models.IoK8sAPICoordinationV1Lease, error) {
+	var r *models.IoK8sAPICoordinationV1Lease
+	for _, r = range LeaseList.Items {
+		if r.Metadata.Name == name && r.Metadata.Namespace == namespace {
+			return r, nil
+		}
 	}
-	return r, nil
+	return nil, errors.Errorf("Could not find %s %s in namespace %s", reflect.TypeOf(r).String(), name, namespace)
 }

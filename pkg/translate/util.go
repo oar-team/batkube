@@ -14,6 +14,7 @@ import (
 
 /*
 Underlying fields must be concrete types, not pointers
+Pointers will be handled in a future version
 
 Returns the underlying value from a struct corresponding to the given tag.
 Recursively explores the struct

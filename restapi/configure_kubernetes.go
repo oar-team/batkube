@@ -154,6 +154,52 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Example:
 	// api.APIAuthorizer = security.Authorized()
 
+	api.CoordinationV1ListCoordinationV1NamespacedLeaseHandler = coordination_v1.ListCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ListCoordinationV1NamespacedLeaseParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := listResource(params.Watch, "Lease", &broker.LeaseList, rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
+
+	api.CoordinationV1CreateCoordinationV1NamespacedLeaseHandler = coordination_v1.CreateCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.CreateCoordinationV1NamespacedLeaseParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			broker.LeaseList.Items = append(broker.LeaseList.Items, params.Body)
+			if err := success(rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
+
+	api.CoordinationV1ReadCoordinationV1NamespacedLeaseHandler = coordination_v1.ReadCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ReadCoordinationV1NamespacedLeaseParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			r, err := broker.GetLease(params.Name, params.Namespace)
+			if r == nil {
+				if err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
+					Kind:       "Status",
+					APIVersion: "v1",
+					Status:     "Failure",
+					Message:    fmt.Sprintf("leases.coordination.k8s.io \\\"%s\\\" not found", params.Name),
+					Reason:     "NotFound",
+					Details: &models.IoK8sApimachineryPkgApisMetaV1StatusDetails{
+						Name:  params.Name,
+						Group: "coordination.k8s.io",
+						Kind:  "leases",
+					},
+					Code: 404,
+				}); err != nil {
+					http.Error(rw, err.Error(), http.StatusInternalServerError)
+				}
+			} else if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			} else {
+				if err = p.Produce(rw, r); err != nil {
+					http.Error(rw, err.Error(), http.StatusInternalServerError)
+				}
+			}
+		})
+	})
+
 	api.CoreV1CreateCoreV1NamespacedEndpointsHandler = core_v1.CreateCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.EndpointsList.Items = append(broker.EndpointsList.Items, params.Body)
@@ -744,11 +790,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CertificatesV1beta1CreateCertificatesV1beta1CertificateSigningRequestHandler == nil {
 		api.CertificatesV1beta1CreateCertificatesV1beta1CertificateSigningRequestHandler = certificates_v1beta1.CreateCertificatesV1beta1CertificateSigningRequestHandlerFunc(func(params certificates_v1beta1.CreateCertificatesV1beta1CertificateSigningRequestParams) middleware.Responder {
 			return middleware.NotImplemented("operation certificates_v1beta1.CreateCertificatesV1beta1CertificateSigningRequest has not yet been implemented")
-		})
-	}
-	if api.CoordinationV1CreateCoordinationV1NamespacedLeaseHandler == nil {
-		api.CoordinationV1CreateCoordinationV1NamespacedLeaseHandler = coordination_v1.CreateCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.CreateCoordinationV1NamespacedLeaseParams) middleware.Responder {
-			return middleware.NotImplemented("operation coordination_v1.CreateCoordinationV1NamespacedLease has not yet been implemented")
 		})
 	}
 	if api.CoordinationV1beta1CreateCoordinationV1beta1NamespacedLeaseHandler == nil {
@@ -2251,11 +2292,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation coordination_v1.ListCoordinationV1LeaseForAllNamespaces has not yet been implemented")
 		})
 	}
-	if api.CoordinationV1ListCoordinationV1NamespacedLeaseHandler == nil {
-		api.CoordinationV1ListCoordinationV1NamespacedLeaseHandler = coordination_v1.ListCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ListCoordinationV1NamespacedLeaseParams) middleware.Responder {
-			return middleware.NotImplemented("operation coordination_v1.ListCoordinationV1NamespacedLease has not yet been implemented")
-		})
-	}
 	if api.CoordinationV1beta1ListCoordinationV1beta1LeaseForAllNamespacesHandler == nil {
 		api.CoordinationV1beta1ListCoordinationV1beta1LeaseForAllNamespacesHandler = coordination_v1beta1.ListCoordinationV1beta1LeaseForAllNamespacesHandlerFunc(func(params coordination_v1beta1.ListCoordinationV1beta1LeaseForAllNamespacesParams) middleware.Responder {
 			return middleware.NotImplemented("operation coordination_v1beta1.ListCoordinationV1beta1LeaseForAllNamespaces has not yet been implemented")
@@ -3359,11 +3395,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CertificatesV1beta1ReadCertificatesV1beta1CertificateSigningRequestStatusHandler == nil {
 		api.CertificatesV1beta1ReadCertificatesV1beta1CertificateSigningRequestStatusHandler = certificates_v1beta1.ReadCertificatesV1beta1CertificateSigningRequestStatusHandlerFunc(func(params certificates_v1beta1.ReadCertificatesV1beta1CertificateSigningRequestStatusParams) middleware.Responder {
 			return middleware.NotImplemented("operation certificates_v1beta1.ReadCertificatesV1beta1CertificateSigningRequestStatus has not yet been implemented")
-		})
-	}
-	if api.CoordinationV1ReadCoordinationV1NamespacedLeaseHandler == nil {
-		api.CoordinationV1ReadCoordinationV1NamespacedLeaseHandler = coordination_v1.ReadCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ReadCoordinationV1NamespacedLeaseParams) middleware.Responder {
-			return middleware.NotImplemented("operation coordination_v1.ReadCoordinationV1NamespacedLease has not yet been implemented")
 		})
 	}
 	if api.CoordinationV1beta1ReadCoordinationV1beta1NamespacedLeaseHandler == nil {
