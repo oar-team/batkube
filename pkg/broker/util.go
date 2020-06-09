@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
@@ -38,41 +39,37 @@ Parameters :
 o : object from which to read the value
 tag : string representing the tagged field you want to extract. Ex : status.phase
 */
-func GetValueFromTag(o interface{}, tag string) interface{} {
+func GetValueFromTag(o interface{}, tag string) (string, error) {
 	v := indirect(reflect.ValueOf(o))
+	t := v.Type()
+	if v.Kind() != reflect.Struct {
+		return "", errors.Errorf("Expected a struct, got a %s\n", v.Kind().String())
+	}
 
 	tagsliced := strings.Split(tag, ".") // slice representation of the tag
 
 	var i int
-	t := reflect.TypeOf(v)
-	for ; i < t.NumField() && !strings.Contains(t.Field(i).Tag.Get("json"), tagsliced[0]); i++ {
+	for ; i < t.NumField(); i++ {
+		tagContent, ok := t.Field(i).Tag.Lookup("json")
+		if ok && strings.Contains(tagContent, tagsliced[0]) {
+			break
+		}
 	}
 
 	if i < t.NumField() {
 		if len(tagsliced) == 1 {
-			return v.Field(i).Interface()
-		}
-		return GetValueFromTag(v.Field(i).Interface(), strings.Join(tagsliced[1:], "."))
-	}
-	return nil
-}
-
-func FilterOnTag(items interface{}, tag string, value interface{}) []interface{} {
-	filtered := make([]interface{}, 0)
-	v := indirect(reflect.ValueOf(items))
-	if v.Kind() == reflect.Slice {
-		for i := 0; i < v.Len(); i++ {
-			if GetValueFromTag(v.Index(i), tag) == value {
-				filtered = append(filtered, v.Index(i))
+			if v.Field(i).Kind() != reflect.String {
+				return "", errors.Errorf("Only fields containing strings are supported")
 			}
+			return v.Field(i).String(), nil
 		}
-	} else {
-		if GetValueFromTag(v, tag) == value {
-			filtered = append(filtered, items) // Return the original type, not the redirected one
+		value, err := GetValueFromTag(v.Field(i).Interface(), strings.Join(tagsliced[1:], "."))
+		if err != nil {
+			return "", errors.Errorf("Error looking for %s in %s : %s", tag, t.String(), err)
 		}
+		return value, nil
 	}
-
-	return filtered
+	return "", errors.Errorf("Type %s does not contain any field %s", t.String(), tag)
 }
 
 func indirect(v reflect.Value) reflect.Value {

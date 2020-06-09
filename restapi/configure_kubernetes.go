@@ -304,7 +304,12 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				split := strings.Split(*params.FieldSelector, "=")
 				selector, value := split[0], split[1]
 				for _, pod := range broker.PodList.Items {
-					if value == broker.GetValueFromTag(*pod, selector) {
+					tagValue, err := broker.GetValueFromTag(*pod, selector)
+					if err != nil {
+						http.Error(rw, err.Error(), http.StatusBadRequest)
+						return
+					}
+					if value == tagValue {
 						chosenPods.Items = append(chosenPods.Items, pod)
 					}
 				}
@@ -314,7 +319,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 
 			// TODO implement ?resourceVersion
 
-			if err := listResource(params.Watch, "Pod", &broker.PodList, rw, p); err != nil {
+			if err := listResource(params.Watch, "Pod", &chosenPods, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 			}
 		})
