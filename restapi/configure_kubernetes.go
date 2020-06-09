@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	interpose "github.com/carbocation/interpose/middleware"
 	"github.com/go-openapi/errors"
@@ -298,18 +297,14 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			chosenPods := broker.PodList
 
-			// TODO : handle ?fieldSelectors
 			if params.FieldSelector != nil {
 				chosenPods.Items = make([]*models.IoK8sAPICoreV1Pod, 0)
-				split := strings.Split(*params.FieldSelector, "=")
-				selector, value := split[0], split[1]
 				for _, pod := range broker.PodList.Items {
-					tagValue, err := broker.GetValueFromTag(*pod, selector)
+					ok, err := broker.FilterOnFieldSelector(pod, *params.FieldSelector)
 					if err != nil {
 						http.Error(rw, err.Error(), http.StatusBadRequest)
 						return
-					}
-					if value == tagValue {
+					} else if ok {
 						chosenPods.Items = append(chosenPods.Items, pod)
 					}
 				}

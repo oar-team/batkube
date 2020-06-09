@@ -39,7 +39,7 @@ Parameters :
 o : object from which to read the value
 tag : string representing the tagged field you want to extract. Ex : status.phase
 */
-func GetValueFromTag(o interface{}, tag string) (string, error) {
+func getValueFromTag(o interface{}, tag string) (string, error) {
 	v := indirect(reflect.ValueOf(o))
 	t := v.Type()
 	if v.Kind() != reflect.Struct {
@@ -63,13 +63,42 @@ func GetValueFromTag(o interface{}, tag string) (string, error) {
 			}
 			return v.Field(i).String(), nil
 		}
-		value, err := GetValueFromTag(v.Field(i).Interface(), strings.Join(tagsliced[1:], "."))
+		value, err := getValueFromTag(v.Field(i).Interface(), strings.Join(tagsliced[1:], "."))
 		if err != nil {
 			return "", errors.Errorf("Error looking for %s in %s : %s", tag, t.String(), err)
 		}
 		return value, nil
 	}
 	return "", errors.Errorf("Type %s does not contain any field %s", t.String(), tag)
+}
+
+/*
+Returns whether the given struct complies with the given fieldSelector
+*/
+func FilterOnFieldSelector(o interface{}, selectors string) (bool, error) {
+	selectorsSlice := strings.Split(selectors, ",")
+	for _, selector := range selectorsSlice {
+		if strings.Contains(selector, "!=") {
+			selectorSlice := strings.Split(selector, "!=")
+			value, err := getValueFromTag(o, selectorSlice[0])
+			if err != nil {
+				return false, err
+			} else if value == selectorSlice[1] {
+				return false, nil
+			}
+		} else if strings.Contains(selector, "=") {
+			selectorSlice := strings.Split(selector, "=")
+			value, err := getValueFromTag(o, selectorSlice[0])
+			if err != nil {
+				return false, err
+			} else if value != selectorSlice[1] {
+				return false, nil
+			}
+		} else {
+			return false, errors.Errorf("Wrong fieldSelector : %s", selectors)
+		}
+	}
+	return true, nil
 }
 
 func indirect(v reflect.Value) reflect.Value {
