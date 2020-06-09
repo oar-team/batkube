@@ -1,18 +1,21 @@
 package broker
 
 import (
+	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
 
 func FilterEventListOnKind(events []models.IoK8sApimachineryPkgApisMetaV1WatchEvent, kind string) []models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	var result []models.IoK8sApimachineryPkgApisMetaV1WatchEvent
 	for _, event := range events {
-		if FilterObjectOnKind(event, kind) {
+		if FilterObjectOnKind(&event.Object, kind) {
 			result = append(result, event)
 		}
 	}
@@ -20,15 +23,70 @@ func FilterEventListOnKind(events []models.IoK8sApimachineryPkgApisMetaV1WatchEv
 }
 
 func FilterObjectOnKind(o interface{}, kind string) bool {
+	if reflect.ValueOf(o).Kind() != reflect.Ptr {
+		panic("Filter function requires an indirect type")
+	}
 	switch o.(type) {
-	case models.IoK8sAPICoreV1Pod, *models.IoK8sAPICoreV1Pod:
-		return strings.EqualFold(kind, "pod")
-	case models.IoK8sAPICoreV1Node, *models.IoK8sAPICoreV1Node:
-		return strings.EqualFold(kind, "node")
+	case *models.IoK8sAPICoreV1Pod:
+		return strings.EqualFold(kind, o.(*models.IoK8sAPICoreV1Pod).Kind)
+	case *models.IoK8sAPICoreV1Node:
+		return strings.EqualFold(kind, o.(*models.IoK8sAPICoreV1Node).Kind)
 	default:
-		logrus.Warnf("[util:FilterOnObjectKind] Unknown object type : %T", o)
+		logrus.Warnf("[broker/util:FilterOnObjectKind] Unknown object type : %T", o)
 		return false
 	}
+}
+
+func FilterEventListOnResourceVersion(events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent, resourceVersion string) []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
+	var result []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent
+	for _, event := range events {
+		if FilterObjectOnResourceVersion(event.Object, resourceVersion) {
+			result = append(result, event)
+		}
+	}
+	return result
+}
+
+func FilterEventListOnFieldSelector(events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent, fieldSelector string) ([]*models.IoK8sApimachineryPkgApisMetaV1WatchEvent, error) {
+	var result []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent
+	var ok bool
+	var err error
+	for _, event := range events {
+		ok, err = FilterObjectOnFieldSelector(event.Object, fieldSelector)
+		if err != nil {
+			return nil, err
+		} else if ok {
+			result = append(result, event)
+		}
+	}
+	return result, nil
+}
+
+func FilterObjectOnResourceVersion(o interface{}, resourceVersion string) bool {
+	if reflect.ValueOf(o).Kind() != reflect.Ptr {
+		panic("Filter function requires an indirect type")
+	}
+	expected, err := strconv.Atoi(resourceVersion)
+	var rv int
+	if err != nil {
+		panic(err)
+	}
+	switch o.(type) {
+	case *models.IoK8sAPICoreV1Pod:
+		rv, err = strconv.Atoi(o.(*models.IoK8sAPICoreV1Pod).Metadata.ResourceVersion)
+		if err != nil {
+			panic(err)
+		}
+	case *models.IoK8sAPICoreV1Node:
+		rv, err = strconv.Atoi(o.(*models.IoK8sAPICoreV1Node).Metadata.ResourceVersion)
+		if err != nil {
+			panic(err)
+		}
+	default:
+		logrus.Warnf("[broker/util:FilterOnObjectKind] Unknown object type : %T", o)
+		return false
+	}
+	return rv >= expected
 }
 
 /*
@@ -75,7 +133,7 @@ func getValueFromTag(o interface{}, tag string) (string, error) {
 /*
 Returns whether the given struct complies with the given fieldSelector
 */
-func FilterOnFieldSelector(o interface{}, selectors string) (bool, error) {
+func FilterObjectOnFieldSelector(o interface{}, selectors string) (bool, error) {
 	selectorsSlice := strings.Split(selectors, ",")
 	for _, selector := range selectorsSlice {
 		if strings.Contains(selector, "!=") {
@@ -106,4 +164,12 @@ func indirect(v reflect.Value) reflect.Value {
 		v = v.Elem()
 	}
 	return v
+}
+
+func IncrementPodResourceVersion(pod *models.IoK8sAPICoreV1Pod) {
+	resourceVersion, err := strconv.Atoi(pod.Metadata.ResourceVersion)
+	if err != nil {
+		log.Panic(err)
+	}
+	pod.Metadata.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
 }

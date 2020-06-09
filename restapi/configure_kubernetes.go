@@ -300,7 +300,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			if params.FieldSelector != nil {
 				chosenPods.Items = make([]*models.IoK8sAPICoreV1Pod, 0)
 				for _, pod := range broker.PodList.Items {
-					ok, err := broker.FilterOnFieldSelector(pod, *params.FieldSelector)
+					ok, err := broker.FilterObjectOnFieldSelector(pod, *params.FieldSelector)
 					if err != nil {
 						http.Error(rw, err.Error(), http.StatusBadRequest)
 						return
@@ -352,7 +352,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			pod.Spec.NodeName = params.Body.Target.Name
 
 			// Increment resource version
-			translate.IncrementPodResourceVersion(pod)
+			broker.IncrementPodResourceVersion(pod)
 
 			// Add modified event and let the broker know there is a pod to be executed
 			broker.AddEvent(models.IoK8sApimachineryPkgApisMetaV1WatchEvent{

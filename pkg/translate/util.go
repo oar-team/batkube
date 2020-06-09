@@ -1,13 +1,9 @@
 package translate
 
 import (
-	"fmt"
-	"log"
-	"strconv"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
 
 func GetJobIdFromPodName(name string) string {
@@ -16,14 +12,6 @@ func GetJobIdFromPodName(name string) string {
 
 func GetPodNameFromJobId(name string) string {
 	return strings.ReplaceAll(name, "!", "-")
-}
-
-func IncrementPodResourceVersion(pod *models.IoK8sAPICoreV1Pod) {
-	resourceVersion, err := strconv.Atoi(pod.Metadata.ResourceVersion)
-	if err != nil {
-		log.Panic(err)
-	}
-	pod.Metadata.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
 }
 
 /*
