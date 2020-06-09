@@ -6,7 +6,7 @@
 \usepackage[french,english]{babel}
 
 % personal packages
-\usepackage[margin=2cm]{geometry} % decrease margin
+\usepackage [includehead, margin=1.5cm]{geometry}                % See geometry.pdf to learn the layout options. There are lots.
 \usepackage{graphicx} % include images
 \usepackage{hyperref} % urls, hyperlinks, etc
 % \usepackage{pdfpages} % include pdf pages
@@ -19,15 +19,15 @@
 \usepackage[linesnumbered,ruled,vlined]{algorithm2e}
 
 % Packages from uga template
-\usepackage{fullpage}
+%\usepackage{fullpage}
 \usepackage{mathptmx} % font = times
 \usepackage{helvet} % font sf = helvetica
-\usepackage{amsmath}
-\usepackage{relsize}
+% \usepackage{amsmath}
+% \usepackage{relsize}
 % \usepackage{tikz}
-\usepackage{booktabs}
-\usepackage{textcomp}%textquotesingle
-\usepackage{multirow}
+% \usepackage{booktabs}
+% \usepackage{textcomp}%textquotesingle
+% \usepackage{multirow}
 % \usepackage{pgfplots}
 
 % \usetikzlibrary{arrows,shapes,positioning,shadows,trees}
@@ -129,7 +129,28 @@ Jury member 2\\
 \renewcommand{\abstracttextfont}{\normalfont}
 \abstractintoc
 \begin{abstract} 
-Your abstract goes here... 
+	The rise of containerized applications provided web platforms with much
+	more control over their resources than they had before with their
+	physical servers. Soon, developers realized that container operations
+	could be automated to allow for even more scalability. The Cloud Native
+	Computing Foundation was founded in this context, and developed
+	Kubernetes which is a piece of software capable of container
+	orchestration. Now, as we observe a convergence between High
+	Performance Computing and the Big Data field where Kubernetes is
+	already the standard for some applications such as Machine Learning,
+	discussions about leveraging containers for HPC applications rose and
+	interest in Kubernetes has grown in the HPC community. However, using
+	Kubernetes in a HPC context comes with many challenges, amongst which
+	is the scheduling problem. Many batch schedulers have already been
+	developed for Kubernetes, although how can one user know which (or wich
+	combination) is best for its infrastructure? One solution is to test
+	different schedulers in real conditions which is costly both in time
+	and resources. One other solution is to simulate the cluster to
+	approximate the results with little time and effort. Our proposal to
+	this other approach is named Batkube : it is an interface between
+	Kubernetes schedulers and Batsim, a general purpose infrastructure
+	simulator based on Simgrid and developed at the LIG.
+
 \end{abstract}
 \abstractintoc
 
@@ -141,7 +162,7 @@ Good luck :)
 
 \renewcommand\abstractname{R\'esum\'e}
 \begin{abstract} \selectlanguage{french}
-Your abstract in French goes here... 
+	Abstract mais en franchais
 \end{abstract}
 \selectlanguage{english}
 
