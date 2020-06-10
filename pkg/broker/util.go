@@ -7,40 +7,158 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
 
-func FilterEventListOnKind(events []models.IoK8sApimachineryPkgApisMetaV1WatchEvent, kind string) []models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
-	var result []models.IoK8sApimachineryPkgApisMetaV1WatchEvent
+/*
+Filters the given resourcelist object items based on the given filter fucntion.
+
+resourceList must be an indirect type.
+*/
+func FilterResourceList(resourceList interface{}, filterCondition string, filter func(interface{}, string) (bool, error)) (interface{}, error) {
+	if reflect.ValueOf(resourceList).Kind() != reflect.Ptr {
+		return nil, errors.Errorf("An indirect type is required as input")
+	}
+
+	// Could not find a better way, as we can't define interface methods with swagger.
+	switch resourceList.(type) {
+	case *models.IoK8sAPICoreV1PodList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1PodList)
+		resourceListShallowCopy := &models.IoK8sAPICoreV1PodList{}
+		resourceListShallowCopy.APIVersion = concreteResourceList.APIVersion
+		resourceListShallowCopy.Kind = concreteResourceList.Kind
+		resourceListShallowCopy.Metadata = concreteResourceList.Metadata
+
+		selectedItems := make([]*models.IoK8sAPICoreV1Pod, 0)
+		var ok bool
+		var err error
+		for _, item := range concreteResourceList.Items {
+			ok, err = filter(item, filterCondition)
+			if err != nil {
+				return nil, err
+			} else if ok {
+				selectedItems = append(selectedItems, item)
+			}
+		}
+
+		resourceListShallowCopy.Items = selectedItems
+		return resourceListShallowCopy, nil
+
+	case *models.IoK8sAPICoreV1NodeList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1NodeList)
+		resourceListShallowCopy := &models.IoK8sAPICoreV1NodeList{}
+		resourceListShallowCopy.APIVersion = concreteResourceList.APIVersion
+		resourceListShallowCopy.Kind = concreteResourceList.Kind
+		resourceListShallowCopy.Metadata = concreteResourceList.Metadata
+
+		selectedItems := make([]*models.IoK8sAPICoreV1Node, 0)
+		var ok bool
+		var err error
+		for _, item := range concreteResourceList.Items {
+			ok, err = filter(item, filterCondition)
+			if err != nil {
+				return nil, err
+			} else if ok {
+				selectedItems = append(selectedItems, item)
+			}
+		}
+
+		resourceListShallowCopy.Items = selectedItems
+		return resourceListShallowCopy, nil
+
+	default:
+		return nil, errors.Errorf("I don't know this resource type : %T", resourceList)
+	}
+}
+
+func FilterObjectOnKind(o interface{}, kind string) (bool, error) {
+	v := indirect(reflect.ValueOf(o))
+	if v.Kind() == reflect.Interface {
+		v = indirect(v.Elem())
+	}
+	if v.Kind() != reflect.Struct {
+		return false, errors.Errorf("%T is neither a struct nor an interface", o)
+	}
+	fieldName := "Kind"
+	fieldValue := v.FieldByName(fieldName)
+	if fieldValue.IsZero() {
+		return false, errors.Errorf("Could not find %s in %T fields", o, fieldName)
+	}
+	return strings.EqualFold(kind, fieldValue.String()), nil
+}
+
+func FilterObjectOnResourceVersion(o interface{}, resourceVersion string) (bool, error) {
+	expected, err := strconv.Atoi(resourceVersion)
+	if err != nil {
+		panic(err)
+	}
+
+	v := indirect(reflect.ValueOf(o))
+	if v.Kind() == reflect.Interface {
+		v = indirect(v.Elem())
+	}
+	if v.Kind() != reflect.Struct {
+		return false, errors.Errorf("%T is neither a struct nor an interface", o)
+	}
+	fieldName := "Metadata"
+	fieldValue := v.FieldByName(fieldName)
+	if fieldValue.IsZero() {
+		return false, errors.Errorf("Could not find %s in %T fields", o, fieldName)
+	}
+
+	metadata, ok := fieldValue.Interface().(*models.IoK8sApimachineryPkgApisMetaV1ObjectMeta)
+	if !ok {
+		return false, errors.Errorf("Field %s of %T is %s (was excpecting *models.IoK8sApimachineryPkgApisMetaV1ObjectMeta)", fieldName, o, fieldValue.Type().String())
+	}
+	rv, err := strconv.Atoi(metadata.ResourceVersion)
+	return rv >= expected, nil
+}
+
+func FilterObjectOnFieldSelector(o interface{}, selectors string) (bool, error) {
+	selectorsSlice := strings.Split(selectors, ",")
+	for _, selector := range selectorsSlice {
+		if strings.Contains(selector, "!=") {
+			selectorSlice := strings.Split(selector, "!=")
+			value, err := getValueFromTag(o, selectorSlice[0])
+			if err != nil {
+				return false, err
+			} else if value == selectorSlice[1] {
+				return false, nil
+			}
+		} else if strings.Contains(selector, "=") {
+			selectorSlice := strings.Split(selector, "=")
+			value, err := getValueFromTag(o, selectorSlice[0])
+			if err != nil {
+				return false, err
+			} else if value != selectorSlice[1] {
+				return false, nil
+			}
+		} else {
+			return false, errors.Errorf("Wrong fieldSelector : %s", selectors)
+		}
+	}
+	return true, nil
+}
+
+func FilterEventListOnKind(events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent, kind string) []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
+	var result []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent
+	var ok bool
 	for _, event := range events {
-		if FilterObjectOnKind(&event.Object, kind) {
+		ok, _ = FilterObjectOnKind(&event.Object, kind)
+		if ok {
 			result = append(result, event)
 		}
 	}
 	return result
 }
 
-func FilterObjectOnKind(o interface{}, kind string) bool {
-	if reflect.ValueOf(o).Kind() != reflect.Ptr {
-		panic("Filter function requires an indirect type")
-	}
-	switch o.(type) {
-	case *models.IoK8sAPICoreV1Pod:
-		return strings.EqualFold(kind, o.(*models.IoK8sAPICoreV1Pod).Kind)
-	case *models.IoK8sAPICoreV1Node:
-		return strings.EqualFold(kind, o.(*models.IoK8sAPICoreV1Node).Kind)
-	default:
-		logrus.Warnf("[broker/util:FilterOnObjectKind] Unknown object type : %T", o)
-		return false
-	}
-}
-
 func FilterEventListOnResourceVersion(events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent, resourceVersion string) []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	var result []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent
+	var ok bool
 	for _, event := range events {
-		if FilterObjectOnResourceVersion(event.Object, resourceVersion) {
+		ok, _ = FilterObjectOnResourceVersion(event.Object, resourceVersion)
+		if ok {
 			result = append(result, event)
 		}
 	}
@@ -60,33 +178,6 @@ func FilterEventListOnFieldSelector(events []*models.IoK8sApimachineryPkgApisMet
 		}
 	}
 	return result, nil
-}
-
-func FilterObjectOnResourceVersion(o interface{}, resourceVersion string) bool {
-	if reflect.ValueOf(o).Kind() != reflect.Ptr {
-		panic("Filter function requires an indirect type")
-	}
-	expected, err := strconv.Atoi(resourceVersion)
-	var rv int
-	if err != nil {
-		panic(err)
-	}
-	switch o.(type) {
-	case *models.IoK8sAPICoreV1Pod:
-		rv, err = strconv.Atoi(o.(*models.IoK8sAPICoreV1Pod).Metadata.ResourceVersion)
-		if err != nil {
-			panic(err)
-		}
-	case *models.IoK8sAPICoreV1Node:
-		rv, err = strconv.Atoi(o.(*models.IoK8sAPICoreV1Node).Metadata.ResourceVersion)
-		if err != nil {
-			panic(err)
-		}
-	default:
-		logrus.Warnf("[broker/util:FilterOnObjectKind] Unknown object type : %T", o)
-		return false
-	}
-	return rv >= expected
 }
 
 /*
@@ -128,35 +219,6 @@ func getValueFromTag(o interface{}, tag string) (string, error) {
 		return value, nil
 	}
 	return "", errors.Errorf("Type %s does not contain any field %s", t.String(), tag)
-}
-
-/*
-Returns whether the given struct complies with the given fieldSelector
-*/
-func FilterObjectOnFieldSelector(o interface{}, selectors string) (bool, error) {
-	selectorsSlice := strings.Split(selectors, ",")
-	for _, selector := range selectorsSlice {
-		if strings.Contains(selector, "!=") {
-			selectorSlice := strings.Split(selector, "!=")
-			value, err := getValueFromTag(o, selectorSlice[0])
-			if err != nil {
-				return false, err
-			} else if value == selectorSlice[1] {
-				return false, nil
-			}
-		} else if strings.Contains(selector, "=") {
-			selectorSlice := strings.Split(selector, "=")
-			value, err := getValueFromTag(o, selectorSlice[0])
-			if err != nil {
-				return false, err
-			} else if value != selectorSlice[1] {
-				return false, nil
-			}
-		} else {
-			return false, errors.Errorf("Wrong fieldSelector : %s", selectors)
-		}
-	}
-	return true, nil
 }
 
 func indirect(v reflect.Value) reflect.Value {

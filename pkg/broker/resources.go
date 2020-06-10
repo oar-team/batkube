@@ -9,7 +9,7 @@ import (
 )
 
 // Resources protected by getters and setters
-var events []models.IoK8sApimachineryPkgApisMetaV1WatchEvent
+var events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent
 
 // Kubernetes resources
 var NodeList models.IoK8sAPICoreV1NodeList = models.IoK8sAPICoreV1NodeList{
@@ -74,11 +74,11 @@ var SimData translate.SimulationBeginsData
 // retrieved by te broker and sent to Batsim.
 var ToExecute = make(chan *models.IoK8sAPICoreV1Pod)
 
-func AddEvent(event models.IoK8sApimachineryPkgApisMetaV1WatchEvent) {
+func AddEvent(event *models.IoK8sApimachineryPkgApisMetaV1WatchEvent) {
 	events = append(events, event)
 }
 
-func GetEvents() []models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
+func GetEvents() []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	return events
 }
 

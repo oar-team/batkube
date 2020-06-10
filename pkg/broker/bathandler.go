@@ -27,7 +27,7 @@ func handleBatMessage(msg translate.BatMessage) {
 
 			// Add events to event list
 			for _, node := range NodeList.Items {
-				AddEvent(models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
+				AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
 					Type:   &translate.Added,
 					Object: node,
 				})
@@ -58,7 +58,7 @@ func handleBatMessage(msg translate.BatMessage) {
 			log.Infof("[broker:bathandler] pod %s is ready to be scheduled", pod.Metadata.Name)
 
 			// Add to event list
-			AddEvent(models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
+			AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
 				Type:   &translate.Added,
 				Object: pod,
 			})
@@ -78,9 +78,9 @@ func handleBatMessage(msg translate.BatMessage) {
 			case "COMPLETED_SUCCESSFULLY":
 				pod, _ := GetPod(translate.GetPodNameFromJobId(jobCompleted.JobId))
 				pod.Status.Phase = "Succeeded"
-				translate.IncrementPodResourceVersion(pod)
+				IncrementPodResourceVersion(pod)
 				// TODO : unbind the pod?
-				AddEvent(models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
+				AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
 					Type:   &translate.Modified,
 					Object: pod,
 				})
