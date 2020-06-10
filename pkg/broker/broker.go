@@ -175,21 +175,24 @@ func Run(batEndpoint string) {
 			case event := <-timeEvents:
 				// Call me later events from time requests
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
-				lastMessageTime = time.Now()
 				batMsg.Events = append(batMsg.Events, event)
+				lastMessageTime = time.Now() // put this at the end to minimize batkube overhead
 			case pod := <-ToExecute:
 				// Jobs sent over by the api
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
-				lastMessageTime = time.Now()
 				err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
 				if err != nil {
 					log.Panic("Failed to create event:", err)
 				}
 				batMsg.Events = append(batMsg.Events, executeJob)
 				log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
+				lastMessageTime = time.Now()
 			default:
+				// TODO : removing outdated events takes time, which should not be accounted for in scheduler time
+				// (but it is negligeable, most probably)
 				if stopCondition&nonEmpty != 0 {
 					if len(batMsg.Events) > 0 {
+						// TODO : ?
 						stopReceivingEvents = !removeOutdatedEvents(&batMsg)
 					}
 				}

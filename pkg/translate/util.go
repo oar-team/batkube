@@ -15,7 +15,7 @@ func GetPodNameFromJobId(name string) string {
 }
 
 /*
-Wrapper function top help with Batsim event creation
+Wrapper function to help with Batsim event creation
 */
 func MakeEvent(timestamp float64, eventType string, data interface{}) (error, Event) {
 	var eventData map[string]interface{}
