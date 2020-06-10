@@ -2,7 +2,7 @@
 
 % Essential packages
 \usepackage[T1]{fontenc}
-%\usepackage[latin1]{inputenc}
+%%\usepackage[latin1]{inputenc}
 \usepackage[french,english]{babel}
 
 % personal packages
@@ -175,20 +175,56 @@ Good luck :)
 \chapter{Introduction}
 \section{Scheduling}
 \begin{displayquote}[][]
-	\textbf{sched·ule} (skĕj′o͞ol, -o͞o-əl, skĕj′əl) \textit{n} : A plan for
+	\textbf{schedule} \textit{n.} : A plan for
 	performing work or achieving an objective, specifying the order and
 	allotted time for each part.
 \end{displayquote}
 
 In a general way, scheduling is the concept of allocating available resources
 to a set of tasks, organizing them in time and space (the resource space). The
-resources can be human or machine, and the tasks independant from each others or
+resources can be of any nature, and the tasks independant from each others or
 linked together.
 
-In computing the definition remains the same with automation in mind.
-Algorithms allocate tasks - that are called jobs - on machines, virtual or
-physical, with the intent of minimizing the total execution time, using as much
-computing potential as possible and reducing energy costs.
+In computing the definition remains the same, but with automation in mind.
+Schedulers are algorithms that take as an input either a pre-defined workload,
+which is a set of jobs  to be executed - the tasks arre called jobs in this
+context -, or simple jobs submitted over time by users in an unpredictable
+manner. In the latter case, the jobs are added to a queue managed by the
+scheduler. Scheduling is also called batch scheduling or batch processing, as
+schedulers allocate batches of jobs at a time. Jobs are allocated on machines,
+virtual or physical, with the intent of minimizing the total execution time,
+equally distributing resources, minimizing wait time for the user or reducing
+energy costs. As these objectives often contradict themselves, schedulers have
+to implement compromises or focus on what the user really needs or requires.  
+
+The scheduler has many factors to keep in mind while trying to be as efficient
+as possible, such as :
+
+\begin{itemize}
+	\item Resource availability and jobs resource requirements
+	\item Link between jobs (some are executed in parallel and need synchronization, some are independant)
+	\item Latency between compute resources
+	\item Compute resources failures
+	\item Jobs priority
+	\item Machine shutdowns and restarts
+	\item Data locality
+\end{itemize}
+
+All these elements make scheduling a very intricate problem that is at best
+polynomial in complexity, and often NP-hard\cite{scheduler-complexity}.
+Moreover, with the growing complexity of modern Resource and Job Management
+Systems (RJMS)\footnote{The RJMS is the software at the core of the cluster. It
+	is a synonym for a scheduler and manages resources, energy consumption,
+	users' jobs life-cycle and implements scheduling policies.} and the
+wide variety in infrastructures, scheduler performances are rather
+inpredictable.
+
+\section{Simulating an infrastructure}
+Since it is very difficult to establish a model for a scheduler on a certain
+infrastructure to try and predict is performances on this particular situation,
+evaluating a scheduler often boils down to testing it against real scenarios -
+that is to say with a real workload, on a real infrastructure.
+
 
 \section{Kubernetes overview}
 
@@ -351,9 +387,6 @@ Kubernetes simulation for batch schedulers evaluation.
 
 
 
-
-
-\section{Simulating an infrastructure}
 
 
 \chapter{State of the art}
