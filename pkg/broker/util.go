@@ -12,61 +12,86 @@ import (
 )
 
 /*
+Filters out items slice in filteredItems slice based on the given filter.
+
+filteredItems must be a slice of same type as items with capacity superior or
+equal to items lenght
+*/
+func filterItems(items, filteredItems interface{}, filterCondition string, filter func(interface{}, string) (bool, error)) error {
+	itemsValue := indirect(reflect.ValueOf(items))
+	filteredItemsValue := reflect.ValueOf(filteredItems)
+	if reflect.ValueOf(filteredItems).Kind() != reflect.Ptr {
+		return errors.Errorf("filteredItems (type %T) should be a pointer to a slice", filteredItems)
+	}
+	filteredItemsValue = filteredItemsValue.Elem()
+
+	if itemsValue.Kind() != reflect.Slice {
+		return errors.Errorf("items (type %T) should be a slice or pointer to a slice", itemsValue.Type)
+	}
+	if filteredItemsValue.Kind() != reflect.Slice {
+		return errors.Errorf("filteredItems (type %T) should be a pointer to a slice", filteredItemsValue.Type)
+	}
+
+	n := itemsValue.Len()
+	if filteredItemsValue.Cap() < n {
+		return errors.Errorf("filteredItems capacity (%d) is less than items length (%d)", filteredItemsValue.Cap(), n)
+	}
+	i := 0 // current index in filteredItems
+	var ok bool
+	var err error
+	for j := 0; j < n; j++ {
+		ok, err = filter(itemsValue.Index(j).Interface(), filterCondition)
+		if err != nil {
+			return err
+		} else if ok {
+			filteredItemsValue.Index(i).Set(itemsValue.Index(j))
+			i++ // At most, i = n
+		}
+	}
+	filteredItemsValue.Set(filteredItemsValue.Slice(0, i))
+	return nil
+}
+
+/*
 Filters the given resourcelist object items based on the given filter fucntion.
 
 resourceList must be an indirect type.
 */
 func FilterResourceList(resourceList interface{}, filterCondition string, filter func(interface{}, string) (bool, error)) (interface{}, error) {
 	if reflect.ValueOf(resourceList).Kind() != reflect.Ptr {
-		return nil, errors.Errorf("An indirect type is required as input")
+		return nil, errors.Errorf("ResourceList must be an indirect type")
 	}
 
-	// Could not find a better way, as we can't define interface methods with swagger.
+	// Could not find a better way, as we can't define interface methods with go-swagger.
+	var err error
 	switch resourceList.(type) {
 	case *models.IoK8sAPICoreV1PodList:
 		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1PodList)
-		resourceListShallowCopy := &models.IoK8sAPICoreV1PodList{}
-		resourceListShallowCopy.APIVersion = concreteResourceList.APIVersion
-		resourceListShallowCopy.Kind = concreteResourceList.Kind
-		resourceListShallowCopy.Metadata = concreteResourceList.Metadata
-
-		selectedItems := make([]*models.IoK8sAPICoreV1Pod, 0)
-		var ok bool
-		var err error
-		for _, item := range concreteResourceList.Items {
-			ok, err = filter(item, filterCondition)
-			if err != nil {
-				return nil, err
-			} else if ok {
-				selectedItems = append(selectedItems, item)
-			}
+		resourceListShallowCopy := &models.IoK8sAPICoreV1PodList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
 		}
-
-		resourceListShallowCopy.Items = selectedItems
+		filteredItems := make([]*models.IoK8sAPICoreV1Pod, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
 		return resourceListShallowCopy, nil
-
 	case *models.IoK8sAPICoreV1NodeList:
 		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1NodeList)
-		resourceListShallowCopy := &models.IoK8sAPICoreV1NodeList{}
-		resourceListShallowCopy.APIVersion = concreteResourceList.APIVersion
-		resourceListShallowCopy.Kind = concreteResourceList.Kind
-		resourceListShallowCopy.Metadata = concreteResourceList.Metadata
-
-		selectedItems := make([]*models.IoK8sAPICoreV1Node, 0)
-		var ok bool
-		var err error
-		for _, item := range concreteResourceList.Items {
-			ok, err = filter(item, filterCondition)
-			if err != nil {
-				return nil, err
-			} else if ok {
-				selectedItems = append(selectedItems, item)
-			}
+		resourceListShallowCopy := &models.IoK8sAPICoreV1NodeList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
 		}
-
-		resourceListShallowCopy.Items = selectedItems
+		filteredItems := make([]*models.IoK8sAPICoreV1Node, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
 		return resourceListShallowCopy, nil
-
+		// TODO : add the rest of the types
 	default:
 		return nil, errors.Errorf("I don't know this resource type : %T", resourceList)
 	}
@@ -82,8 +107,8 @@ func FilterObjectOnKind(o interface{}, kind string) (bool, error) {
 	}
 	fieldName := "Kind"
 	fieldValue := v.FieldByName(fieldName)
-	if fieldValue.IsZero() {
-		return false, errors.Errorf("Could not find %s in %T fields", o, fieldName)
+	if !fieldValue.IsValid() {
+		return false, errors.Errorf("Could not find %s in %T fields", fieldName, o)
 	}
 	return strings.EqualFold(kind, fieldValue.String()), nil
 }
@@ -103,8 +128,8 @@ func FilterObjectOnResourceVersion(o interface{}, resourceVersion string) (bool,
 	}
 	fieldName := "Metadata"
 	fieldValue := v.FieldByName(fieldName)
-	if fieldValue.IsZero() {
-		return false, errors.Errorf("Could not find %s in %T fields", o, fieldName)
+	if !fieldValue.IsValid() {
+		return false, errors.Errorf("Could not find %s in %T fields", fieldName, o)
 	}
 
 	metadata, ok := fieldValue.Interface().(*models.IoK8sApimachineryPkgApisMetaV1ObjectMeta)
@@ -221,9 +246,12 @@ func getValueFromTag(o interface{}, tag string) (string, error) {
 	return "", errors.Errorf("Type %s does not contain any field %s", t.String(), tag)
 }
 
+/*
+Indirects the given value, recursively
+*/
 func indirect(v reflect.Value) reflect.Value {
-	for v.Kind() == reflect.Ptr {
-		v = v.Elem()
+	if v.Kind() == reflect.Ptr {
+		return indirect(v.Elem())
 	}
 	return v
 }
