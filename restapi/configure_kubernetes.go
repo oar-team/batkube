@@ -5232,7 +5232,7 @@ func configureServer(s *http.Server, scheme, addr string) {
 // The middleware executes after routing but before authentication, binding and validation
 func setupMiddlewares(handler http.Handler) http.Handler {
 	//TODO read from env variables
-	debug := true
+	debug := false
 	if debug {
 		return interpose.NegroniLogrus()(handler)
 	}

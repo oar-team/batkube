@@ -6,3 +6,4 @@ report/master-project-blx.bib
 *.bbl
 *.xml
 *.blg
+!examples

@@ -18,7 +18,7 @@ const nonEmpty = 1 << 1
 // ex : stopCondition = nonEmpty | timeout will stop waiting for messages if
 // the waiting time since last message is higher than timeoutValue OR if the
 // Events slice is not empty.
-var stopCondition = nonEmpty | timeout
+var stopCondition = timeout
 var timeoutValue = 100 * time.Millisecond
 
 /*
