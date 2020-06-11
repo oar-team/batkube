@@ -32,7 +32,7 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 				SchedulerName: scheduler,
 				NodeName:      "",
 				Containers: []*models.IoK8sAPICoreV1Container{
-					&models.IoK8sAPICoreV1Container{
+					{
 						Name:  &containerName,
 						Image: "tutum/curl",
 						Command: []string{
@@ -55,10 +55,17 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 
 func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8sAPICoreV1Node) {
 	var nodes []*models.IoK8sAPICoreV1Node
+	var node models.IoK8sAPICoreV1Node
 	nodeConditionType := "Ready"
 	nodeConditionStatus := "True"
 	for _, resource := range resources {
-		var node models.IoK8sAPICoreV1Node
+		e, ok := resource.Properties["memory"].(string)
+		memory := models.IoK8sApimachineryPkgAPIResourceQuantity("0")
+		if ok {
+			fmt.Printf("e : %v\n", e)
+			memory = models.IoK8sApimachineryPkgAPIResourceQuantity(e)
+		}
+
 		node = models.IoK8sAPICoreV1Node{
 			Kind:       "Node",
 			APIVersion: "v1",
@@ -67,8 +74,11 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 				ResourceVersion: "0",
 			},
 			Status: &models.IoK8sAPICoreV1NodeStatus{
+				Capacity: map[string]models.IoK8sApimachineryPkgAPIResourceQuantity{
+					"memory": memory,
+				},
 				Conditions: []*models.IoK8sAPICoreV1NodeCondition{
-					&models.IoK8sAPICoreV1NodeCondition{
+					{
 						// Is the initial state of the
 						// resource always idle? -> To
 						// be discussed with batsim devs
