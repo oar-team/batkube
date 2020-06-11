@@ -62,7 +62,7 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 		return nil, errors.Errorf("ResourceList must be an indirect type")
 	}
 
-	// Could not find a better way, as we can't define interface methods with go-swagger.
+	// Could not find a better way. Objects cannot be initialized and manipulated without a concrete type.
 	var err error
 	switch resourceList.(type) {
 	case *models.IoK8sAPICoreV1PodList:
@@ -91,7 +91,122 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 		}
 		resourceListShallowCopy.Items = filteredItems
 		return resourceListShallowCopy, nil
-		// TODO : add the rest of the types
+	case *models.IoK8sAPIPolicyV1beta1PodDisruptionBudgetList:
+		concreteResourceList := resourceList.(*models.IoK8sAPIPolicyV1beta1PodDisruptionBudgetList)
+		resourceListShallowCopy := &models.IoK8sAPIPolicyV1beta1PodDisruptionBudgetList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPIPolicyV1beta1PodDisruptionBudget, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPIStorageV1StorageClassList:
+		concreteResourceList := resourceList.(*models.IoK8sAPIStorageV1StorageClassList)
+		resourceListShallowCopy := &models.IoK8sAPIStorageV1StorageClassList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPIStorageV1StorageClass, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPIStorageV1CSINodeList:
+		concreteResourceList := resourceList.(*models.IoK8sAPIStorageV1CSINodeList)
+		resourceListShallowCopy := &models.IoK8sAPIStorageV1CSINodeList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPIStorageV1CSINode, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPICoreV1PersistentVolumeClaimList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1PersistentVolumeClaimList)
+		resourceListShallowCopy := &models.IoK8sAPICoreV1PersistentVolumeClaimList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPICoreV1PersistentVolumeClaim, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPICoreV1PersistentVolumeList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1PersistentVolumeList)
+		resourceListShallowCopy := &models.IoK8sAPICoreV1PersistentVolumeList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPICoreV1PersistentVolume, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPICoreV1ServiceList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1ServiceList)
+		resourceListShallowCopy := &models.IoK8sAPICoreV1ServiceList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPICoreV1Service, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sApimachineryPkgApisMetaV1APIResourceList:
+		concreteResourceList := resourceList.(*models.IoK8sApimachineryPkgApisMetaV1APIResourceList)
+		resourceListShallowCopy := &models.IoK8sApimachineryPkgApisMetaV1APIResourceList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+		}
+		filteredItems := make([]*models.IoK8sApimachineryPkgApisMetaV1APIResource, len(concreteResourceList.Resources))
+		if err = filterItems(&concreteResourceList.Resources, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Resources = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPICoreV1EndpointsList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1EndpointsList)
+		resourceListShallowCopy := &models.IoK8sAPICoreV1EndpointsList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPICoreV1Endpoints, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPICoordinationV1LeaseList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoordinationV1LeaseList)
+		resourceListShallowCopy := &models.IoK8sAPICoordinationV1LeaseList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPICoordinationV1Lease, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
 	default:
 		return nil, errors.Errorf("I don't know this resource type : %T", resourceList)
 	}
