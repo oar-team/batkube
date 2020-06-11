@@ -129,27 +129,32 @@ Jury member 2\\
 \renewcommand{\abstracttextfont}{\normalfont}
 \abstractintoc
 \begin{abstract} 
-	The rise of containerized applications provided web platforms with much
-	more control over their resources than they had before with their
-	physical servers. Soon, developers realized that container operations
-	could be automated to allow for even more scalability. The Cloud Native
-	Computing Foundation was founded in this context, and developed
-	Kubernetes which is a piece of software capable of container
-	orchestration. Now, as we observe a convergence between High
-	Performance Computing and the Big Data field where Kubernetes is
+	The rise of containerized applications has provided web platforms with
+	much more control over their resources than they had before with their
+	physical servers. Soon enough, developers realized they could go even
+	further by automating container management operations to allow for even
+	more scalability. The Cloud Native Computing Foundation was founded in
+	this context, and developed Kubernetes which is a piece of software
+	capable of container orchestration, or in other words, container
+	management. Now, as we observe a convergence between HPC (High
+	Performance Computing) and the Big Data field where Kubernetes is
 	already the standard for some applications such as Machine Learning,
 	discussions about leveraging containers for HPC applications rose and
-	interest in Kubernetes has grown in the HPC community. However, using
-	Kubernetes in a HPC context comes with many challenges, amongst which
-	is the scheduling problem. Many batch schedulers have already been
-	developed for Kubernetes, although how can one user know which (or wich
-	combination) is best for its infrastructure? One solution is to test
-	different schedulers in real conditions which is costly both in time
-	and resources. One other solution is to simulate the cluster to
-	approximate the results with little time and effort. Our proposal to
-	this other approach is named Batkube : it is an interface between
-	Kubernetes schedulers and Batsim, a general purpose infrastructure
-	simulator based on Simgrid and developed at the LIG.
+	interest in Kubernetes has grown in the HPC community. One of the many
+	challenges the HPC world has to face is scheduling, which is the act of
+	allocating tasks submitted by users on available resources. In order to
+	properly evaluate and develop schedulers researchers have used
+	simulators for decades to avoid running experiments in real conditions,
+	which is costly both in time and resources. However, such simulators do
+	not exist for Kubernetes or are not open to the public. While the
+	default scheduler works great for most of the Cloud Native
+	infrastructures Kubernetes was designed for, some teams of researchers
+	would rather be able to experiment with different batch processing
+	policies on Kubernetes as they do with traditional HPC. Our goal in
+	this master thesis is to describe how we developed Batkube, which it is
+	an interface between Kubernetes schedulers and Batsim, a general
+	purpose infrastructure simulator based on the Simgrid framework and
+	developed at the LIG.
 
 \end{abstract}
 \abstractintoc
@@ -173,61 +178,8 @@ Good luck :)
 \SingleSpace
 
 \chapter{Introduction}
-\section{Scheduling}
-\begin{displayquote}[][]
-	\textbf{schedule} \textit{n.} : A plan for
-	performing work or achieving an objective, specifying the order and
-	allotted time for each part.
-\end{displayquote}
-
-In a general way, scheduling is the concept of allocating available resources
-to a set of tasks, organizing them in time and space (the resource space). The
-resources can be of any nature, and the tasks independant from each others or
-linked together.
-
-In computing the definition remains the same, but with automation in mind.
-Schedulers are algorithms that take as an input either a pre-defined workload,
-which is a set of jobs  to be executed - the tasks arre called jobs in this
-context -, or simple jobs submitted over time by users in an unpredictable
-manner. In the latter case, the jobs are added to a queue managed by the
-scheduler. Scheduling is also called batch scheduling or batch processing, as
-schedulers allocate batches of jobs at a time. Jobs are allocated on machines,
-virtual or physical, with the intent of minimizing the total execution time,
-equally distributing resources, minimizing wait time for the user or reducing
-energy costs. As these objectives often contradict themselves, schedulers have
-to implement compromises or focus on what the user really needs or requires.  
-
-The scheduler has many factors to keep in mind while trying to be as efficient
-as possible, such as :
-
-\begin{itemize}
-	\item Resource availability and jobs resource requirements
-	\item Link between jobs (some are executed in parallel and need synchronization, some are independant)
-	\item Latency between compute resources
-	\item Compute resources failures
-	\item Jobs priority
-	\item Machine shutdowns and restarts
-	\item Data locality
-\end{itemize}
-
-All these elements make scheduling a very intricate problem that is at best
-polynomial in complexity, and often NP-hard\cite{scheduler-complexity}.
-Moreover, with the growing complexity of modern Resource and Job Management
-Systems (RJMS)\footnote{The RJMS is the software at the core of the cluster. It
-	is a synonym for a scheduler and manages resources, energy consumption,
-	users' jobs life-cycle and implements scheduling policies.} and the
-wide variety in infrastructures, scheduler performances are rather
-inpredictable.
-
-\section{Simulating an infrastructure}
-Since it is very difficult to establish a model for a scheduler on a certain
-infrastructure to try and predict is performances on this particular situation,
-evaluating a scheduler often boils down to testing it against real scenarios -
-that is to say with a real workload, on a real infrastructure.
-
-
-\section{Kubernetes overview}
-
+\section{Kubernetes}
+\subsection{Kubernetes overview}
 \subsubsection{Cloud Native Computing}
 In the early stages of application development, organizations used to run their
 services on physical servers. With this direct approach came many challenges
@@ -313,9 +265,8 @@ operations.
 	\label{fig:kube-components}
 \end{figure}
 
-\section{HPC and Kubernetes}
-The difference between HPC (High Performance Computing) and Kubernetes lies in
-the workloads they are intended to tackle.
+\subsection{HPC and Kubernetes}
+The difference between HPC (High Performance Computing) and Cloud Native computing lies in the workloads they are intended to tackle.
 
 A general definition of HPC would be :
 ``\textit{High Performance Computing (HPC) most generally refers to the
@@ -385,23 +336,64 @@ against the very well established HPC ecosystem, however efforts are being made
 in this direction. This master thesis is focused on a part of this problem :
 Kubernetes simulation for batch schedulers evaluation.
 
+\section{Scheduling}
+\begin{displayquote}[][]
+	\textbf{schedule} \textit{n.} : A plan for
+	performing work or achieving an objective, specifying the order and
+	allotted time for each part.
+\end{displayquote}
 
+In a general way, scheduling is the concept of allocating available resources
+to a set of tasks, organizing them in time and space (the resource space). The
+resources can be of any nature, and the tasks independant from each others or
+linked together.
 
+In computing the definition remains the same, but with automation in mind.
+Schedulers are algorithms that take as an input either a pre-defined workload,
+which is a set of jobs  to be executed - the tasks are called jobs in this
+context -, or simple jobs submitted over time by users in an unpredictable
+manner. In the latter case, the jobs are added to a queue managed by the
+scheduler. Scheduling is also called batch scheduling or batch processing, as
+schedulers allocate batches of jobs at a time. Jobs are allocated on machines,
+virtual or physical, with the intent of minimizing the total execution time,
+equally distributing resources, minimizing wait time for the user or reducing
+energy costs. As these objectives often contradict themselves, schedulers have
+to implement compromises or focus on what the user really needs or requires.  
+
+The scheduler has many factors to keep in mind while trying to be as efficient
+as possible, such as :
+
+\begin{itemize}
+	\item Resource availability and jobs resource requirements
+	\item Link between jobs (some are executed in parallel and need synchronization, some are independant)
+	\item Latency between compute resources
+	\item Compute resources failures
+	\item Jobs priority
+	\item Machine shutdowns and restarts
+	\item Data locality
+\end{itemize}
+
+All these elements make scheduling a very intricate problem that is at best
+polynomial in complexity, and often NP-hard\cite{scheduler-complexity}.
+Moreover, with the growing complexity of modern Resource and Job Management
+Systems (RJMS)\footnote{The RJMS is the software at the core of the cluster. It
+	is a synonym for a scheduler and manages resources, energy consumption,
+	users' jobs life-cycle and implements scheduling policies.} and the
+wide variety in infrastructures, scheduler performances are rather
+inpredictable.
+
+\section{Simulating an infrastructure}
+Since it is very difficult to establish a model for a scheduler on a certain
+infrastructure to try and predict is performances on a given situation,
+evaluating a scheduler often boils down to testing it against real scenarios -
+that is to say with a real workload, on a real infrastructure. Indeed, that is
+costly both in time and resources and schedulers can't be evaluated extensively
+or ``on the go'' while being developed. One solution to this problem is to run
+simulations of the infrasctuctures on which they run.
 
 
 \chapter{State of the art}
-\section{Kubernetes schedulers}
-
-\subsubsection{kube-scheduler}
-Not exactly a batch scheduler, it is the default scheduler for Kubernetes made
-by the CNCF
-\subsubsection{kube-batch}
-\subsubsection{Poseidon}
-\subsubsection{bashScheduler by rothgar}
-\subsubsection{random-scheduler by Banzaicloud}
-\subsubsection{k8s-custom-scheduler by IBM}
-\subsubsection{scheduler by kelseyhightower}
-
+\section{Batsim}
 \section{Infrastructure simulators}
 
 Developing a scheduler implies being able to test its performances throughout
@@ -419,8 +411,17 @@ services but is capable of handling High-Performance
 Computing\cite{kube-for-hpc}. This project aims at adapting Batsim so it can
 evaluate Kuberenetes schedulers.
 
-\section{Batsim}
+\section{Kubernetes schedulers}
 
+\subsubsection{kube-scheduler}
+Not exactly a batch scheduler, it is the default scheduler for Kubernetes made
+by the CNCF
+\subsubsection{kube-batch}
+\subsubsection{Poseidon}
+\subsubsection{bashScheduler by rothgar}
+\subsubsection{random-scheduler by Banzaicloud}
+\subsubsection{k8s-custom-scheduler by IBM}
+\subsubsection{scheduler by kelseyhightower}
 
 \chapter{Problematic}
 
