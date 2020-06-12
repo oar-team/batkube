@@ -60,7 +60,7 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 	nodeConditionStatus := "True"
 	for _, resource := range resources {
 		e, ok := resource.Properties["memory"].(string)
-		memory := models.IoK8sApimachineryPkgAPIResourceQuantity("0")
+		var memory models.IoK8sApimachineryPkgAPIResourceQuantity
 		if ok {
 			fmt.Printf("e : %v\n", e)
 			memory = models.IoK8sApimachineryPkgAPIResourceQuantity(e)

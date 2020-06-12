@@ -273,4 +273,3 @@ understand an tackle the technical details of the implementation.
 Major update 1 : we may need to recode the scheduler in go, so as to
 synchronize the scheduler with batsim. Currently the bashScheduler sleeps in
 between calls, which is a major issue time-wise.
-
