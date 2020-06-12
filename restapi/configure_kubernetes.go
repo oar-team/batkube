@@ -154,6 +154,26 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Example:
 	// api.APIAuthorizer = security.Authorized()
 
+	// APIVersions
+	api.CoreGetCoreAPIVersionsHandler = core.GetCoreAPIVersionsHandlerFunc(func(params core.GetCoreAPIVersionsParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			clientCIDR := "0.0.0.0/0"
+			serverAddress := params.HTTPRequest.Host
+			if err := p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1APIVersions{
+				Kind:     "APIVersions",
+				Versions: []string{"v1"},
+				ServerAddressByClientCIDRs: []*models.IoK8sApimachineryPkgApisMetaV1ServerAddressByClientCIDR{
+					{
+						ClientCIDR:    &clientCIDR,
+						ServerAddress: &serverAddress,
+					},
+				},
+			}); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
+
 	// Events
 	api.CoreV1ListCoreV1EventForAllNamespacesHandler = core_v1.ListCoreV1EventForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EventForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
@@ -1970,11 +1990,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler == nil {
 		api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler = coordination_v1beta1.GetCoordinationV1beta1APIResourcesHandlerFunc(func(params coordination_v1beta1.GetCoordinationV1beta1APIResourcesParams) middleware.Responder {
 			return middleware.NotImplemented("operation coordination_v1beta1.GetCoordinationV1beta1APIResources has not yet been implemented")
-		})
-	}
-	if api.CoreGetCoreAPIVersionsHandler == nil {
-		api.CoreGetCoreAPIVersionsHandler = core.GetCoreAPIVersionsHandlerFunc(func(params core.GetCoreAPIVersionsParams) middleware.Responder {
-			return middleware.NotImplemented("operation core.GetCoreAPIVersions has not yet been implemented")
 		})
 	}
 	if api.CoreV1GetCoreV1APIResourcesHandler == nil {
@@ -5252,7 +5267,7 @@ func configureServer(s *http.Server, scheme, addr string) {
 // The middleware executes after routing but before authentication, binding and validation
 func setupMiddlewares(handler http.Handler) http.Handler {
 	//TODO read from env variables
-	debug := false
+	debug := true
 	if debug {
 		return interpose.NegroniLogrus()(handler)
 	}
