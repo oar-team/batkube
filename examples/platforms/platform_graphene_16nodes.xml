@@ -13,6 +13,8 @@
 <AS id="AS_graphene_full" routing="Full" >
 
 <host id="graphene-1.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 	<prop id="role" value="master"/>
 </host>
@@ -21,6 +23,8 @@
 <link id="graphene-1.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-2.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-2.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -28,6 +32,8 @@
 <link id="graphene-2.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-3.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-3.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -35,6 +41,8 @@
 <link id="graphene-3.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-4.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-4.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -42,6 +50,8 @@
 <link id="graphene-4.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-5.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-5.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -49,6 +59,8 @@
 <link id="graphene-5.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-6.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-6.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -56,6 +68,8 @@
 <link id="graphene-6.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-7.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-7.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -63,6 +77,8 @@
 <link id="graphene-7.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-8.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-8.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -70,6 +86,8 @@
 <link id="graphene-8.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-9.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-9.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -77,6 +95,8 @@
 <link id="graphene-9.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-10.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-10.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -84,6 +104,8 @@
 <link id="graphene-10.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-11.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-11.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -91,6 +113,8 @@
 <link id="graphene-11.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-12.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-12.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -98,6 +122,8 @@
 <link id="graphene-12.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-13.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-13.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -105,6 +131,8 @@
 <link id="graphene-13.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-14.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-14.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -112,6 +140,8 @@
 <link id="graphene-14.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-15.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-15.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
@@ -119,6 +149,8 @@
 <link id="graphene-15.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
 
 <host id="graphene-16.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="4"/>
 	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-16.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />

@@ -62,9 +62,18 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 		e, ok := resource.Properties["memory"].(string)
 		var memory models.IoK8sApimachineryPkgAPIResourceQuantity
 		if ok {
-			fmt.Printf("e : %v\n", e)
 			memory = models.IoK8sApimachineryPkgAPIResourceQuantity(e)
 		}
+		e, ok = resource.Properties["core"].(string)
+		var core models.IoK8sApimachineryPkgAPIResourceQuantity
+		if ok {
+			core = models.IoK8sApimachineryPkgAPIResourceQuantity(e)
+		}
+		//e, ok = resource.Properties["speed"].(string)
+		//var speed models.IoK8sApimachineryPkgAPIResourceQuantity
+		//if ok {
+		//	speed = models.IoK8sApimachineryPkgAPIResourceQuantity(e)
+		//}
 
 		node = models.IoK8sAPICoreV1Node{
 			Kind:       "Node",
@@ -76,6 +85,7 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 			Status: &models.IoK8sAPICoreV1NodeStatus{
 				Capacity: map[string]models.IoK8sApimachineryPkgAPIResourceQuantity{
 					"memory": memory,
+					"cpu":    core,
 				},
 				Conditions: []*models.IoK8sAPICoreV1NodeCondition{
 					{

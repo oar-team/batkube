@@ -67,6 +67,11 @@ var LeaseList models.IoK8sAPICoordinationV1LeaseList = models.IoK8sAPICoordinati
 	APIVersion: "coordination.k8s.io/v1",
 	Items:      []*models.IoK8sAPICoordinationV1Lease{},
 }
+var EventList models.IoK8sAPICoreV1EventList = models.IoK8sAPICoreV1EventList{
+	Kind:       "EventList",
+	APIVersion: "v1",
+	Items:      []*models.IoK8sAPICoreV1Event{},
+}
 
 var SimData translate.SimulationBeginsData
 

@@ -154,6 +154,25 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Example:
 	// api.APIAuthorizer = security.Authorized()
 
+	// Events
+	api.CoreV1ListCoreV1EventForAllNamespacesHandler = core_v1.ListCoreV1EventForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EventForAllNamespacesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventList, rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
+
+	api.CoreV1CreateCoreV1NamespacedEventHandler = core_v1.CreateCoreV1NamespacedEventHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEventParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			broker.EventList.Items = append(broker.EventList.Items, params.Body)
+			if err := success(rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
+
+	// Leases
 	api.CoordinationV1ListCoordinationV1NamespacedLeaseHandler = coordination_v1.ListCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ListCoordinationV1NamespacedLeaseParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Lease", &broker.LeaseList, rw, p); err != nil {
@@ -200,6 +219,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// Endpoints
 	api.CoreV1CreateCoreV1NamespacedEndpointsHandler = core_v1.CreateCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.EndpointsList.Items = append(broker.EndpointsList.Items, params.Body)
@@ -237,6 +257,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// StorageClasses
 	api.StorageV1ListStorageV1StorageClassHandler = storage_v1.ListStorageV1StorageClassHandlerFunc(func(params storage_v1.ListStorageV1StorageClassParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "StorageClass", &broker.StorageClassList, rw, p); err != nil {
@@ -245,6 +266,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// CSINodes
 	api.StorageV1ListStorageV1CSINodeHandler = storage_v1.ListStorageV1CSINodeHandlerFunc(func(params storage_v1.ListStorageV1CSINodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "CSINode", &broker.CSINodeList, rw, p); err != nil {
@@ -253,6 +275,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// PersistentVolumeClaims
 	api.CoreV1ListCoreV1PersistentVolumeClaimForAllNamespacesHandler = core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PersistentVolumeClaim", &broker.PersistentVolumeClaimList, rw, p); err != nil {
@@ -261,6 +284,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// PersistentVolume
 	api.CoreV1ListCoreV1PersistentVolumeHandler = core_v1.ListCoreV1PersistentVolumeHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PersistentVolume", &broker.PersistentVolumeList, rw, p); err != nil {
@@ -269,6 +293,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// Services
 	api.CoreV1ListCoreV1ServiceForAllNamespacesHandler = core_v1.ListCoreV1ServiceForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1ServiceForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Service", &broker.ServiceList, rw, p); err != nil {
@@ -277,6 +302,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// PodDisruptionBudgets
 	api.PolicyV1beta1ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandler = policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandlerFunc(func(params policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PodDisruptionBudget", &broker.PodDisruptionBudgetList, rw, p); err != nil {
@@ -285,6 +311,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// APIResources
 	api.EventsV1beta1GetEventsV1beta1APIResourcesHandler = events_v1beta1.GetEventsV1beta1APIResourcesHandlerFunc(func(params events_v1beta1.GetEventsV1beta1APIResourcesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(nil, nil, nil, "APIResource", &broker.APIResourceList, rw, p); err != nil {
@@ -293,17 +320,10 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// Pods
 	api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
-		})
-	})
-
-	api.CoreV1ListCoreV1NodeHandler = core_v1.ListCoreV1NodeHandlerFunc(func(params core_v1.ListCoreV1NodeParams) middleware.Responder {
-		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Node", &broker.NodeList, rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 			}
 		})
@@ -349,8 +369,18 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// Bindings
 	api.CoreV1CreateCoreV1NamespacedBindingHandler = core_v1.CreateCoreV1NamespacedBindingHandlerFunc(func(params core_v1.CreateCoreV1NamespacedBindingParams) middleware.Responder {
 		return middleware.NotImplemented("operation core_v1.CoreV1CreateCoreV1NamespacedBindingHandler has not yet been implemented")
+	})
+
+	// Nodes
+	api.CoreV1ListCoreV1NodeHandler = core_v1.ListCoreV1NodeHandlerFunc(func(params core_v1.ListCoreV1NodeParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Node", &broker.NodeList, rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
 	})
 
 	api.CoreV1PatchCoreV1NodeHandler = core_v1.PatchCoreV1NodeHandlerFunc(func(params core_v1.PatchCoreV1NodeParams) middleware.Responder {
@@ -780,11 +810,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1CreateCoreV1NamespacedConfigMapHandler == nil {
 		api.CoreV1CreateCoreV1NamespacedConfigMapHandler = core_v1.CreateCoreV1NamespacedConfigMapHandlerFunc(func(params core_v1.CreateCoreV1NamespacedConfigMapParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.CreateCoreV1NamespacedConfigMap has not yet been implemented")
-		})
-	}
-	if api.CoreV1CreateCoreV1NamespacedEventHandler == nil {
-		api.CoreV1CreateCoreV1NamespacedEventHandler = core_v1.CreateCoreV1NamespacedEventHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEventParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.CreateCoreV1NamespacedEvent has not yet been implemented")
 		})
 	}
 	if api.CoreV1CreateCoreV1NamespacedLimitRangeHandler == nil {
@@ -2290,11 +2315,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1ListCoreV1EndpointsForAllNamespacesHandler == nil {
 		api.CoreV1ListCoreV1EndpointsForAllNamespacesHandler = core_v1.ListCoreV1EndpointsForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EndpointsForAllNamespacesParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1EndpointsForAllNamespaces has not yet been implemented")
-		})
-	}
-	if api.CoreV1ListCoreV1EventForAllNamespacesHandler == nil {
-		api.CoreV1ListCoreV1EventForAllNamespacesHandler = core_v1.ListCoreV1EventForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EventForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1EventForAllNamespaces has not yet been implemented")
 		})
 	}
 	if api.CoreV1ListCoreV1LimitRangeForAllNamespacesHandler == nil {
@@ -5266,6 +5286,12 @@ func streamEvents(rw http.ResponseWriter, events []*models.IoK8sApimachineryPkgA
 		w: rw,
 	}
 	e := json.NewEncoder(fw)
+
+	// TODO : remove this
+	// This is here so kubernetes stops logging about short watches
+	//if len(events) == 0 {
+	//	time.Sleep(1 * time.Second)
+	//}
 
 	for _, event := range events {
 		err := e.Encode(event)

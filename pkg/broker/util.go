@@ -59,7 +59,7 @@ resourceList must be an indirect type.
 */
 func FilterResourceList(resourceList interface{}, filterCondition string, filter func(interface{}, string) (bool, error)) (interface{}, error) {
 	if reflect.ValueOf(resourceList).Kind() != reflect.Ptr {
-		return nil, errors.Errorf("ResourceList must be an indirect type")
+		return nil, errors.Errorf("ResourceList must be an indirect type. Given type : %T", resourceList)
 	}
 
 	// Could not find a better way. Objects cannot be initialized and manipulated without a concrete type.
@@ -207,12 +207,28 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 		}
 		resourceListShallowCopy.Items = filteredItems
 		return resourceListShallowCopy, nil
+	case *models.IoK8sAPICoreV1EventList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1EventList)
+		resourceListShallowCopy := &models.IoK8sAPICoreV1EventList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPICoreV1Event, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
 	default:
 		return nil, errors.Errorf("I don't know this resource type : %T", resourceList)
 	}
 }
 
 func FilterObjectOnKind(o interface{}, kind string) (bool, error) {
+	if kind == "" || kind == "*" {
+		return true, nil
+	}
 	v := indirect(reflect.ValueOf(o))
 	if v.Kind() == reflect.Interface {
 		v = indirect(v.Elem())
