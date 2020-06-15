@@ -187,6 +187,12 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventList, rw, p)
 		})
 	})
+	api.CoreV1ListCoreV1NamespacedEventHandler = core_v1.ListCoreV1NamespacedEventHandlerFunc(func(params core_v1.ListCoreV1NamespacedEventParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			addFieldSelector("namespace", true, params.Namespace, params.FieldSelector)
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventList, rw, p)
+		})
+	})
 	api.CoreV1CreateCoreV1NamespacedEventHandler = core_v1.CreateCoreV1NamespacedEventHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.EventList.Items = append(broker.EventList.Items, params.Body)
@@ -353,6 +359,12 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Pods
 	api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p)
+		})
+	})
+	api.CoreV1ListCoreV1NamespacedPodHandler = core_v1.ListCoreV1NamespacedPodHandlerFunc(func(params core_v1.ListCoreV1NamespacedPodParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			addFieldSelector("namespace", true, params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p)
 		})
 	})
@@ -2327,11 +2339,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedEndpoints has not yet been implemented")
 		})
 	}
-	if api.CoreV1ListCoreV1NamespacedEventHandler == nil {
-		api.CoreV1ListCoreV1NamespacedEventHandler = core_v1.ListCoreV1NamespacedEventHandlerFunc(func(params core_v1.ListCoreV1NamespacedEventParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedEvent has not yet been implemented")
-		})
-	}
 	if api.CoreV1ListCoreV1NamespacedLimitRangeHandler == nil {
 		api.CoreV1ListCoreV1NamespacedLimitRangeHandler = core_v1.ListCoreV1NamespacedLimitRangeHandlerFunc(func(params core_v1.ListCoreV1NamespacedLimitRangeParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedLimitRange has not yet been implemented")
@@ -2340,11 +2347,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1ListCoreV1NamespacedPersistentVolumeClaimHandler == nil {
 		api.CoreV1ListCoreV1NamespacedPersistentVolumeClaimHandler = core_v1.ListCoreV1NamespacedPersistentVolumeClaimHandlerFunc(func(params core_v1.ListCoreV1NamespacedPersistentVolumeClaimParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedPersistentVolumeClaim has not yet been implemented")
-		})
-	}
-	if api.CoreV1ListCoreV1NamespacedPodHandler == nil {
-		api.CoreV1ListCoreV1NamespacedPodHandler = core_v1.ListCoreV1NamespacedPodHandlerFunc(func(params core_v1.ListCoreV1NamespacedPodParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedPod has not yet been implemented")
 		})
 	}
 	if api.CoreV1ListCoreV1NamespacedPodTemplateHandler == nil {
@@ -5324,6 +5326,7 @@ func listResource(watch *bool, fieldSelector *string, resourceVersion *string, r
 				return
 			}
 		}
+		//TODO : resourceVersion can be handled as a fieldSelector
 		if resourceVersion != nil {
 			filteredResourceList, err = broker.FilterResourceList(resourceList, *resourceVersion, broker.FilterObjectOnResourceVersion)
 			if err != nil {
@@ -5356,4 +5359,18 @@ func listAPIResources(rw http.ResponseWriter, p runtime.Producer, groupVersion s
 	if err := p.Produce(rw, resources); err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func addFieldSelector(field string, equal bool, value string, fieldSelector *string) {
+	if fieldSelector != nil {
+		*fieldSelector += ","
+	} else {
+		str := ""
+		fieldSelector = &str
+	}
+	*fieldSelector += field
+	if !equal {
+		*fieldSelector += "!"
+	}
+	*fieldSelector += "=" + value
 }
