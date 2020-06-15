@@ -146,7 +146,7 @@ func GetEvents() []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 }
 
 /*
-TODO : use reflection to factorise all this. At the cost of greater code complexity.
+TODO : use reflection to factorise all this.
 */
 func GetPod(name string) (*models.IoK8sAPICoreV1Pod, error) {
 	var r *models.IoK8sAPICoreV1Pod

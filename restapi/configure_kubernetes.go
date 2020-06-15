@@ -5361,6 +5361,9 @@ func listAPIResources(rw http.ResponseWriter, p runtime.Producer, groupVersion s
 	}
 }
 
+/*
+Useful to implement url query parameters effortlessly.
+*/
 func addFieldSelector(field string, equal bool, value string, fieldSelector *string) {
 	if fieldSelector != nil {
 		*fieldSelector += ","

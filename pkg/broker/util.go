@@ -83,7 +83,7 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 		return nil, errors.Errorf("ResourceList must be an indirect type. Given type : %T", resourceList)
 	}
 
-	// Could not find a better way. Objects cannot be initialized and manipulated without a concrete type.
+	// Could not find a better way. To my knowledge, objects cannot be initialized and manipulated without a concrete type.
 	var err error
 	switch resourceList.(type) {
 	case *models.IoK8sAPICoreV1PodList:
@@ -235,6 +235,9 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 		return nil, errors.Errorf("I don't know this resource type : %T", resourceList)
 	}
 }
+
+// TODO : these next two filters can be handled as fieldSelectors.
+// This will reduce the amount of filters to one only, based on json tags.
 
 func FilterObjectOnKind(o interface{}, kind string) (bool, error) {
 	if kind == "" || kind == "*" {
