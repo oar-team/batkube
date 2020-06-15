@@ -25,9 +25,10 @@ var EndpointsList models.IoK8sAPICoreV1EndpointsList
 var LeaseList models.IoK8sAPICoordinationV1LeaseList
 var EventList models.IoK8sAPICoreV1EventList
 
-// APIResources, sorted by groupVersion and the list of verbs.
+// APIResources, sorted by groupVersion
 var apiResources = make(map[string][]*models.IoK8sApimachineryPkgApisMetaV1APIResource)
 
+// List of verbs
 const create = "create"
 const deleteVerb = "delete"
 const deletecollection = "deletecollection"

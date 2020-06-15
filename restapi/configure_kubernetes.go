@@ -345,6 +345,21 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			listAPIResources(rw, p, "events.k8s.io/v1beta1/")
 		})
 	})
+	api.PolicyV1beta1GetPolicyV1beta1APIResourcesHandler = policy_v1beta1.GetPolicyV1beta1APIResourcesHandlerFunc(func(params policy_v1beta1.GetPolicyV1beta1APIResourcesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listAPIResources(rw, p, "policy/v1beta1")
+		})
+	})
+	api.StorageV1GetStorageV1APIResourcesHandler = storage_v1.GetStorageV1APIResourcesHandlerFunc(func(params storage_v1.GetStorageV1APIResourcesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listAPIResources(rw, p, "storage.k8s.io/v1")
+		})
+	})
+	api.CoordinationV1GetCoordinationV1APIResourcesHandler = coordination_v1.GetCoordinationV1APIResourcesHandlerFunc(func(params coordination_v1.GetCoordinationV1APIResourcesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listAPIResources(rw, p, "coordination.k8s.io/v1")
+		})
+	})
 
 	// Pods
 	api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
@@ -1982,11 +1997,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation coordination.GetCoordinationAPIGroup has not yet been implemented")
 		})
 	}
-	if api.CoordinationV1GetCoordinationV1APIResourcesHandler == nil {
-		api.CoordinationV1GetCoordinationV1APIResourcesHandler = coordination_v1.GetCoordinationV1APIResourcesHandlerFunc(func(params coordination_v1.GetCoordinationV1APIResourcesParams) middleware.Responder {
-			return middleware.NotImplemented("operation coordination_v1.GetCoordinationV1APIResources has not yet been implemented")
-		})
-	}
 	if api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler == nil {
 		api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler = coordination_v1beta1.GetCoordinationV1beta1APIResourcesHandlerFunc(func(params coordination_v1beta1.GetCoordinationV1beta1APIResourcesParams) middleware.Responder {
 			return middleware.NotImplemented("operation coordination_v1beta1.GetCoordinationV1beta1APIResources has not yet been implemented")
@@ -2062,11 +2072,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation policy.GetPolicyAPIGroup has not yet been implemented")
 		})
 	}
-	if api.PolicyV1beta1GetPolicyV1beta1APIResourcesHandler == nil {
-		api.PolicyV1beta1GetPolicyV1beta1APIResourcesHandler = policy_v1beta1.GetPolicyV1beta1APIResourcesHandlerFunc(func(params policy_v1beta1.GetPolicyV1beta1APIResourcesParams) middleware.Responder {
-			return middleware.NotImplemented("operation policy_v1beta1.GetPolicyV1beta1APIResources has not yet been implemented")
-		})
-	}
 	if api.RbacAuthorizationGetRbacAuthorizationAPIGroupHandler == nil {
 		api.RbacAuthorizationGetRbacAuthorizationAPIGroupHandler = rbac_authorization.GetRbacAuthorizationAPIGroupHandlerFunc(func(params rbac_authorization.GetRbacAuthorizationAPIGroupParams) middleware.Responder {
 			return middleware.NotImplemented("operation rbac_authorization.GetRbacAuthorizationAPIGroup has not yet been implemented")
@@ -2120,11 +2125,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.StorageGetStorageAPIGroupHandler == nil {
 		api.StorageGetStorageAPIGroupHandler = storage.GetStorageAPIGroupHandlerFunc(func(params storage.GetStorageAPIGroupParams) middleware.Responder {
 			return middleware.NotImplemented("operation storage.GetStorageAPIGroup has not yet been implemented")
-		})
-	}
-	if api.StorageV1GetStorageV1APIResourcesHandler == nil {
-		api.StorageV1GetStorageV1APIResourcesHandler = storage_v1.GetStorageV1APIResourcesHandlerFunc(func(params storage_v1.GetStorageV1APIResourcesParams) middleware.Responder {
-			return middleware.NotImplemented("operation storage_v1.GetStorageV1APIResources has not yet been implemented")
 		})
 	}
 	if api.StorageV1alpha1GetStorageV1alpha1APIResourcesHandler == nil {
