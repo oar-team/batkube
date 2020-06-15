@@ -184,9 +184,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Events
 	api.CoreV1ListCoreV1EventForAllNamespacesHandler = core_v1.ListCoreV1EventForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EventForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventList, rw, p)
 		})
 	})
 	api.CoreV1CreateCoreV1NamespacedEventHandler = core_v1.CreateCoreV1NamespacedEventHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEventParams) middleware.Responder {
@@ -201,9 +199,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Leases
 	api.CoordinationV1ListCoordinationV1NamespacedLeaseHandler = coordination_v1.ListCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ListCoordinationV1NamespacedLeaseParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Lease", &broker.LeaseList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Lease", &broker.LeaseList, rw, p)
 		})
 	})
 	api.CoordinationV1CreateCoordinationV1NamespacedLeaseHandler = coordination_v1.CreateCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.CreateCoordinationV1NamespacedLeaseParams) middleware.Responder {
@@ -283,54 +279,42 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// StorageClasses
 	api.StorageV1ListStorageV1StorageClassHandler = storage_v1.ListStorageV1StorageClassHandlerFunc(func(params storage_v1.ListStorageV1StorageClassParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "StorageClass", &broker.StorageClassList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "StorageClass", &broker.StorageClassList, rw, p)
 		})
 	})
 
 	// CSINodes
 	api.StorageV1ListStorageV1CSINodeHandler = storage_v1.ListStorageV1CSINodeHandlerFunc(func(params storage_v1.ListStorageV1CSINodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "CSINode", &broker.CSINodeList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "CSINode", &broker.CSINodeList, rw, p)
 		})
 	})
 
 	// PersistentVolumeClaims
 	api.CoreV1ListCoreV1PersistentVolumeClaimForAllNamespacesHandler = core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeClaimForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PersistentVolumeClaim", &broker.PersistentVolumeClaimList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PersistentVolumeClaim", &broker.PersistentVolumeClaimList, rw, p)
 		})
 	})
 
 	// PersistentVolume
 	api.CoreV1ListCoreV1PersistentVolumeHandler = core_v1.ListCoreV1PersistentVolumeHandlerFunc(func(params core_v1.ListCoreV1PersistentVolumeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PersistentVolume", &broker.PersistentVolumeList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PersistentVolume", &broker.PersistentVolumeList, rw, p)
 		})
 	})
 
 	// Services
 	api.CoreV1ListCoreV1ServiceForAllNamespacesHandler = core_v1.ListCoreV1ServiceForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1ServiceForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Service", &broker.ServiceList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Service", &broker.ServiceList, rw, p)
 		})
 	})
 
 	// PodDisruptionBudgets
 	api.PolicyV1beta1ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandler = policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesHandlerFunc(func(params policy_v1beta1.ListPolicyV1beta1PodDisruptionBudgetForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PodDisruptionBudget", &broker.PodDisruptionBudgetList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "PodDisruptionBudget", &broker.PodDisruptionBudgetList, rw, p)
 		})
 	})
 
@@ -364,9 +348,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Pods
 	api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p)
 		})
 	})
 	api.CoreV1CreateCoreV1NamespacedPodBindingHandler = core_v1.CreateCoreV1NamespacedPodBindingHandlerFunc(func(params core_v1.CreateCoreV1NamespacedPodBindingParams) middleware.Responder {
@@ -417,9 +399,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Nodes
 	api.CoreV1ListCoreV1NodeHandler = core_v1.ListCoreV1NodeHandlerFunc(func(params core_v1.ListCoreV1NodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Node", &broker.NodeList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Node", &broker.NodeList, rw, p)
 		})
 	})
 	api.CoreV1PatchCoreV1NodeHandler = core_v1.PatchCoreV1NodeHandlerFunc(func(params core_v1.PatchCoreV1NodeParams) middleware.Responder {
@@ -5320,14 +5300,15 @@ that the function knows which resources to answer back.
 
 Otherwise, resourceList will be used.
 */
-func listResource(watch *bool, fieldSelector *string, resourceVersion *string, resourceKind string, resourceList interface{}, rw http.ResponseWriter, p runtime.Producer) error {
+func listResource(watch *bool, fieldSelector *string, resourceVersion *string, resourceKind string, resourceList interface{}, rw http.ResponseWriter, p runtime.Producer) {
 	var err error
 	if watch != nil && *watch {
 		filteredEvents := broker.FilterEventListOnKind(broker.GetEvents(), resourceKind)
 		if fieldSelector != nil {
 			filteredEvents, err = broker.FilterEventListOnFieldSelector(filteredEvents, *fieldSelector)
 			if err != nil {
-				return err
+				http.Error(rw, err.Error(), http.StatusBadRequest)
+				return
 			}
 		}
 		if resourceVersion != nil {
@@ -5339,21 +5320,22 @@ func listResource(watch *bool, fieldSelector *string, resourceVersion *string, r
 		if fieldSelector != nil {
 			filteredResourceList, err = broker.FilterResourceList(resourceList, *fieldSelector, broker.FilterObjectOnFieldSelector)
 			if err != nil {
-				return err
+				http.Error(rw, err.Error(), http.StatusBadRequest)
+				return
 			}
 		}
 		if resourceVersion != nil {
 			filteredResourceList, err = broker.FilterResourceList(resourceList, *resourceVersion, broker.FilterObjectOnResourceVersion)
 			if err != nil {
-				return err
+				http.Error(rw, err.Error(), http.StatusBadRequest)
+				return
 			}
 		}
 
 		if err := p.Produce(rw, filteredResourceList); err != nil {
-			return err
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		}
 	}
-	return nil
 }
 
 func success(rw http.ResponseWriter, p runtime.Producer) error {
