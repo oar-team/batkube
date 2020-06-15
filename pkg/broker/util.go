@@ -13,10 +13,7 @@ import (
 
 //TODO
 func GetAPIResourceList(groupVersion string) (*models.IoK8sApimachineryPkgApisMetaV1APIResourceList, error) {
-	resources, ok := apiResources[groupVersion]
-	if !ok {
-		return nil, errors.Errorf("Unknown groupVersion : %s", groupVersion)
-	}
+	resources, _ := apiResources[groupVersion]
 
 	return &models.IoK8sApimachineryPkgApisMetaV1APIResourceList{
 		Kind:         "APIResourceList",

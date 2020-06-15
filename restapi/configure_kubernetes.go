@@ -344,6 +344,11 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			listAPIResources(rw, p, "coordination.k8s.io/v1")
 		})
 	})
+	api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler = coordination_v1beta1.GetCoordinationV1beta1APIResourcesHandlerFunc(func(params coordination_v1beta1.GetCoordinationV1beta1APIResourcesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listAPIResources(rw, p, "coordination.k8s.io/v1beta1")
+		})
+	})
 
 	// Pods
 	api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
@@ -1975,11 +1980,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoordinationGetCoordinationAPIGroupHandler == nil {
 		api.CoordinationGetCoordinationAPIGroupHandler = coordination.GetCoordinationAPIGroupHandlerFunc(func(params coordination.GetCoordinationAPIGroupParams) middleware.Responder {
 			return middleware.NotImplemented("operation coordination.GetCoordinationAPIGroup has not yet been implemented")
-		})
-	}
-	if api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler == nil {
-		api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler = coordination_v1beta1.GetCoordinationV1beta1APIResourcesHandlerFunc(func(params coordination_v1beta1.GetCoordinationV1beta1APIResourcesParams) middleware.Responder {
-			return middleware.NotImplemented("operation coordination_v1beta1.GetCoordinationV1beta1APIResources has not yet been implemented")
 		})
 	}
 	if api.DiscoveryGetDiscoveryAPIGroupHandler == nil {
