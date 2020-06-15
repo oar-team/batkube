@@ -155,6 +155,13 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// api.APIAuthorizer = security.Authorized()
 
 	// APIVersions
+	api.ApisGetAPIVersionsHandler = apis.GetAPIVersionsHandlerFunc(func(params apis.GetAPIVersionsParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			if err := p.Produce(rw, broker.APIGroupList); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
 	api.CoreGetCoreAPIVersionsHandler = core.GetCoreAPIVersionsHandlerFunc(func(params core.GetCoreAPIVersionsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			clientCIDR := "0.0.0.0/0"
@@ -182,7 +189,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 		})
 	})
-
 	api.CoreV1CreateCoreV1NamespacedEventHandler = core_v1.CreateCoreV1NamespacedEventHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.EventList.Items = append(broker.EventList.Items, params.Body)
@@ -200,7 +206,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 		})
 	})
-
 	api.CoordinationV1CreateCoordinationV1NamespacedLeaseHandler = coordination_v1.CreateCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.CreateCoordinationV1NamespacedLeaseParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.LeaseList.Items = append(broker.LeaseList.Items, params.Body)
@@ -209,7 +214,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 		})
 	})
-
 	api.CoordinationV1ReadCoordinationV1NamespacedLeaseHandler = coordination_v1.ReadCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ReadCoordinationV1NamespacedLeaseParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			r, err := broker.GetLease(params.Name, params.Namespace)
@@ -248,7 +252,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 		})
 	})
-
 	api.CoreV1ReadCoreV1NamespacedEndpointsHandler = core_v1.ReadCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ReadCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			endpoints, err := broker.GetEndpoint(params.Name, params.Namespace)
@@ -332,11 +335,14 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 
 	// APIResources
+	api.CoreV1GetCoreV1APIResourcesHandler = core_v1.GetCoreV1APIResourcesHandlerFunc(func(params core_v1.GetCoreV1APIResourcesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listAPIResources(rw, p, "v1")
+		})
+	})
 	api.EventsV1beta1GetEventsV1beta1APIResourcesHandler = events_v1beta1.GetEventsV1beta1APIResourcesHandlerFunc(func(params events_v1beta1.GetEventsV1beta1APIResourcesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			if err := listResource(nil, nil, nil, "APIResource", &broker.APIResourceList, rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			listAPIResources(rw, p, "events.k8s.io/v1beta1/")
 		})
 	})
 
@@ -348,7 +354,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 		})
 	})
-
 	api.CoreV1CreateCoreV1NamespacedPodBindingHandler = core_v1.CreateCoreV1NamespacedPodBindingHandlerFunc(func(params core_v1.CreateCoreV1NamespacedPodBindingParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			// Find the pod to bind
@@ -402,7 +407,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 		})
 	})
-
 	api.CoreV1PatchCoreV1NodeHandler = core_v1.PatchCoreV1NodeHandlerFunc(func(params core_v1.PatchCoreV1NodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			node, err := broker.GetNode(params.Name)
@@ -422,6 +426,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
+	// Not implemented
 	if api.CoreV1ConnectCoreV1DeleteNamespacedPodProxyHandler == nil {
 		api.CoreV1ConnectCoreV1DeleteNamespacedPodProxyHandler = core_v1.ConnectCoreV1DeleteNamespacedPodProxyHandlerFunc(func(params core_v1.ConnectCoreV1DeleteNamespacedPodProxyParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ConnectCoreV1DeleteNamespacedPodProxy has not yet been implemented")
@@ -1822,11 +1827,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation storage_v1beta1.DeleteStorageV1beta1VolumeAttachment has not yet been implemented")
 		})
 	}
-	if api.ApisGetAPIVersionsHandler == nil {
-		api.ApisGetAPIVersionsHandler = apis.GetAPIVersionsHandlerFunc(func(params apis.GetAPIVersionsParams) middleware.Responder {
-			return middleware.NotImplemented("operation apis.GetAPIVersions has not yet been implemented")
-		})
-	}
 	if api.AdmissionregistrationGetAdmissionregistrationAPIGroupHandler == nil {
 		api.AdmissionregistrationGetAdmissionregistrationAPIGroupHandler = admissionregistration.GetAdmissionregistrationAPIGroupHandlerFunc(func(params admissionregistration.GetAdmissionregistrationAPIGroupParams) middleware.Responder {
 			return middleware.NotImplemented("operation admissionregistration.GetAdmissionregistrationAPIGroup has not yet been implemented")
@@ -1990,11 +1990,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler == nil {
 		api.CoordinationV1beta1GetCoordinationV1beta1APIResourcesHandler = coordination_v1beta1.GetCoordinationV1beta1APIResourcesHandlerFunc(func(params coordination_v1beta1.GetCoordinationV1beta1APIResourcesParams) middleware.Responder {
 			return middleware.NotImplemented("operation coordination_v1beta1.GetCoordinationV1beta1APIResources has not yet been implemented")
-		})
-	}
-	if api.CoreV1GetCoreV1APIResourcesHandler == nil {
-		api.CoreV1GetCoreV1APIResourcesHandler = core_v1.GetCoreV1APIResourcesHandlerFunc(func(params core_v1.GetCoreV1APIResourcesParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.GetCoreV1APIResources has not yet been implemented")
 		})
 	}
 	if api.DiscoveryGetDiscoveryAPIGroupHandler == nil {
@@ -5368,4 +5363,15 @@ func success(rw http.ResponseWriter, p runtime.Producer) error {
 		Status:     "Success",
 		Code:       201,
 	})
+}
+
+func listAPIResources(rw http.ResponseWriter, p runtime.Producer, groupVersion string) {
+	resources, err := broker.GetAPIResourceList(groupVersion)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := p.Produce(rw, resources); err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	}
 }

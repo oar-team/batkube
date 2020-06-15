@@ -108,6 +108,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 func Run(batEndpoint string) {
 	var err error
 	log.Infoln("[broker] Launching the Broker")
+	InitResources()
 
 	log.Infoln("[broker] Listening to batsim on", batEndpoint)
 	batSock := NewReplySocket(batEndpoint)

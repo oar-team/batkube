@@ -11,6 +11,30 @@ import (
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
 
+//TODO
+func GetAPIResourceList(groupVersion string) (*models.IoK8sApimachineryPkgApisMetaV1APIResourceList, error) {
+	resources, ok := apiResources[groupVersion]
+	if !ok {
+		return nil, errors.Errorf("Unknown groupVersion : %s", groupVersion)
+	}
+
+	return &models.IoK8sApimachineryPkgApisMetaV1APIResourceList{
+		Kind:         "APIResourceList",
+		APIVersion:   "v1",
+		GroupVersion: &groupVersion,
+		Resources:    resources,
+	}, nil
+}
+
+func createAPIResource(groupVersion, name, kind string, namespaced bool, verbs []string) {
+	apiResources[groupVersion] = append(apiResources[groupVersion], &models.IoK8sApimachineryPkgApisMetaV1APIResource{
+		Name:       &name,
+		Kind:       &kind,
+		Namespaced: &namespaced,
+		Verbs:      verbs,
+	})
+}
+
 /*
 Filters out items slice in filteredItems slice based on the given filter.
 
@@ -170,17 +194,7 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 		resourceListShallowCopy.Items = filteredItems
 		return resourceListShallowCopy, nil
 	case *models.IoK8sApimachineryPkgApisMetaV1APIResourceList:
-		concreteResourceList := resourceList.(*models.IoK8sApimachineryPkgApisMetaV1APIResourceList)
-		resourceListShallowCopy := &models.IoK8sApimachineryPkgApisMetaV1APIResourceList{
-			APIVersion: concreteResourceList.APIVersion,
-			Kind:       concreteResourceList.Kind,
-		}
-		filteredItems := make([]*models.IoK8sApimachineryPkgApisMetaV1APIResource, len(concreteResourceList.Resources))
-		if err = filterItems(&concreteResourceList.Resources, &filteredItems, filterCondition, filter); err != nil {
-			return nil, err
-		}
-		resourceListShallowCopy.Resources = filteredItems
-		return resourceListShallowCopy, nil
+		return nil, errors.Errorf("internal error : use GetAPIResourceList to list API resources")
 	case *models.IoK8sAPICoreV1EndpointsList:
 		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1EndpointsList)
 		resourceListShallowCopy := &models.IoK8sAPICoreV1EndpointsList{
