@@ -29,8 +29,13 @@ func GetResource(name *string, namespace *string, resourceList interface{}) (int
 	n := itemsValue.Len()
 	for j := 0; j < n; j++ {
 		item := indirect(itemsValue.Index(j))
+		metadata, err := getFieldByName(item, "Metadata")
+		if err != nil {
+			return nil, err
+		}
+		metadata = indirect(metadata)
 
-		nameValue, err := getFieldByName(item, "Name")
+		nameValue, err := getFieldByName(metadata, "Name")
 		if err != nil {
 			return nil, err
 		}
@@ -39,7 +44,7 @@ func GetResource(name *string, namespace *string, resourceList interface{}) (int
 			continue
 		}
 
-		namespaceValue, err := getFieldByName(item, "Namespace")
+		namespaceValue, err := getFieldByName(metadata, "Namespace")
 		if err != nil {
 			return nil, err
 		}
@@ -50,13 +55,21 @@ func GetResource(name *string, namespace *string, resourceList interface{}) (int
 
 		return item.Addr().Interface(), nil
 	}
-	return nil, errors.Errorf("Could not find resource with name %s and namespace %s in %T", name, namespace, resourceList)
+	nameStr := ""
+	namespaceStr := ""
+	if name != nil {
+		nameStr = *name
+	}
+	if namespace != nil {
+		namespaceStr = *namespace
+	}
+	return nil, errors.Errorf("Could not find resource associated with name %v and namespace %v in %T", nameStr, namespaceStr, resourceList)
 }
 
 func getFieldByName(resource reflect.Value, fieldName string) (reflect.Value, error) {
 	fieldValue := resource.FieldByName(fieldName)
 	if !fieldValue.IsValid() {
-		return reflect.Value{}, errors.Errorf("Type %s has no Items fiels", resource.Type())
+		return reflect.Value{}, errors.Errorf("Type %s has no %s field", resource.Type(), fieldName)
 	}
 	return fieldValue, nil
 }
@@ -280,6 +293,19 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 		}
 		resourceListShallowCopy.Items = filteredItems
 		return resourceListShallowCopy, nil
+	case *models.IoK8sAPIEventsV1beta1EventList:
+		concreteResourceList := resourceList.(*models.IoK8sAPIEventsV1beta1EventList)
+		resourceListShallowCopy := &models.IoK8sAPIEventsV1beta1EventList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPIEventsV1beta1Event, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
 	default:
 		return nil, errors.Errorf("I don't know this resource type : %T", resourceList)
 	}
@@ -437,7 +463,7 @@ func getValueFromTag(o interface{}, tag string) (string, error) {
 		}
 		return value, nil
 	}
-	return "", errors.Errorf("Type %s does not contain any field %s", t.String(), tag)
+	return "", errors.Errorf("Type %s does not contain any field tagged %s", t.String(), tag)
 }
 
 /*

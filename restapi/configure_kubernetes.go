@@ -189,7 +189,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ListCoreV1NamespacedEventHandler = core_v1.ListCoreV1NamespacedEventHandlerFunc(func(params core_v1.ListCoreV1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			params.FieldSelector = addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.CoreV1EventList, rw, p)
 		})
 	})
@@ -223,6 +223,13 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			if err = success(rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 			}
+		})
+	})
+	api.EventsV1beta1ListEventsV1beta1NamespacedEventHandler = events_v1beta1.ListEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.ListEventsV1beta1NamespacedEventParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			params.FieldSelector = addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			fmt.Println("fieldSelector", *params.FieldSelector)
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventV1beta1EventList, rw, p)
 		})
 	})
 
@@ -308,7 +315,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ListCoreV1NamespacedEndpointsHandler = core_v1.ListCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ListCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			params.FieldSelector = addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Endpoints", &broker.EndpointsList, rw, p)
 		})
 	})
@@ -395,7 +402,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ListCoreV1NamespacedPodHandler = core_v1.ListCoreV1NamespacedPodHandlerFunc(func(params core_v1.ListCoreV1NamespacedPodParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			params.FieldSelector = addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p)
 		})
 	})
@@ -2437,11 +2444,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.EventsV1beta1ListEventsV1beta1EventForAllNamespacesHandler == nil {
 		api.EventsV1beta1ListEventsV1beta1EventForAllNamespacesHandler = events_v1beta1.ListEventsV1beta1EventForAllNamespacesHandlerFunc(func(params events_v1beta1.ListEventsV1beta1EventForAllNamespacesParams) middleware.Responder {
 			return middleware.NotImplemented("operation events_v1beta1.ListEventsV1beta1EventForAllNamespaces has not yet been implemented")
-		})
-	}
-	if api.EventsV1beta1ListEventsV1beta1NamespacedEventHandler == nil {
-		api.EventsV1beta1ListEventsV1beta1NamespacedEventHandler = events_v1beta1.ListEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.ListEventsV1beta1NamespacedEventParams) middleware.Responder {
-			return middleware.NotImplemented("operation events_v1beta1.ListEventsV1beta1NamespacedEvent has not yet been implemented")
 		})
 	}
 	if api.ExtensionsV1beta1ListExtensionsV1beta1IngressForAllNamespacesHandler == nil {
@@ -5384,8 +5386,10 @@ func listAPIResources(rw http.ResponseWriter, p runtime.Producer, groupVersion s
 
 /*
 Useful to implement url query parameters effortlessly.
+
+Returns a pointer to a string, which is useful in case fieldSelector is nil
 */
-func addFieldSelector(selector string, fieldSelector *string) {
+func addFieldSelector(selector string, fieldSelector *string) *string {
 	if fieldSelector != nil {
 		*fieldSelector += ","
 	} else {
@@ -5393,4 +5397,5 @@ func addFieldSelector(selector string, fieldSelector *string) {
 		fieldSelector = &str
 	}
 	*fieldSelector += selector
+	return fieldSelector
 }
