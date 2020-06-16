@@ -189,7 +189,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ListCoreV1NamespacedEventHandler = core_v1.ListCoreV1NamespacedEventHandlerFunc(func(params core_v1.ListCoreV1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			params.FieldSelector = addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			params.FieldSelector = addFieldSelector("metadata.namespace="+params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.CoreV1EventList, rw, p)
 		})
 	})
@@ -227,8 +227,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.EventsV1beta1ListEventsV1beta1NamespacedEventHandler = events_v1beta1.ListEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.ListEventsV1beta1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			params.FieldSelector = addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
-			fmt.Println("fieldSelector", *params.FieldSelector)
+			params.FieldSelector = addFieldSelector("metadata.namespace="+params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventV1beta1EventList, rw, p)
 		})
 	})
@@ -315,7 +314,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ListCoreV1NamespacedEndpointsHandler = core_v1.ListCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ListCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			params.FieldSelector = addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			params.FieldSelector = addFieldSelector("metadata.namespace="+params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Endpoints", &broker.EndpointsList, rw, p)
 		})
 	})
@@ -402,7 +401,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ListCoreV1NamespacedPodHandler = core_v1.ListCoreV1NamespacedPodHandlerFunc(func(params core_v1.ListCoreV1NamespacedPodParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			params.FieldSelector = addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			params.FieldSelector = addFieldSelector("metadata.namespace="+params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p)
 		})
 	})
