@@ -9,12 +9,12 @@ import (
 	"io"
 	"net/http"
 
-	interpose "github.com/carbocation/interpose/middleware"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/yamlpc"
 	"github.com/mitchellh/mapstructure"
+	"github.com/urfave/negroni"
 
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/broker"
@@ -184,19 +184,43 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Events
 	api.CoreV1ListCoreV1EventForAllNamespacesHandler = core_v1.ListCoreV1EventForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EventForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventList, rw, p)
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.CoreV1EventList, rw, p)
 		})
 	})
 	api.CoreV1ListCoreV1NamespacedEventHandler = core_v1.ListCoreV1NamespacedEventHandlerFunc(func(params core_v1.ListCoreV1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			addFieldSelector("namespace", true, params.Namespace, params.FieldSelector)
-			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventList, rw, p)
+			addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.CoreV1EventList, rw, p)
 		})
 	})
 	api.CoreV1CreateCoreV1NamespacedEventHandler = core_v1.CreateCoreV1NamespacedEventHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			broker.EventList.Items = append(broker.EventList.Items, params.Body)
+			broker.CoreV1EventList.Items = append(broker.CoreV1EventList.Items, params.Body)
 			if err := success(rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
+	api.EventsV1beta1CreateEventsV1beta1NamespacedEventHandler = events_v1beta1.CreateEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.CreateEventsV1beta1NamespacedEventParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			broker.EventV1beta1EventList.Items = append(broker.EventV1beta1EventList.Items, params.Body)
+			if err := success(rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
+	api.EventsV1beta1PatchEventsV1beta1NamespacedEventHandler = events_v1beta1.PatchEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.PatchEventsV1beta1NamespacedEventParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			event, err := broker.GetResource(&params.Name, &params.Namespace, broker.EventV1beta1EventList)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if err := mapstructure.Decode(params.Body, event); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if err = success(rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 			}
 		})
@@ -218,7 +242,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoordinationV1ReadCoordinationV1NamespacedLeaseHandler = coordination_v1.ReadCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ReadCoordinationV1NamespacedLeaseParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			r, err := broker.GetLease(params.Name, params.Namespace)
+			r, err := broker.GetResource(&params.Name, &params.Namespace, broker.LeaseList)
 			if r == nil {
 				if err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
 					Kind:       "Status",
@@ -256,7 +280,8 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ReadCoreV1NamespacedEndpointsHandler = core_v1.ReadCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ReadCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			endpoints, err := broker.GetEndpoint(params.Name, params.Namespace)
+			//endpoints, err := broker.GetEndpoint(params.Name, params.Namespace)
+			endpoints, err := broker.GetResource(&params.Name, &params.Namespace, broker.EndpointsList)
 			if endpoints == nil {
 				if err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
 					Kind:       "Status",
@@ -279,6 +304,12 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 					http.Error(rw, err.Error(), http.StatusInternalServerError)
 				}
 			}
+		})
+	})
+	api.CoreV1ListCoreV1NamespacedEndpointsHandler = core_v1.ListCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ListCoreV1NamespacedEndpointsParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Endpoints", &broker.EndpointsList, rw, p)
 		})
 	})
 
@@ -364,18 +395,19 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ListCoreV1NamespacedPodHandler = core_v1.ListCoreV1NamespacedPodHandlerFunc(func(params core_v1.ListCoreV1NamespacedPodParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			addFieldSelector("namespace", true, params.Namespace, params.FieldSelector)
+			addFieldSelector("namespace="+params.Namespace, params.FieldSelector)
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p)
 		})
 	})
 	api.CoreV1CreateCoreV1NamespacedPodBindingHandler = core_v1.CreateCoreV1NamespacedPodBindingHandlerFunc(func(params core_v1.CreateCoreV1NamespacedPodBindingParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			// Find the pod to bind
-			pod, err := broker.GetPod(params.Name)
+			res, err := broker.GetResource(&params.Name, nil, broker.PodList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
 			}
+			pod := res.(*models.IoK8sAPICoreV1Pod)
 			// Is this a sound check to make?
 			if pod.Spec.NodeName != "" {
 				err := fmt.Sprintf("Pod %s was already bound in namespace %s", params.Name, params.Namespace)
@@ -384,7 +416,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 
 			// Bind the pod
-			_, err = broker.GetNode(params.Body.Target.Name) // Find out if the node exists
+			_, err = broker.GetResource(&params.Body.Target.Name, nil, broker.NodeList) // Find out if the node exists
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
@@ -421,20 +453,18 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1PatchCoreV1NodeHandler = core_v1.PatchCoreV1NodeHandlerFunc(func(params core_v1.PatchCoreV1NodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			node, err := broker.GetNode(params.Name)
+			node, err := broker.GetResource(&params.Name, nil, broker.NodeList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
 			}
 			if err := mapstructure.Decode(params.Body, node); err != nil {
-				panic(err)
-			}
-
-			if err = success(rw, p); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
-
+			if err = success(rw, p); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
 		})
 	})
 
@@ -917,11 +947,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.DiscoveryV1beta1CreateDiscoveryV1beta1NamespacedEndpointSliceHandler == nil {
 		api.DiscoveryV1beta1CreateDiscoveryV1beta1NamespacedEndpointSliceHandler = discovery_v1beta1.CreateDiscoveryV1beta1NamespacedEndpointSliceHandlerFunc(func(params discovery_v1beta1.CreateDiscoveryV1beta1NamespacedEndpointSliceParams) middleware.Responder {
 			return middleware.NotImplemented("operation discovery_v1beta1.CreateDiscoveryV1beta1NamespacedEndpointSlice has not yet been implemented")
-		})
-	}
-	if api.EventsV1beta1CreateEventsV1beta1NamespacedEventHandler == nil {
-		api.EventsV1beta1CreateEventsV1beta1NamespacedEventHandler = events_v1beta1.CreateEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.CreateEventsV1beta1NamespacedEventParams) middleware.Responder {
-			return middleware.NotImplemented("operation events_v1beta1.CreateEventsV1beta1NamespacedEvent has not yet been implemented")
 		})
 	}
 	if api.ExtensionsV1beta1CreateExtensionsV1beta1NamespacedIngressHandler == nil {
@@ -2334,11 +2359,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedConfigMap has not yet been implemented")
 		})
 	}
-	if api.CoreV1ListCoreV1NamespacedEndpointsHandler == nil {
-		api.CoreV1ListCoreV1NamespacedEndpointsHandler = core_v1.ListCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ListCoreV1NamespacedEndpointsParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedEndpoints has not yet been implemented")
-		})
-	}
 	if api.CoreV1ListCoreV1NamespacedLimitRangeHandler == nil {
 		api.CoreV1ListCoreV1NamespacedLimitRangeHandler = core_v1.ListCoreV1NamespacedLimitRangeHandlerFunc(func(params core_v1.ListCoreV1NamespacedLimitRangeParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1NamespacedLimitRange has not yet been implemented")
@@ -2977,11 +2997,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.DiscoveryV1beta1PatchDiscoveryV1beta1NamespacedEndpointSliceHandler == nil {
 		api.DiscoveryV1beta1PatchDiscoveryV1beta1NamespacedEndpointSliceHandler = discovery_v1beta1.PatchDiscoveryV1beta1NamespacedEndpointSliceHandlerFunc(func(params discovery_v1beta1.PatchDiscoveryV1beta1NamespacedEndpointSliceParams) middleware.Responder {
 			return middleware.NotImplemented("operation discovery_v1beta1.PatchDiscoveryV1beta1NamespacedEndpointSlice has not yet been implemented")
-		})
-	}
-	if api.EventsV1beta1PatchEventsV1beta1NamespacedEventHandler == nil {
-		api.EventsV1beta1PatchEventsV1beta1NamespacedEventHandler = events_v1beta1.PatchEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.PatchEventsV1beta1NamespacedEventParams) middleware.Responder {
-			return middleware.NotImplemented("operation events_v1beta1.PatchEventsV1beta1NamespacedEvent has not yet been implemented")
 		})
 	}
 	if api.ExtensionsV1beta1PatchExtensionsV1beta1NamespacedIngressHandler == nil {
@@ -5243,17 +5258,23 @@ func configureServer(s *http.Server, scheme, addr string) {
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
 // The middleware executes after routing but before authentication, binding and validation
 func setupMiddlewares(handler http.Handler) http.Handler {
-	//TODO read from env variables
-	debug := true
-	if debug {
-		return interpose.NegroniLogrus()(handler)
-	}
 	return handler
 }
 
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
+	// TODO read from env variables
+	debug := true
+	if debug {
+		n := negroni.New()
+		//n.Use(negronilogrus.NewMiddleware())
+		n.Use(negroni.NewLogger())
+		n.UseHandler(handler)
+		handler = http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			n.ServeHTTP(rw, req)
+		})
+	}
 	return handler
 }
 
@@ -5364,16 +5385,12 @@ func listAPIResources(rw http.ResponseWriter, p runtime.Producer, groupVersion s
 /*
 Useful to implement url query parameters effortlessly.
 */
-func addFieldSelector(field string, equal bool, value string, fieldSelector *string) {
+func addFieldSelector(selector string, fieldSelector *string) {
 	if fieldSelector != nil {
 		*fieldSelector += ","
 	} else {
 		str := ""
 		fieldSelector = &str
 	}
-	*fieldSelector += field
-	if !equal {
-		*fieldSelector += "!"
-	}
-	*fieldSelector += "=" + value
+	*fieldSelector += selector
 }

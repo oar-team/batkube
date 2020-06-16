@@ -76,7 +76,9 @@ func handleBatMessage(msg translate.BatMessage) {
 
 			switch jobCompleted.JobState {
 			case "COMPLETED_SUCCESSFULLY":
-				pod, _ := GetPod(translate.GetPodNameFromJobId(jobCompleted.JobId))
+				podName := translate.GetPodNameFromJobId(jobCompleted.JobId)
+				res, _ := GetResource(&podName, nil, PodList)
+				pod := res.(*models.IoK8sAPICoreV1Pod)
 				pod.Status.Phase = "Succeeded"
 				IncrementPodResourceVersion(pod)
 				// TODO : unbind the pod?

@@ -11,7 +11,56 @@ import (
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
 
-//TODO
+/*
+Returns the resource corresponding to the given fields.
+Returned type is a pointer to the resource.
+*/
+func GetResource(name *string, namespace *string, resourceList interface{}) (interface{}, error) {
+	v := indirect(reflect.ValueOf(resourceList))
+	itemsValue, err := getFieldByName(v, "Items")
+	if err != nil {
+		return nil, err
+	}
+	//itemsValue = itemsValue.Elem()
+	if itemsValue.Kind() != reflect.Slice {
+		return nil, errors.Errorf("Expected a slice as Items value, got %s (type %s)", itemsValue.Kind(), itemsValue.Type())
+	}
+
+	n := itemsValue.Len()
+	for j := 0; j < n; j++ {
+		item := indirect(itemsValue.Index(j))
+
+		nameValue, err := getFieldByName(item, "Name")
+		if err != nil {
+			return nil, err
+		}
+		nameValue = indirect(nameValue)
+		if name != nil && nameValue.IsValid() && nameValue.String() != *name {
+			continue
+		}
+
+		namespaceValue, err := getFieldByName(item, "Namespace")
+		if err != nil {
+			return nil, err
+		}
+		namespaceValue = indirect(namespaceValue)
+		if namespace != nil && namespaceValue.IsValid() && namespaceValue.String() != *namespace {
+			continue
+		}
+
+		return item.Addr().Interface(), nil
+	}
+	return nil, errors.Errorf("Could not find resource with name %s and namespace %s in %T", name, namespace, resourceList)
+}
+
+func getFieldByName(resource reflect.Value, fieldName string) (reflect.Value, error) {
+	fieldValue := resource.FieldByName(fieldName)
+	if !fieldValue.IsValid() {
+		return reflect.Value{}, errors.Errorf("Type %s has no Items fiels", resource.Type())
+	}
+	return fieldValue, nil
+}
+
 func GetAPIResourceList(groupVersion string) (*models.IoK8sApimachineryPkgApisMetaV1APIResourceList, error) {
 	resources, _ := apiResources[groupVersion]
 
@@ -394,6 +443,7 @@ func getValueFromTag(o interface{}, tag string) (string, error) {
 /*
 Indirects the given value, recursively
 */
+// TODO : get rid of this, as we never encounter nested pointers. If we do, it is an error.
 func indirect(v reflect.Value) reflect.Value {
 	if v.Kind() == reflect.Ptr {
 		return indirect(v.Elem())

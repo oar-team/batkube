@@ -1,9 +1,6 @@
 package broker
 
 import (
-	"reflect"
-
-	"github.com/pkg/errors"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
@@ -23,7 +20,8 @@ var PersistentVolumeList models.IoK8sAPICoreV1PersistentVolumeList
 var ServiceList models.IoK8sAPICoreV1ServiceList
 var EndpointsList models.IoK8sAPICoreV1EndpointsList
 var LeaseList models.IoK8sAPICoordinationV1LeaseList
-var EventList models.IoK8sAPICoreV1EventList
+var CoreV1EventList models.IoK8sAPICoreV1EventList
+var EventV1beta1EventList models.IoK8sAPIEventsV1beta1EventList
 
 // APIResources, sorted by groupVersion
 var apiResources = make(map[string][]*models.IoK8sApimachineryPkgApisMetaV1APIResource)
@@ -107,17 +105,24 @@ func InitResources() {
 		Items:      []*models.IoK8sAPICoordinationV1Lease{},
 	}
 	createAPIResource("coordination.k8s.io/v1", "leases", "Lease", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
-	EventList = models.IoK8sAPICoreV1EventList{
+	CoreV1EventList = models.IoK8sAPICoreV1EventList{
 		Kind:       "EventList",
 		APIVersion: "v1",
 		Items:      []*models.IoK8sAPICoreV1Event{},
 	}
 	createAPIResource("v1", "events", "Event", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
+	EventV1beta1EventList = models.IoK8sAPIEventsV1beta1EventList{
+		Kind:       "EventList",
+		APIVersion: "events.k8s.io/v1beta1",
+		Items:      []*models.IoK8sAPIEventsV1beta1Event{},
+	}
+	createAPIResource("events.k8s.io/v1beta1", "events", "Event", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 
 	// Made this loop to factorize a bit. It is still hard coded, though
 	APIGroupsMap["policy"] = []string{"v1beta1"}
 	APIGroupsMap["storage.k8s.io"] = []string{"v1"}
 	APIGroupsMap["coordination.k8s.io"] = []string{"v1"}
+	APIGroupsMap["events.k8s.io/v1beta1"] = []string{"v1beta1"}
 	APIGroupList = models.IoK8sApimachineryPkgApisMetaV1APIGroupList{
 		Kind:       "APIGroupList",
 		APIVersion: "v1",
@@ -143,47 +148,4 @@ func AddEvent(event *models.IoK8sApimachineryPkgApisMetaV1WatchEvent) {
 
 func GetEvents() []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	return events
-}
-
-/*
-TODO : use reflection to factorise all this.
-*/
-func GetPod(name string) (*models.IoK8sAPICoreV1Pod, error) {
-	var r *models.IoK8sAPICoreV1Pod
-	for _, r = range PodList.Items {
-		if r.Metadata.Name == name {
-			return r, nil
-		}
-	}
-	return nil, errors.Errorf("Could not find %s %s", reflect.TypeOf(r).String(), name)
-}
-
-func GetNode(name string) (*models.IoK8sAPICoreV1Node, error) {
-	var r *models.IoK8sAPICoreV1Node
-	for _, r = range NodeList.Items {
-		if r.Metadata.Name == name {
-			return r, nil
-		}
-	}
-	return nil, errors.Errorf("Could not find %s %s", reflect.TypeOf(r).String(), name)
-}
-
-func GetEndpoint(name string, namespace string) (*models.IoK8sAPICoreV1Endpoints, error) {
-	var r *models.IoK8sAPICoreV1Endpoints
-	for _, r = range EndpointsList.Items {
-		if r.Metadata.Name == name && r.Metadata.Namespace == namespace {
-			return r, nil
-		}
-	}
-	return nil, errors.Errorf("Could not find %s %s in namespace %s", reflect.TypeOf(r).String(), name, namespace)
-}
-
-func GetLease(name string, namespace string) (*models.IoK8sAPICoordinationV1Lease, error) {
-	var r *models.IoK8sAPICoordinationV1Lease
-	for _, r = range LeaseList.Items {
-		if r.Metadata.Name == name && r.Metadata.Namespace == namespace {
-			return r, nil
-		}
-	}
-	return nil, errors.Errorf("Could not find %s %s in namespace %s", reflect.TypeOf(r).String(), name, namespace)
 }

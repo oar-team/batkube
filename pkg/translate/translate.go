@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
@@ -27,6 +28,7 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 				Name:            strings.ReplaceAll(job.Id, "!", "-"),
 				Namespace:       "default",
 				ResourceVersion: "0",
+				UID:             uuid.New().String(),
 			},
 			Spec: &models.IoK8sAPICoreV1PodSpec{
 				SchedulerName: scheduler,

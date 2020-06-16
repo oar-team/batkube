@@ -19,7 +19,7 @@ const nonEmpty = 1 << 1
 // the waiting time since last message is higher than timeoutValue OR if the
 // Events slice is not empty.
 var stopCondition = timeout | nonEmpty
-var timeoutValue = 5000 * time.Millisecond
+var timeoutValue = 300 * time.Millisecond
 
 /*
 Handles time requests asynchronously. All sends and receives are non blocking

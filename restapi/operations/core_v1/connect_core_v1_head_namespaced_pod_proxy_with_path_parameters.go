@@ -42,17 +42,17 @@ type ConnectCoreV1HeadNamespacedPodProxyWithPathParams struct {
 	  In: path
 	*/
 	Namespace string
+	/*Path is the URL path to use for the current proxy request to pod.
+	  Unique: true
+	  In: query
+	*/
+	QueryPath *string
 	/*path to the resource
 	  Required: true
 	  Unique: true
 	  In: path
 	*/
 	PathPath string
-	/*Path is the URL path to use for the current proxy request to pod.
-	  Unique: true
-	  In: query
-	*/
-	QueryPath *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -76,13 +76,13 @@ func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) BindRequest(r *http.
 		res = append(res, err)
 	}
 
-	rPath, rhkPath, _ := route.Params.GetOK("path")
-	if err := o.bindPathPath(rPath, rhkPath, route.Formats); err != nil {
+	qPath, qhkPath, _ := qs.GetOK("path")
+	if err := o.bindQueryPath(qPath, qhkPath, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
-	qPath, qhkPath, _ := qs.GetOK("path")
-	if err := o.bindQueryPath(qPath, qhkPath, route.Formats); err != nil {
+	rPath, rhkPath, _ := route.Params.GetOK("path")
+	if err := o.bindPathPath(rPath, rhkPath, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -142,31 +142,6 @@ func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) validateNamespace(fo
 	return nil
 }
 
-// bindPathPath binds and validates parameter PathPath from path.
-func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) bindPathPath(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: true
-	// Parameter is provided by construction from the route
-
-	o.PathPath = raw
-
-	if err := o.validatePathPath(formats); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// validatePathPath carries on validations for parameter PathPath
-func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) validatePathPath(formats strfmt.Registry) error {
-
-	return nil
-}
-
 // bindQueryPath binds and validates parameter QueryPath from query.
 func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) bindQueryPath(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
@@ -191,6 +166,31 @@ func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) bindQueryPath(rawDat
 
 // validateQueryPath carries on validations for parameter QueryPath
 func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) validateQueryPath(formats strfmt.Registry) error {
+
+	return nil
+}
+
+// bindPathPath binds and validates parameter PathPath from path.
+func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) bindPathPath(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: true
+	// Parameter is provided by construction from the route
+
+	o.PathPath = raw
+
+	if err := o.validatePathPath(formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validatePathPath carries on validations for parameter PathPath
+func (o *ConnectCoreV1HeadNamespacedPodProxyWithPathParams) validatePathPath(formats strfmt.Registry) error {
 
 	return nil
 }
