@@ -120,6 +120,9 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		return errors.NotImplemented(" producer has not yet been implemented")
 	})
 	api.JSONProducer = runtime.JSONProducer()
+	//api.JSONProducer = runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
+	//	return json.NewEncoder(w).Encode(data)
+	//})
 	api.ProtobufProducer = runtime.ProducerFunc(func(w io.Writer, data interface{}) error {
 		return errors.NotImplemented("protobuf producer has not yet been implemented")
 	})

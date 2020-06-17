@@ -55,8 +55,8 @@ func GetResource(name *string, namespace *string, resourceList interface{}) (int
 
 		return item.Addr().Interface(), nil
 	}
-	nameStr := ""
-	namespaceStr := ""
+	nameStr := "<nil>"
+	namespaceStr := "<nil>"
 	if name != nil {
 		nameStr = *name
 	}

@@ -2,6 +2,7 @@ package translate
 
 import (
 	"strings"
+	"time"
 
 	"github.com/mitchellh/mapstructure"
 )
@@ -28,4 +29,8 @@ func MakeEvent(timestamp float64, eventType string, data interface{}) (error, Ev
 		Type:      eventType,
 		Data:      eventData,
 	}
+}
+
+func BatsimNowToTime(now float64) time.Time {
+	return time.Unix(0, int64(now*1e9))
 }

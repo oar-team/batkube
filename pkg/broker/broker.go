@@ -32,7 +32,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 	if cap(now) != 1 {
 		panic("now should be a buffered channel with capacity 1")
 	}
-	nowValue := <-now // has to be initialized
+	nowValue := <-now // Blocking send : the value has to be initialized
 
 	thisIsTheEnd := false
 	for !thisIsTheEnd {

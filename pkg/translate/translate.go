@@ -25,10 +25,11 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 			Kind:       "Pod",
 			APIVersion: "v1",
 			Metadata: &models.IoK8sApimachineryPkgApisMetaV1ObjectMeta{
-				Name:            strings.ReplaceAll(job.Id, "!", "-"),
-				Namespace:       "default",
-				ResourceVersion: "0",
-				UID:             uuid.New().String(),
+				Name:              strings.ReplaceAll(job.Id, "!", "-"),
+				Namespace:         "default",
+				ResourceVersion:   "0",
+				UID:               uuid.New().String(),
+				CreationTimestamp: models.IoK8sApimachineryPkgApisMetaV1Time(BatsimNowToTime(job.Subtime)),
 			},
 			Spec: &models.IoK8sAPICoreV1PodSpec{
 				SchedulerName: scheduler,
