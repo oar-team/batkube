@@ -74,7 +74,7 @@ func getFieldByName(resource reflect.Value, fieldName string) (reflect.Value, er
 	return fieldValue, nil
 }
 
-func GetAPIResourceList(groupVersion string) (*models.IoK8sApimachineryPkgApisMetaV1APIResourceList, error) {
+func GetAPIResourceList(groupVersion string) *models.IoK8sApimachineryPkgApisMetaV1APIResourceList {
 	resources, _ := apiResources[groupVersion]
 
 	return &models.IoK8sApimachineryPkgApisMetaV1APIResourceList{
@@ -82,7 +82,7 @@ func GetAPIResourceList(groupVersion string) (*models.IoK8sApimachineryPkgApisMe
 		APIVersion:   "v1",
 		GroupVersion: &groupVersion,
 		Resources:    resources,
-	}, nil
+	}
 }
 
 func createAPIResource(groupVersion, name, kind string, namespaced bool, verbs []string) {

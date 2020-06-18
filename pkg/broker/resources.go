@@ -20,7 +20,7 @@ var PersistentVolumeList models.IoK8sAPICoreV1PersistentVolumeList
 var ServiceList models.IoK8sAPICoreV1ServiceList
 var EndpointsList models.IoK8sAPICoreV1EndpointsList
 var LeaseList models.IoK8sAPICoordinationV1LeaseList
-var CoreV1EventList models.IoK8sAPICoreV1EventList
+var CoreV1EventList models.IoK8sAPICoreV1EventList // Deprecated, here for backwards compatibility
 var EventV1beta1EventList models.IoK8sAPIEventsV1beta1EventList
 
 // APIResources, sorted by groupVersion
@@ -122,19 +122,23 @@ func InitResources() {
 	APIGroupsMap["policy"] = []string{"v1beta1"}
 	APIGroupsMap["storage.k8s.io"] = []string{"v1"}
 	APIGroupsMap["coordination.k8s.io"] = []string{"v1"}
-	APIGroupsMap["events.k8s.io/v1beta1"] = []string{"v1beta1"}
+	APIGroupsMap["events.k8s.io"] = []string{"v1beta1"}
 	APIGroupList = models.IoK8sApimachineryPkgApisMetaV1APIGroupList{
 		Kind:       "APIGroupList",
 		APIVersion: "v1",
 		Groups:     []*models.IoK8sApimachineryPkgApisMetaV1APIGroup{},
 	}
-	for groupName, groupVersions := range APIGroupsMap {
-		group := models.IoK8sApimachineryPkgApisMetaV1APIGroup{Name: &groupName}
-		for _, groupVersion := range groupVersions {
-			versionString := groupName + "/" + groupVersion
+	for groupName, versions := range APIGroupsMap {
+		// groupName location in memory remains the same. Setting its
+		// pointer as a value directly results in every goup having the
+		// same name - the last key of APIGroupsMap
+		groupNameStr := groupName
+		group := models.IoK8sApimachineryPkgApisMetaV1APIGroup{Name: &groupNameStr}
+		for _, version := range versions {
+			groupVersion := groupName + "/" + version
 			group.Versions = append(group.Versions, &models.IoK8sApimachineryPkgApisMetaV1GroupVersionForDiscovery{
-				GroupVersion: &versionString,
-				Version:      &groupVersion,
+				GroupVersion: &groupVersion,
+				Version:      &version,
 			})
 		}
 		group.PreferredVersion = group.Versions[0] // For now there's only one version per group

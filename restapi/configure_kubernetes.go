@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
@@ -185,6 +186,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 
 	// Events
+	// core v1 event endpoint is deprecateed. New api is on events.k8s.io
 	api.CoreV1ListCoreV1EventForAllNamespacesHandler = core_v1.ListCoreV1EventForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EventForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.CoreV1EventList, rw, p)
@@ -219,6 +221,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
 			}
+			// Those two events structure are actually the same, eventhough they don't have the same name
 			if err := mapstructure.Decode(params.Body, event); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
@@ -372,7 +375,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.EventsV1beta1GetEventsV1beta1APIResourcesHandler = events_v1beta1.GetEventsV1beta1APIResourcesHandlerFunc(func(params events_v1beta1.GetEventsV1beta1APIResourcesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			listAPIResources(rw, p, "events.k8s.io/v1beta1/")
+			listAPIResources(rw, p, "events.k8s.io/v1beta1")
 		})
 	})
 	api.PolicyV1beta1GetPolicyV1beta1APIResourcesHandler = policy_v1beta1.GetPolicyV1beta1APIResourcesHandlerFunc(func(params policy_v1beta1.GetPolicyV1beta1APIResourcesParams) middleware.Responder {
@@ -5306,9 +5309,9 @@ func streamEvents(rw http.ResponseWriter, events []*models.IoK8sApimachineryPkgA
 
 	// TODO : remove this
 	// This is here so kubernetes stops logging about short watches
-	//if len(events) == 0 {
-	//	time.Sleep(1 * time.Second)
-	//}
+	if len(events) == 0 {
+		time.Sleep(1 * time.Second)
+	}
 
 	for _, event := range events {
 		err := e.Encode(event)
@@ -5376,11 +5379,7 @@ func success(rw http.ResponseWriter, p runtime.Producer) error {
 }
 
 func listAPIResources(rw http.ResponseWriter, p runtime.Producer, groupVersion string) {
-	resources, err := broker.GetAPIResourceList(groupVersion)
-	if err != nil {
-		http.Error(rw, err.Error(), http.StatusBadRequest)
-		return
-	}
+	resources := broker.GetAPIResourceList(groupVersion)
 	if err := p.Produce(rw, resources); err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
