@@ -2,7 +2,9 @@ package translate
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
@@ -58,9 +60,8 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 
 func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8sAPICoreV1Node) {
 	var nodes []*models.IoK8sAPICoreV1Node
-	var node models.IoK8sAPICoreV1Node
-	nodeConditionType := "Ready"
-	nodeConditionStatus := "True"
+	readyConditionType := "Ready"
+	trueConditionStatus := "True"
 	for _, resource := range resources {
 		e, ok := resource.Properties["memory"].(string)
 		var memory models.IoK8sApimachineryPkgAPIResourceQuantity
@@ -72,18 +73,15 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 		if ok {
 			core = models.IoK8sApimachineryPkgAPIResourceQuantity(e)
 		}
-		//e, ok = resource.Properties["speed"].(string)
-		//var speed models.IoK8sApimachineryPkgAPIResourceQuantity
-		//if ok {
-		//	speed = models.IoK8sApimachineryPkgAPIResourceQuantity(e)
-		//}
-
-		node = models.IoK8sAPICoreV1Node{
+		// Node speed is not a thing in Kubernetes
+		var node models.IoK8sAPICoreV1Node = models.IoK8sAPICoreV1Node{
 			Kind:       "Node",
 			APIVersion: "v1",
 			Metadata: &models.IoK8sApimachineryPkgApisMetaV1ObjectMeta{
-				Name:            fmt.Sprintf("%v", resource.Id) + "-" + resource.Name,
-				ResourceVersion: "0",
+				Name:              strconv.Itoa(resource.Id) + "-" + resource.Name,
+				ResourceVersion:   "0",
+				UID:               uuid.New().String(),
+				CreationTimestamp: models.IoK8sApimachineryPkgApisMetaV1Time(time.Time{}),
 			},
 			Status: &models.IoK8sAPICoreV1NodeStatus{
 				Capacity: map[string]models.IoK8sApimachineryPkgAPIResourceQuantity{
@@ -93,10 +91,9 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 				Conditions: []*models.IoK8sAPICoreV1NodeCondition{
 					{
 						// Is the initial state of the
-						// resource always idle? -> To
-						// be discussed with batsim devs
-						Type:   &nodeConditionType,
-						Status: &nodeConditionStatus,
+						// resource always idle?
+						Type:   &readyConditionType,
+						Status: &trueConditionStatus,
 					},
 				},
 			},

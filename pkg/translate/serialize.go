@@ -27,7 +27,6 @@ func DeserializeSimulationBegins(data map[string]interface{}, v *SimulationBegin
 			v.Profiles[wlId][profileName] = profile
 		}
 	}
-
 	return nil
 }
 

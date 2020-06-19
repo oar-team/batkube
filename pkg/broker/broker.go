@@ -4,9 +4,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
+	"os"
 	"time"
 
 	zmq "github.com/pebbe/zmq4"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
@@ -107,6 +109,12 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 
 func Run(batEndpoint string) {
 	var err error
+
+	logrus.SetLevel(logrus.InfoLevel)
+	if level, err := logrus.ParseLevel(os.Getenv("LOGLEVEL")); err == nil {
+		logrus.SetLevel(level)
+	}
+
 	log.Infoln("[broker] Launching the Broker")
 	InitResources()
 
