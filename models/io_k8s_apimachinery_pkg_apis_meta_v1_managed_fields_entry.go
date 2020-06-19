@@ -33,7 +33,7 @@ type IoK8sApimachineryPkgApisMetaV1ManagedFieldsEntry struct {
 
 	// Time is timestamp of when these fields were set. It should always be empty if Operation is 'Apply'
 	// Format: date-time
-	Time IoK8sApimachineryPkgApisMetaV1Time `json:"time,omitempty"`
+	Time *IoK8sApimachineryPkgApisMetaV1Time `json:"time,omitempty"`
 }
 
 // Validate validates this io k8s apimachinery pkg apis meta v1 managed fields entry

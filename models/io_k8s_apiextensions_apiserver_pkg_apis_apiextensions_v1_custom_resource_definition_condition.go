@@ -19,7 +19,7 @@ type IoK8sApiextensionsApiserverPkgApisApiextensionsV1CustomResourceDefinitionCo
 
 	// lastTransitionTime last time the condition transitioned from one status to another.
 	// Format: date-time
-	LastTransitionTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
 
 	// message is a human-readable message indicating details about last transition.
 	Message string `json:"message,omitempty"`

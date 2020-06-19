@@ -32,7 +32,7 @@ type IoK8sAPICoreV1Event struct {
 
 	// The time at which the event was first recorded. (Time of server receipt is in TypeMeta.)
 	// Format: date-time
-	FirstTimestamp IoK8sApimachineryPkgApisMetaV1Time `json:"firstTimestamp,omitempty"`
+	FirstTimestamp *IoK8sApimachineryPkgApisMetaV1Time `json:"firstTimestamp,omitempty"`
 
 	// The object that this event is about.
 	// Required: true
@@ -43,7 +43,7 @@ type IoK8sAPICoreV1Event struct {
 
 	// The time at which the most recent occurrence of this event was recorded.
 	// Format: date-time
-	LastTimestamp IoK8sApimachineryPkgApisMetaV1Time `json:"lastTimestamp,omitempty"`
+	LastTimestamp *IoK8sApimachineryPkgApisMetaV1Time `json:"lastTimestamp,omitempty"`
 
 	// A human-readable description of the status of this operation.
 	Message string `json:"message,omitempty"`

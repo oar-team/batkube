@@ -60,7 +60,7 @@ type IoK8sAPICoreV1PodStatus struct {
 
 	// RFC 3339 date and time at which the object was acknowledged by the Kubelet. This is before the Kubelet pulled the container image(s) for the pod.
 	// Format: date-time
-	StartTime IoK8sApimachineryPkgApisMetaV1Time `json:"startTime,omitempty"`
+	StartTime *IoK8sApimachineryPkgApisMetaV1Time `json:"startTime,omitempty"`
 }
 
 // Validate validates this io k8s api core v1 pod status

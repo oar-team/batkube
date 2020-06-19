@@ -19,7 +19,7 @@ type IoK8sAPICoreV1NamespaceCondition struct {
 
 	// last transition time
 	// Format: date-time
-	LastTransitionTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
 
 	// message
 	Message string `json:"message,omitempty"`

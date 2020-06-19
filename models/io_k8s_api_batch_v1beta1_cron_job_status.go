@@ -23,7 +23,7 @@ type IoK8sAPIBatchV1beta1CronJobStatus struct {
 
 	// Information when was the last time the job was successfully scheduled.
 	// Format: date-time
-	LastScheduleTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastScheduleTime,omitempty"`
+	LastScheduleTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastScheduleTime,omitempty"`
 }
 
 // Validate validates this io k8s api batch v1beta1 cron job status

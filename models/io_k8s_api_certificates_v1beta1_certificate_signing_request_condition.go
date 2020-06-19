@@ -19,7 +19,7 @@ type IoK8sAPICertificatesV1beta1CertificateSigningRequestCondition struct {
 
 	// timestamp for the last update to this condition
 	// Format: date-time
-	LastUpdateTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastUpdateTime,omitempty"`
+	LastUpdateTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastUpdateTime,omitempty"`
 
 	// human readable message with details about the request state
 	Message string `json:"message,omitempty"`

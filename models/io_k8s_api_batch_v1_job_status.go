@@ -23,7 +23,7 @@ type IoK8sAPIBatchV1JobStatus struct {
 
 	// Represents time when the job was completed. It is not guaranteed to be set in happens-before order across separate operations. It is represented in RFC3339 form and is in UTC.
 	// Format: date-time
-	CompletionTime IoK8sApimachineryPkgApisMetaV1Time `json:"completionTime,omitempty"`
+	CompletionTime *IoK8sApimachineryPkgApisMetaV1Time `json:"completionTime,omitempty"`
 
 	// The latest available observations of an object's current state. More info: https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/
 	Conditions []*IoK8sAPIBatchV1JobCondition `json:"conditions"`
@@ -33,7 +33,7 @@ type IoK8sAPIBatchV1JobStatus struct {
 
 	// Represents time when the job was acknowledged by the job controller. It is not guaranteed to be set in happens-before order across separate operations. It is represented in RFC3339 form and is in UTC.
 	// Format: date-time
-	StartTime IoK8sApimachineryPkgApisMetaV1Time `json:"startTime,omitempty"`
+	StartTime *IoK8sApimachineryPkgApisMetaV1Time `json:"startTime,omitempty"`
 
 	// The number of pods which reached phase Succeeded.
 	Succeeded int32 `json:"succeeded,omitempty"`

@@ -36,7 +36,7 @@ type IoK8sAPIAutoscalingV2beta2HorizontalPodAutoscalerStatus struct {
 
 	// lastScaleTime is the last time the HorizontalPodAutoscaler scaled the number of pods, used by the autoscaler to control how often the number of pods is changed.
 	// Format: date-time
-	LastScaleTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastScaleTime,omitempty"`
+	LastScaleTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastScaleTime,omitempty"`
 
 	// observedGeneration is the most recent generation observed by this autoscaler.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`

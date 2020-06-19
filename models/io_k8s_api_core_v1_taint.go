@@ -27,7 +27,7 @@ type IoK8sAPICoreV1Taint struct {
 
 	// TimeAdded represents the time at which the taint was added. It is only written for NoExecute taints.
 	// Format: date-time
-	TimeAdded IoK8sApimachineryPkgApisMetaV1Time `json:"timeAdded,omitempty"`
+	TimeAdded *IoK8sApimachineryPkgApisMetaV1Time `json:"timeAdded,omitempty"`
 
 	// The taint value corresponding to the taint key.
 	Value string `json:"value,omitempty"`

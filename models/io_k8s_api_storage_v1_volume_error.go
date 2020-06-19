@@ -21,7 +21,7 @@ type IoK8sAPIStorageV1VolumeError struct {
 
 	// Time the error was encountered.
 	// Format: date-time
-	Time IoK8sApimachineryPkgApisMetaV1Time `json:"time,omitempty"`
+	Time *IoK8sApimachineryPkgApisMetaV1Time `json:"time,omitempty"`
 }
 
 // Validate validates this io k8s api storage v1 volume error

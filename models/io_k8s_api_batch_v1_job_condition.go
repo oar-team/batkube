@@ -19,11 +19,11 @@ type IoK8sAPIBatchV1JobCondition struct {
 
 	// Last time the condition was checked.
 	// Format: date-time
-	LastProbeTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastProbeTime,omitempty"`
+	LastProbeTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastProbeTime,omitempty"`
 
 	// Last time the condition transit from one status to another.
 	// Format: date-time
-	LastTransitionTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
 
 	// Human readable message indicating details about last transition.
 	Message string `json:"message,omitempty"`

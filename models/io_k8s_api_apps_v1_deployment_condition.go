@@ -19,11 +19,11 @@ type IoK8sAPIAppsV1DeploymentCondition struct {
 
 	// Last time the condition transitioned from one status to another.
 	// Format: date-time
-	LastTransitionTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
 
 	// The last time this condition was updated.
 	// Format: date-time
-	LastUpdateTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastUpdateTime,omitempty"`
+	LastUpdateTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastUpdateTime,omitempty"`
 
 	// A human readable message indicating details about the transition.
 	Message string `json:"message,omitempty"`

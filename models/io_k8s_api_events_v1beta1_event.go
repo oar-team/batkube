@@ -27,11 +27,11 @@ type IoK8sAPIEventsV1beta1Event struct {
 
 	// Deprecated field assuring backward compatibility with core.v1 Event type
 	// Format: date-time
-	DeprecatedFirstTimestamp IoK8sApimachineryPkgApisMetaV1Time `json:"deprecatedFirstTimestamp,omitempty"`
+	DeprecatedFirstTimestamp *IoK8sApimachineryPkgApisMetaV1Time `json:"deprecatedFirstTimestamp,omitempty"`
 
 	// Deprecated field assuring backward compatibility with core.v1 Event type
 	// Format: date-time
-	DeprecatedLastTimestamp IoK8sApimachineryPkgApisMetaV1Time `json:"deprecatedLastTimestamp,omitempty"`
+	DeprecatedLastTimestamp *IoK8sApimachineryPkgApisMetaV1Time `json:"deprecatedLastTimestamp,omitempty"`
 
 	// Deprecated field assuring backward compatibility with core.v1 Event type
 	DeprecatedSource *IoK8sAPICoreV1EventSource `json:"deprecatedSource,omitempty"`

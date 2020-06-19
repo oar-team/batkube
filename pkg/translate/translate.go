@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
@@ -23,6 +22,7 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 	switch prof.Type {
 	case "delay":
 		containerName := "sleep"
+		jobSubtime := models.IoK8sApimachineryPkgApisMetaV1Time(BatsimNowToTime(job.Subtime))
 		pod = models.IoK8sAPICoreV1Pod{
 			Kind:       "Pod",
 			APIVersion: "v1",
@@ -31,7 +31,7 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 				Namespace:         "default",
 				ResourceVersion:   "0",
 				UID:               uuid.New().String(),
-				CreationTimestamp: models.IoK8sApimachineryPkgApisMetaV1Time(BatsimNowToTime(job.Subtime)),
+				CreationTimestamp: &jobSubtime,
 			},
 			Spec: &models.IoK8sAPICoreV1PodSpec{
 				SchedulerName: scheduler,
@@ -81,7 +81,7 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 				Name:              strconv.Itoa(resource.Id) + "-" + resource.Name,
 				ResourceVersion:   "0",
 				UID:               uuid.New().String(),
-				CreationTimestamp: models.IoK8sApimachineryPkgApisMetaV1Time(time.Time{}),
+				CreationTimestamp: &models.IoK8sApimachineryPkgApisMetaV1Time{},
 			},
 			Status: &models.IoK8sAPICoreV1NodeStatus{
 				Capacity: map[string]models.IoK8sApimachineryPkgAPIResourceQuantity{

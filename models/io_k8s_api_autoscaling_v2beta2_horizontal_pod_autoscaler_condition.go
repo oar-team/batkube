@@ -19,7 +19,7 @@ type IoK8sAPIAutoscalingV2beta2HorizontalPodAutoscalerCondition struct {
 
 	// lastTransitionTime is the last time the condition transitioned from one status to another
 	// Format: date-time
-	LastTransitionTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
 
 	// message is a human-readable explanation containing details about the transition
 	Message string `json:"message,omitempty"`

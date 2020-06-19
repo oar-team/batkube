@@ -19,11 +19,11 @@ type IoK8sAPICoreV1NodeCondition struct {
 
 	// Last time we got an update on a given condition.
 	// Format: date-time
-	LastHeartbeatTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastHeartbeatTime,omitempty"`
+	LastHeartbeatTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastHeartbeatTime,omitempty"`
 
 	// Last time the condition transit from one status to another.
 	// Format: date-time
-	LastTransitionTime IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
+	LastTransitionTime *IoK8sApimachineryPkgApisMetaV1Time `json:"lastTransitionTime,omitempty"`
 
 	// Human readable message indicating details about last transition.
 	Message string `json:"message,omitempty"`

@@ -20,7 +20,7 @@ type IoK8sAPIAuthenticationV1TokenRequestStatus struct {
 	// ExpirationTimestamp is the time of expiration of the returned token.
 	// Required: true
 	// Format: date-time
-	ExpirationTimestamp IoK8sApimachineryPkgApisMetaV1Time `json:"expirationTimestamp"`
+	ExpirationTimestamp *IoK8sApimachineryPkgApisMetaV1Time `json:"expirationTimestamp"`
 
 	// Token is the opaque bearer token.
 	// Required: true
