@@ -55,15 +55,16 @@ func GetResource(name *string, namespace *string, resourceList interface{}) (int
 
 		return item.Addr().Interface(), nil
 	}
-	nameStr := "<nil>"
-	namespaceStr := "<nil>"
-	if name != nil {
-		nameStr = *name
-	}
-	if namespace != nil {
-		namespaceStr = *namespace
-	}
-	return nil, errors.Errorf("Could not find resource associated with name %v and namespace %v in %T", nameStr, namespaceStr, resourceList)
+	//nameStr := "<nil>"
+	//namespaceStr := "<nil>"
+	//if name != nil {
+	//	nameStr = *name
+	//}
+	//if namespace != nil {
+	//	namespaceStr = *namespace
+	//}
+	//return nil, errors.Errorf("Could not find resource associated with name %v and namespace %v in %T", nameStr, namespaceStr, resourceList)
+	return nil, nil
 }
 
 func getFieldByName(resource reflect.Value, fieldName string) (reflect.Value, error) {

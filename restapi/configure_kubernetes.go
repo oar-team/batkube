@@ -201,17 +201,13 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	api.CoreV1CreateCoreV1NamespacedEventHandler = core_v1.CreateCoreV1NamespacedEventHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.CoreV1EventList.Items = append(broker.CoreV1EventList.Items, params.Body)
-			if err := success(rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			success(rw, p)
 		})
 	})
 	api.EventsV1beta1CreateEventsV1beta1NamespacedEventHandler = events_v1beta1.CreateEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.CreateEventsV1beta1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.EventV1beta1EventList.Items = append(broker.EventV1beta1EventList.Items, params.Body)
-			if err := success(rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			success(rw, p)
 		})
 	})
 	api.EventsV1beta1PatchEventsV1beta1NamespacedEventHandler = events_v1beta1.PatchEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.PatchEventsV1beta1NamespacedEventParams) middleware.Responder {
@@ -220,15 +216,16 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
+			} else if event == nil {
+				failureNotFound(rw, p)
+				return
 			}
-			// Those two events structure are actually the same, eventhough they don't have the same name
+
 			if err := mapstructure.Decode(params.Body, event); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			if err = success(rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			success(rw, p)
 		})
 	})
 	api.EventsV1beta1ListEventsV1beta1NamespacedEventHandler = events_v1beta1.ListEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.ListEventsV1beta1NamespacedEventParams) middleware.Responder {
@@ -247,36 +244,20 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	api.CoordinationV1CreateCoordinationV1NamespacedLeaseHandler = coordination_v1.CreateCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.CreateCoordinationV1NamespacedLeaseParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.LeaseList.Items = append(broker.LeaseList.Items, params.Body)
-			if err := success(rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			success(rw, p)
 		})
 	})
 	api.CoordinationV1ReadCoordinationV1NamespacedLeaseHandler = coordination_v1.ReadCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ReadCoordinationV1NamespacedLeaseParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			r, err := broker.GetResource(&params.Name, &params.Namespace, broker.LeaseList)
-			if r == nil {
-				if err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
-					Kind:       "Status",
-					APIVersion: "v1",
-					Status:     "Failure",
-					Message:    fmt.Sprintf("leases.coordination.k8s.io \\\"%s\\\" not found", params.Name),
-					Reason:     "NotFound",
-					Details: &models.IoK8sApimachineryPkgApisMetaV1StatusDetails{
-						Name:  params.Name,
-						Group: "coordination.k8s.io",
-						Kind:  "leases",
-					},
-					Code: 404,
-				}); err != nil {
-					http.Error(rw, err.Error(), http.StatusInternalServerError)
-				}
-			} else if err != nil {
+			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.LeaseList)
+			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			} else {
-				if err = p.Produce(rw, r); err != nil {
-					http.Error(rw, err.Error(), http.StatusInternalServerError)
-				}
+				return
+			} else if res == nil {
+				failureNotFound(rw, p)
+				return
+			} else if err = p.Produce(rw, res); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
 			}
 		})
 	})
@@ -285,36 +266,20 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	api.CoreV1CreateCoreV1NamespacedEndpointsHandler = core_v1.CreateCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.EndpointsList.Items = append(broker.EndpointsList.Items, params.Body)
-			if err := success(rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			success(rw, p)
 		})
 	})
 	api.CoreV1ReadCoreV1NamespacedEndpointsHandler = core_v1.ReadCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ReadCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			//endpoints, err := broker.GetEndpoint(params.Name, params.Namespace)
-			endpoints, err := broker.GetResource(&params.Name, &params.Namespace, broker.EndpointsList)
-			if endpoints == nil {
-				if err = p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
-					Kind:       "Status",
-					APIVersion: "v1",
-					Status:     "Failure",
-					Message:    fmt.Sprintf("endpoints \\\"%s\\\" not found", params.Name),
-					Reason:     "NotFound",
-					Details: &models.IoK8sApimachineryPkgApisMetaV1StatusDetails{
-						Name: params.Name,
-						Kind: "endpoints",
-					},
-					Code: 404,
-				}); err != nil {
-					http.Error(rw, err.Error(), http.StatusInternalServerError)
-				}
-			} else if err != nil {
+			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.EndpointsList)
+			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			} else {
-				if err = p.Produce(rw, endpoints); err != nil {
-					http.Error(rw, err.Error(), http.StatusInternalServerError)
-				}
+				return
+			} else if res == nil {
+				failureNotFound(rw, p)
+				return
+			} else if err = p.Produce(rw, res); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
 			}
 		})
 	})
@@ -400,6 +365,20 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 
 	// Pods
+	api.CoreV1ReadCoreV1NamespacedPodHandler = core_v1.ReadCoreV1NamespacedPodHandlerFunc(func(params core_v1.ReadCoreV1NamespacedPodParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			} else if res == nil {
+				failureNotFound(rw, p)
+				return
+			} else if err = p.Produce(rw, res); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
 	api.CoreV1ListCoreV1PodForAllNamespacesHandler = core_v1.ListCoreV1PodForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Pod", &broker.PodList, rw, p)
@@ -418,6 +397,9 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
+			} else if res == nil {
+				failureNotFound(rw, p)
+				return
 			}
 			pod := res.(*models.IoK8sAPICoreV1Pod)
 			// Is this a sound check to make?
@@ -428,9 +410,12 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 
 			// Bind the pod
-			_, err = broker.GetResource(&params.Body.Target.Name, nil, broker.NodeList) // Find out if the node exists
+			node, err := broker.GetResource(&params.Body.Target.Name, nil, broker.NodeList) // Find out if the node exists
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
+				return
+			} else if node == nil {
+				failureNotFound(rw, p)
 				return
 			}
 			pod.Spec.NodeName = params.Body.Target.Name
@@ -445,10 +430,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			})
 			broker.ToExecute <- pod
 
-			// Respond
-			if err = success(rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			success(rw, p)
 		})
 	})
 
@@ -469,14 +451,15 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
+			} else if node == nil {
+				failureNotFound(rw, p)
+				return
 			}
 			if err := mapstructure.Decode(params.Body, node); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			if err = success(rw, p); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-			}
+			success(rw, p)
 		})
 	})
 
@@ -3451,11 +3434,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation core_v1.ReadCoreV1NamespacedPersistentVolumeClaimStatus has not yet been implemented")
 		})
 	}
-	if api.CoreV1ReadCoreV1NamespacedPodHandler == nil {
-		api.CoreV1ReadCoreV1NamespacedPodHandler = core_v1.ReadCoreV1NamespacedPodHandlerFunc(func(params core_v1.ReadCoreV1NamespacedPodParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ReadCoreV1NamespacedPod has not yet been implemented")
-		})
-	}
 	if api.CoreV1ReadCoreV1NamespacedPodLogHandler == nil {
 		api.CoreV1ReadCoreV1NamespacedPodLogHandler = core_v1.ReadCoreV1NamespacedPodLogHandlerFunc(func(params core_v1.ReadCoreV1NamespacedPodLogParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ReadCoreV1NamespacedPodLog has not yet been implemented")
@@ -5369,13 +5347,28 @@ func listResource(watch *bool, fieldSelector *string, resourceVersion *string, r
 	}
 }
 
-func success(rw http.ResponseWriter, p runtime.Producer) error {
-	return p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
+func success(rw http.ResponseWriter, p runtime.Producer) {
+	if err := p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
 		Kind:       "Status",
 		APIVersion: "v1",
 		Status:     "Success",
 		Code:       201,
-	})
+	}); err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func failureNotFound(rw http.ResponseWriter, p runtime.Producer) {
+	if err := p.Produce(rw, models.IoK8sApimachineryPkgApisMetaV1Status{
+		Kind:       "Status",
+		APIVersion: "v1",
+		Status:     "Failure",
+		Message:    "the server could not find the requested resource",
+		Reason:     "NotFound",
+		Code:       404,
+	}); err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func listAPIResources(rw http.ResponseWriter, p runtime.Producer, groupVersion string) {
