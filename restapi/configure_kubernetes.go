@@ -185,7 +185,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
-	// Events
+	// Core v1 Events
 	// core v1 event endpoint is deprecateed. New api is on events.k8s.io
 	api.CoreV1ListCoreV1EventForAllNamespacesHandler = core_v1.ListCoreV1EventForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EventForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
@@ -204,6 +204,8 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			success(rw, p)
 		})
 	})
+
+	// Events
 	api.EventsV1beta1CreateEventsV1beta1NamespacedEventHandler = events_v1beta1.CreateEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.CreateEventsV1beta1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.EventV1beta1EventList.Items = append(broker.EventV1beta1EventList.Items, params.Body)
@@ -231,6 +233,11 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	api.EventsV1beta1ListEventsV1beta1NamespacedEventHandler = events_v1beta1.ListEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.ListEventsV1beta1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			params.FieldSelector = addFieldSelector("metadata.namespace="+params.Namespace, params.FieldSelector)
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventV1beta1EventList, rw, p)
+		})
+	})
+	api.EventsV1beta1ListEventsV1beta1EventForAllNamespacesHandler = events_v1beta1.ListEventsV1beta1EventForAllNamespacesHandlerFunc(func(params events_v1beta1.ListEventsV1beta1EventForAllNamespacesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.EventV1beta1EventList, rw, p)
 		})
 	})
@@ -365,6 +372,22 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 
 	// Pods
+	api.CoreV1ReplaceCoreV1NamespacedPodStatusHandler = core_v1.ReplaceCoreV1NamespacedPodStatusHandlerFunc(func(params core_v1.ReplaceCoreV1NamespacedPodStatusParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			} else if res == nil {
+				failureNotFound(rw, p)
+				return
+			}
+
+			pod := res.(*models.IoK8sAPICoreV1Pod)
+			*pod = *params.Body
+			success(rw, p)
+		})
+	})
 	api.CoreV1ReadCoreV1NamespacedPodHandler = core_v1.ReadCoreV1NamespacedPodHandlerFunc(func(params core_v1.ReadCoreV1NamespacedPodParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
@@ -2429,11 +2452,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation discovery_v1beta1.ListDiscoveryV1beta1NamespacedEndpointSlice has not yet been implemented")
 		})
 	}
-	if api.EventsV1beta1ListEventsV1beta1EventForAllNamespacesHandler == nil {
-		api.EventsV1beta1ListEventsV1beta1EventForAllNamespacesHandler = events_v1beta1.ListEventsV1beta1EventForAllNamespacesHandlerFunc(func(params events_v1beta1.ListEventsV1beta1EventForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation events_v1beta1.ListEventsV1beta1EventForAllNamespaces has not yet been implemented")
-		})
-	}
 	if api.ExtensionsV1beta1ListExtensionsV1beta1IngressForAllNamespacesHandler == nil {
 		api.ExtensionsV1beta1ListExtensionsV1beta1IngressForAllNamespacesHandler = extensions_v1beta1.ListExtensionsV1beta1IngressForAllNamespacesHandlerFunc(func(params extensions_v1beta1.ListExtensionsV1beta1IngressForAllNamespacesParams) middleware.Responder {
 			return middleware.NotImplemented("operation extensions_v1beta1.ListExtensionsV1beta1IngressForAllNamespaces has not yet been implemented")
@@ -3987,11 +4005,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1ReplaceCoreV1NamespacedPodHandler == nil {
 		api.CoreV1ReplaceCoreV1NamespacedPodHandler = core_v1.ReplaceCoreV1NamespacedPodHandlerFunc(func(params core_v1.ReplaceCoreV1NamespacedPodParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ReplaceCoreV1NamespacedPod has not yet been implemented")
-		})
-	}
-	if api.CoreV1ReplaceCoreV1NamespacedPodStatusHandler == nil {
-		api.CoreV1ReplaceCoreV1NamespacedPodStatusHandler = core_v1.ReplaceCoreV1NamespacedPodStatusHandlerFunc(func(params core_v1.ReplaceCoreV1NamespacedPodStatusParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ReplaceCoreV1NamespacedPodStatus has not yet been implemented")
 		})
 	}
 	if api.CoreV1ReplaceCoreV1NamespacedPodTemplateHandler == nil {
