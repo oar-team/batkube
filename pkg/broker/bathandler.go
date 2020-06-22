@@ -12,14 +12,14 @@ func handleBatMessage(msg translate.BatMessage) {
 		switch event.Type {
 		case "SIMULATION_BEGINS":
 			log.Debugln("[broker:bathandler] Deserializing SIMULATION_BEGINS event")
-			if err := translate.DeserializeSimulationBegins(event.Data, &SimData); err != nil {
+			if err := translate.DeserializeSimulationBegins(event.Data, &simData); err != nil {
 				log.Panic("[broker:bathandler] Error deserializing SIMULATION_BEGINS event: ", err)
 			}
-			log.Tracef("[broker:bathandler] Simulation data :\n%s", spew.Sdump(SimData))
+			log.Tracef("[broker:bathandler] Simulation data :\n%s", spew.Sdump(simData))
 
 			// Translate to nodes objects
 			log.Debugln("[broker:bathandler] Translating compute resources to nodes")
-			err, nodesSlice := translate.ComputeResourcesToNodes(SimData.ComputeResources)
+			err, nodesSlice := translate.ComputeResourcesToNodes(simData)
 			NodeList.Items = nodesSlice
 			if err != nil {
 				log.Panic("[broker:bathandler] error translating compute resources to nodes: ", err)
@@ -50,7 +50,7 @@ func handleBatMessage(msg translate.BatMessage) {
 
 			// Translate
 			log.Debugln("[broker:bathandler] Translating a job to a pod")
-			err, pod := translate.JobToPod(job, SimData)
+			err, pod := translate.JobToPod(job, simData)
 			if err != nil {
 				log.Panic("[broker:bathandler] error translating a job to a pod: ", err)
 			}

@@ -58,11 +58,11 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 	return nil, pod
 }
 
-func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8sAPICoreV1Node) {
+func ComputeResourcesToNodes(simData SimulationBeginsData) (error, []*models.IoK8sAPICoreV1Node) {
 	var nodes []*models.IoK8sAPICoreV1Node
 	readyConditionType := "Ready"
 	trueConditionStatus := "True"
-	for _, resource := range resources {
+	for _, resource := range simData.ComputeResources {
 		// Capacity of the pod
 		e, ok := resource.Properties["memory"].(string)
 		var memory models.IoK8sApimachineryPkgAPIResourceQuantity
@@ -78,7 +78,11 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 		var capacity = make(map[string]models.IoK8sApimachineryPkgAPIResourceQuantity, 0)
 		capacity["memory"] = memory
 		capacity["cpu"] = core
-		capacity["pods"] = models.IoK8sApimachineryPkgAPIResourceQuantity("110") // Default value.
+		var pods = "1"
+		if simData.AllowComputeSharing {
+			pods = "110"
+		}
+		capacity["pods"] = models.IoK8sApimachineryPkgAPIResourceQuantity(pods)
 
 		var node models.IoK8sAPICoreV1Node = models.IoK8sAPICoreV1Node{
 			Kind:       "Node",

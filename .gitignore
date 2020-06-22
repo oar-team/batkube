@@ -7,3 +7,4 @@ report/master-project-blx.bib
 *.xml
 *.blg
 !examples
+expe-out

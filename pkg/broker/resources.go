@@ -36,7 +36,7 @@ const patch = "patch"
 const update = "update"
 const watch = "watch"
 
-var SimData translate.SimulationBeginsData
+var simData translate.SimulationBeginsData = translate.SimulationBeginsData{}
 
 // Pods scheduled and ready to be executed are sent over this channel to be
 // retrieved by te broker and sent to Batsim.

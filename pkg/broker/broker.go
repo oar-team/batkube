@@ -16,15 +16,18 @@ import (
 const timeout = 1
 const nonEmpty = 1 << 1
 
-// Stop condition when waiting for new messages to send to Batsim
-// ex : stopCondition = nonEmpty | timeout will stop waiting for messages if
-// the waiting time since last message is higher than timeoutValue OR if the
-// Events slice is not empty.
-var stopCondition = timeout | nonEmpty
+// Stop condition when waiting for new messages to send to Batsim. Ex :
+// stopWaitingForMessages = nonEmpty | timeout will stop waiting for messages if
+// 	- the waiting time since the last message from the scheduler is higher
+// 	than timeoutValue
+// 	- OR if the Events slice is not empty.
+var stopWaitingForMessages = timeout | nonEmpty
 var timeoutValue = 300 * time.Millisecond
 
-// Set to true when the a no_more_static_job_to_submit NOTIFUY is received
+// Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
+
+// Number of jobs left runinning or pending.
 var unfinishedJobs int
 
 // It is possible that batsim and batkube are still exchanging but the
@@ -211,13 +214,13 @@ func Run(batEndpoint string) {
 			default:
 				// TODO : removing outdated events takes time, which should not be accounted for in scheduler time
 				// (but it is negligeable, most probably)
-				if stopCondition&nonEmpty != 0 {
+				if stopWaitingForMessages&nonEmpty != 0 {
 					if len(batMsg.Events) > 0 {
 						// TODO : ?
 						stopReceivingEvents = !removeOutdatedEvents(&batMsg)
 					}
 				}
-				if stopCondition&timeout != 0 {
+				if stopWaitingForMessages&timeout != 0 {
 					elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
 					if elapsedSinceLastMessage >= timeoutValue {
 						stopReceivingEvents = !removeOutdatedEvents(&batMsg)
