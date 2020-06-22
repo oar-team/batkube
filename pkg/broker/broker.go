@@ -23,6 +23,14 @@ const nonEmpty = 1 << 1
 var stopCondition = timeout | nonEmpty
 var timeoutValue = 300 * time.Millisecond
 
+// Set to true when the a no_more_static_job_to_submit NOTIFUY is received
+var noMoreJobs bool
+var unfinishedJobs int
+
+// It is possible that batsim and batkube are still exchanging but the
+// simulation actually ended. This variable tells us the difference.
+var receivedSimulationEnded bool
+
 /*
 Handles time requests asynchronously. All sends and receives are non blocking
 
@@ -161,16 +169,18 @@ func Run(batEndpoint string) {
 		if err := json.Unmarshal(batMsgBytes, &batMsg); err != nil {
 			log.Panicln(err)
 		}
-		batMsg.Now = round(batMsg.Now)
+		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
 		updateNow(now, batMsg)
 
 		//log.Infoln("[broker] Batsim -> Broker:\n", string(batMsgBytes))
 		for _, event := range batMsg.Events {
 			if event.Type == "SIMULATION_ENDS" {
 				thisIsTheEnd = true
-				log.Debugln("sending end signal")
-				end <- true
+				receivedSimulationEnded = true
 			}
+		}
+		if noMoreJobs && unfinishedJobs == 0 {
+			thisIsTheEnd = true
 		}
 
 		// Handle the message
@@ -216,6 +226,19 @@ func Run(batEndpoint string) {
 			}
 		}
 
+		if thisIsTheEnd {
+			// This channel send may shut down the scheduler
+			// prematurely. Maybe we can find another solution to
+			// let the scheduler run for a while without
+			// terminating zmq right now.
+			end <- true
+			log.Debug("It seems like the simulation ended.")
+			emptyEvents(&batMsg)
+			if !receivedSimulationEnded {
+				emptyRequestedCallStack(&batMsg, batSock)
+			}
+		}
+
 		batMsgBytes, err = json.Marshal(batMsg)
 		if err != nil {
 			log.Panicln("Error in message merging: " + err.Error())
@@ -224,7 +247,7 @@ func Run(batEndpoint string) {
 		if err != nil {
 			log.Panicln("Error while sending message to batsim: " + err.Error())
 		}
-		log.Infoln("[broker] Broker -> Batsim:\n", string(batMsgBytes))
+		//log.Infoln("[broker] Broker -> Batsim:\n", string(batMsgBytes))
 	}
 	log.Infoln("[broker] Simulation finished successfully!")
 }
@@ -282,4 +305,44 @@ func addAndRound(now float64, d time.Duration) float64 {
 
 func round(now float64) float64 {
 	return math.Round(now*1000) / 1000 // we want to round to the closest millisecond
+}
+
+func emptyEvents(batMsg *translate.BatMessage) {
+	for _, event := range batMsg.Events {
+		if event.Type != "CALL_ME_LATER" {
+			log.Panicf("Unexpected message type from the scheduler : %s. Did the simulation really end?", event.Type)
+		}
+	}
+	batMsg.Events = make([]translate.Event, 0)
+}
+
+func emptyRequestedCallStack(batMsg *translate.BatMessage, batSock *zmq.Socket) {
+	if len(batMsg.Events) != 0 {
+		log.Panicf("emptyRequestedCallStack called with non-empty event list")
+	}
+	for !receivedSimulationEnded {
+		batMsgBytes, err := json.Marshal(batMsg)
+		if err != nil {
+			log.Panicln("Error in message merging: " + err.Error())
+		}
+		_, err = batSock.SendBytes(batMsgBytes, 0)
+		if err != nil {
+			log.Panicln("Error while sending message to batsim: " + err.Error())
+		}
+		batMsgBytes, err = batSock.RecvBytes(0)
+		if err != nil {
+			log.Panicln("Error while receiving Batsim message: " + err.Error())
+		}
+		if err := json.Unmarshal(batMsgBytes, &batMsg); err != nil {
+			log.Panicln(err)
+		}
+		for _, event := range batMsg.Events {
+			if event.Type == "SIMULATION_ENDS" {
+				receivedSimulationEnded = true
+			} else if event.Type != "REQUESTED_CALL" {
+				log.Panicf("Unexpected message type from Batsim : %s. Did the simulation really end?", event.Type)
+			}
+		}
+		batMsg.Events = make([]translate.Event, 0)
+	}
 }

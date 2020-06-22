@@ -41,6 +41,7 @@ func handleBatMessage(msg translate.BatMessage) {
 
 		case "JOB_SUBMITTED":
 			log.Debugln("[broker:bathandler] Deserializing JOB_SUBMITTED event")
+			unfinishedJobs++
 			var job translate.Job
 			if err := translate.DeserializeJobSubmitted(event.Data, &job); err != nil {
 				log.Panic("[broker:bathandler] Error deserializing JOB_SUBMITTED event: ", err)
@@ -64,7 +65,10 @@ func handleBatMessage(msg translate.BatMessage) {
 			})
 
 		case "NOTIFY":
-			log.Infoln("[broker:bathandler] Got NOTIFY")
+			log.Debugf("[broker:bathandler] Got notify : %s", spew.Sdump(event))
+			if event.Data["type"] == "no_more_static_job_to_submit" {
+				noMoreJobs = true
+			}
 
 		case "JOB_COMPLETED":
 			log.Debugln("[broker:bathandler] Deserializing JOB_COMPLETED event")
@@ -76,6 +80,7 @@ func handleBatMessage(msg translate.BatMessage) {
 
 			switch jobCompleted.JobState {
 			case "COMPLETED_SUCCESSFULLY":
+				unfinishedJobs--
 				podName := translate.GetPodNameFromJobId(jobCompleted.JobId)
 				res, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
