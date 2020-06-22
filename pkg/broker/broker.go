@@ -34,7 +34,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 	if cap(now) != 1 {
 		panic("now should be a buffered channel with capacity 1")
 	}
-	nowValue := <-now // Blocking send : the value has to be initialized
+	nowValue := <-now // Blocking receive : the value has to be initialized
 
 	thisIsTheEnd := false
 	for !thisIsTheEnd {
@@ -161,11 +161,14 @@ func Run(batEndpoint string) {
 		if err := json.Unmarshal(batMsgBytes, &batMsg); err != nil {
 			log.Panicln(err)
 		}
+		batMsg.Now = round(batMsg.Now)
+		updateNow(now, batMsg)
 
-		log.Infoln("[broker] Batsim -> Broker:\n", string(batMsgBytes))
+		//log.Infoln("[broker] Batsim -> Broker:\n", string(batMsgBytes))
 		for _, event := range batMsg.Events {
 			if event.Type == "SIMULATION_ENDS" {
 				thisIsTheEnd = true
+				log.Debugln("sending end signal")
 				end <- true
 			}
 		}
@@ -179,7 +182,6 @@ func Run(batEndpoint string) {
 		lastMessageTime := time.Now()
 		stopReceivingEvents := false
 		for !stopReceivingEvents {
-			updateNow(now, batMsg)
 			select {
 			case event := <-timeEvents:
 				// Call me later events from time requests
@@ -274,6 +276,10 @@ func removeOutdatedEvents(batMsg *translate.BatMessage) bool {
 }
 
 func addAndRound(now float64, d time.Duration) float64 {
-	df := float64(d) / 1e9                  // d is in nanoseconds
-	return math.Round((now+df)*1000) / 1000 // we want to round to the closest millisecond
+	df := float64(d) / 1e9 // d is in nanoseconds
+	return round(now + df)
+}
+
+func round(now float64) float64 {
+	return math.Round(now*1000) / 1000 // we want to round to the closest millisecond
 }

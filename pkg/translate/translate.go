@@ -63,6 +63,7 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 	readyConditionType := "Ready"
 	trueConditionStatus := "True"
 	for _, resource := range resources {
+		// Capacity of the pod
 		e, ok := resource.Properties["memory"].(string)
 		var memory models.IoK8sApimachineryPkgAPIResourceQuantity
 		if ok {
@@ -73,7 +74,12 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 		if ok {
 			core = models.IoK8sApimachineryPkgAPIResourceQuantity(e)
 		}
-		// Node speed is not a thing in Kubernetes
+		// Node cpu speed is not a thing in Kubernetes
+		var capacity = make(map[string]models.IoK8sApimachineryPkgAPIResourceQuantity, 0)
+		capacity["memory"] = memory
+		capacity["cpu"] = core
+		capacity["pods"] = models.IoK8sApimachineryPkgAPIResourceQuantity("110") // Default value.
+
 		var node models.IoK8sAPICoreV1Node = models.IoK8sAPICoreV1Node{
 			Kind:       "Node",
 			APIVersion: "v1",
@@ -84,10 +90,6 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 				CreationTimestamp: &models.IoK8sApimachineryPkgApisMetaV1Time{},
 			},
 			Status: &models.IoK8sAPICoreV1NodeStatus{
-				Capacity: map[string]models.IoK8sApimachineryPkgAPIResourceQuantity{
-					"memory": memory,
-					"cpu":    core,
-				},
 				Conditions: []*models.IoK8sAPICoreV1NodeCondition{
 					{
 						// Is the initial state of the
@@ -96,6 +98,8 @@ func ComputeResourcesToNodes(resources []ComputeResource) (error, []*models.IoK8
 						Status: &trueConditionStatus,
 					},
 				},
+				Capacity:    capacity,
+				Allocatable: capacity,
 			},
 		}
 		nodes = append(nodes, &node)
