@@ -21,8 +21,9 @@ const nonEmpty = 1 << 1
 // 	- the waiting time since the last message from the scheduler is higher
 // 	than timeoutValue
 // 	- OR if the Events slice is not empty.
-var stopWaitingForMessages = timeout | nonEmpty
-var timeoutValue = 300 * time.Millisecond
+
+var stopWaitingForMessages = timeout
+var timeoutValue = 100 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -195,9 +196,16 @@ func Run(batEndpoint string) {
 		lastMessageTime := time.Now()
 		stopReceivingEvents := false
 		for !stopReceivingEvents {
+			updateNow(now, batMsg)
 			select {
 			case event := <-timeEvents:
-				// Call me later events from time requests
+				// Call me later events from time requests Note
+				// : rounding and adding to now value each time
+				// is not very precise. Errors due to rounded
+				// values add up over the many iterations of
+				// the loop. At the same time, it filters noise
+				// and only takes into account significant
+				// scheduler delays.
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				batMsg.Events = append(batMsg.Events, event)
 				lastMessageTime = time.Now() // put this at the end to minimize batkube overhead
@@ -216,7 +224,7 @@ func Run(batEndpoint string) {
 				// (but it is negligeable, most probably)
 				if stopWaitingForMessages&nonEmpty != 0 {
 					if len(batMsg.Events) > 0 {
-						// TODO : ?
+						// TODO : Not sure why I did it this way.
 						stopReceivingEvents = !removeOutdatedEvents(&batMsg)
 					}
 				}

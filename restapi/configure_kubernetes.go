@@ -3,6 +3,7 @@
 package restapi
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -223,10 +224,18 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				return
 			}
 
-			if err := mapstructure.Decode(params.Body, event); err != nil {
+			// mapstructure.Decode does not work. Encoding and decoding again as a quick fix.
+			var patchBytes []byte
+			b := bytes.NewBuffer(patchBytes)
+			if err := runtime.JSONProducer().Produce(b, params.Body); err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			if err := runtime.JSONConsumer().Consume(b, event); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			success(rw, p)
 		})
 	})
