@@ -235,6 +235,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			broker.IncrementResourceVersion(event.(*models.IoK8sAPIEventsV1beta1Event).Metadata)
 
 			success(rw, p)
 		})
@@ -392,8 +393,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				return
 			}
 
-			pod := res.(*models.IoK8sAPICoreV1Pod)
-			*pod = *params.Body
+			*res.(*models.IoK8sAPICoreV1Pod) = *params.Body
 			success(rw, p)
 		})
 	})
@@ -453,7 +453,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			pod.Spec.NodeName = params.Body.Target.Name
 
 			// Increment resource version
-			broker.IncrementPodResourceVersion(pod)
+			broker.IncrementResourceVersion(pod.Metadata)
 
 			// Add modified event and let the broker know there is a pod to be executed
 			broker.AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
@@ -491,6 +491,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			broker.IncrementResourceVersion(node.(*models.IoK8sAPICoreV1Node).Metadata)
 			success(rw, p)
 		})
 	})

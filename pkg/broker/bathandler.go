@@ -85,12 +85,13 @@ func handleBatMessage(msg translate.BatMessage) {
 				res, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
 				pod.Status.Phase = "Succeeded"
-				IncrementPodResourceVersion(pod)
+				IncrementResourceVersion(pod.Metadata)
 				// TODO : unbind the pod?
 				AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
 					Type:   &translate.Modified,
 					Object: pod,
 				})
+				log.Infoln("[broker:bathandler] pod %s completed successfully", podName)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)
 

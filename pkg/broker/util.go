@@ -478,10 +478,10 @@ func indirect(v reflect.Value) reflect.Value {
 	return v
 }
 
-func IncrementPodResourceVersion(pod *models.IoK8sAPICoreV1Pod) {
-	resourceVersion, err := strconv.Atoi(pod.Metadata.ResourceVersion)
+func IncrementResourceVersion(meta *models.IoK8sApimachineryPkgApisMetaV1ObjectMeta) {
+	resourceVersion, err := strconv.Atoi(meta.ResourceVersion)
 	if err != nil {
 		log.Panic(err)
 	}
-	pod.Metadata.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
+	meta.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
 }
