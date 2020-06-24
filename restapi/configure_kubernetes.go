@@ -215,7 +215,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.EventsV1beta1PatchEventsV1beta1NamespacedEventHandler = events_v1beta1.PatchEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.PatchEventsV1beta1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			event, err := broker.GetResource(&params.Name, &params.Namespace, broker.EventV1beta1EventList)
+			event, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.EventV1beta1EventList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
@@ -266,7 +266,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoordinationV1ReadCoordinationV1NamespacedLeaseHandler = coordination_v1.ReadCoordinationV1NamespacedLeaseHandlerFunc(func(params coordination_v1.ReadCoordinationV1NamespacedLeaseParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.LeaseList)
+			res, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.LeaseList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
@@ -288,7 +288,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ReadCoreV1NamespacedEndpointsHandler = core_v1.ReadCoreV1NamespacedEndpointsHandlerFunc(func(params core_v1.ReadCoreV1NamespacedEndpointsParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.EndpointsList)
+			res, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.EndpointsList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
@@ -384,7 +384,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Pods
 	api.CoreV1ReplaceCoreV1NamespacedPodStatusHandler = core_v1.ReplaceCoreV1NamespacedPodStatusHandlerFunc(func(params core_v1.ReplaceCoreV1NamespacedPodStatusParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
+			res, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
@@ -399,7 +399,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1ReadCoreV1NamespacedPodHandler = core_v1.ReadCoreV1NamespacedPodHandlerFunc(func(params core_v1.ReadCoreV1NamespacedPodParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			res, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
+			res, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
@@ -425,7 +425,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	api.CoreV1CreateCoreV1NamespacedPodBindingHandler = core_v1.CreateCoreV1NamespacedPodBindingHandlerFunc(func(params core_v1.CreateCoreV1NamespacedPodBindingParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			// Find the pod to bind
-			res, err := broker.GetResource(&params.Name, nil, broker.PodList)
+			res, _, err := broker.GetResource(&params.Name, nil, broker.PodList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
@@ -442,7 +442,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 
 			// Bind the pod
-			node, err := broker.GetResource(&params.Body.Target.Name, nil, broker.NodeList) // Find out if the node exists
+			node, _, err := broker.GetResource(&params.Body.Target.Name, nil, broker.NodeList) // Find out if the node exists
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return
@@ -479,7 +479,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1PatchCoreV1NodeHandler = core_v1.PatchCoreV1NodeHandlerFunc(func(params core_v1.PatchCoreV1NodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			node, err := broker.GetResource(&params.Name, nil, broker.NodeList)
+			node, _, err := broker.GetResource(&params.Name, nil, broker.NodeList)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusBadRequest)
 				return

@@ -14,16 +14,17 @@ import (
 /*
 Returns the resource corresponding to the given fields.
 Returned type is a pointer to the resource.
+Also returns the index of the resource in the list (returns -1 if the resource could not be found)
 */
-func GetResource(name *string, namespace *string, resourceList interface{}) (interface{}, error) {
+func GetResource(name *string, namespace *string, resourceList interface{}) (interface{}, int, error) {
 	v := indirect(reflect.ValueOf(resourceList))
 	itemsValue, err := getFieldByName(v, "Items")
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
 	//itemsValue = itemsValue.Elem()
 	if itemsValue.Kind() != reflect.Slice {
-		return nil, errors.Errorf("Expected a slice as Items value, got %s (type %s)", itemsValue.Kind(), itemsValue.Type())
+		return nil, -1, errors.Errorf("Expected a slice as Items value, got %s (type %s)", itemsValue.Kind(), itemsValue.Type())
 	}
 
 	n := itemsValue.Len()
@@ -31,13 +32,13 @@ func GetResource(name *string, namespace *string, resourceList interface{}) (int
 		item := indirect(itemsValue.Index(j))
 		metadata, err := getFieldByName(item, "Metadata")
 		if err != nil {
-			return nil, err
+			return nil, -1, err
 		}
 		metadata = indirect(metadata)
 
 		nameValue, err := getFieldByName(metadata, "Name")
 		if err != nil {
-			return nil, err
+			return nil, -1, err
 		}
 		nameValue = indirect(nameValue)
 		if name != nil && nameValue.IsValid() && nameValue.String() != *name {
@@ -46,25 +47,16 @@ func GetResource(name *string, namespace *string, resourceList interface{}) (int
 
 		namespaceValue, err := getFieldByName(metadata, "Namespace")
 		if err != nil {
-			return nil, err
+			return nil, -1, err
 		}
 		namespaceValue = indirect(namespaceValue)
 		if namespace != nil && namespaceValue.IsValid() && namespaceValue.String() != *namespace {
 			continue
 		}
 
-		return item.Addr().Interface(), nil
+		return item.Addr().Interface(), j, nil
 	}
-	//nameStr := "<nil>"
-	//namespaceStr := "<nil>"
-	//if name != nil {
-	//	nameStr = *name
-	//}
-	//if namespace != nil {
-	//	namespaceStr = *namespace
-	//}
-	//return nil, errors.Errorf("Could not find resource associated with name %v and namespace %v in %T", nameStr, namespaceStr, resourceList)
-	return nil, nil
+	return nil, -1, nil
 }
 
 func getFieldByName(resource reflect.Value, fieldName string) (reflect.Value, error) {
