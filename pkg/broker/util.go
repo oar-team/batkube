@@ -479,6 +479,9 @@ func indirect(v reflect.Value) reflect.Value {
 }
 
 func IncrementResourceVersion(meta *models.IoK8sApimachineryPkgApisMetaV1ObjectMeta) {
+	if meta.ResourceVersion == "" {
+		meta.ResourceVersion = "0"
+	}
 	resourceVersion, err := strconv.Atoi(meta.ResourceVersion)
 	if err != nil {
 		log.Panic(err)

@@ -91,7 +91,7 @@ func handleBatMessage(msg translate.BatMessage) {
 					Type:   &translate.Modified,
 					Object: pod,
 				})
-				log.Infoln("[broker:bathandler] pod %s completed successfully", podName)
+				log.Infof("[broker:bathandler] pod %s completed successfully", podName)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)
 

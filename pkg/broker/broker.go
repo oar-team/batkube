@@ -21,9 +21,13 @@ const nonEmpty = 1 << 1
 // 	- the waiting time since the last message from the scheduler is higher
 // 	than timeoutValue
 // 	- OR if the Events slice is not empty.
+var sendMessageCondition = timeout | nonEmpty
+var timeoutValue = 300 * time.Millisecond
 
-var stopWaitingForMessages = timeout
-var timeoutValue = 100 * time.Millisecond
+// Minimal amount of time to wait for messages from the scheduler.
+// Not having a minimal amount of waiting time leads to incorrect behavior from
+// the scheduler, for it needs a bit of time to send all its time requests.
+var minimalWaitDelay = 100 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -176,6 +180,13 @@ func Run(batEndpoint string) {
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
 		updateNow(now, batMsg)
 
+		// Sending an mepty message as a response to an empty message
+		// makes Batsim erorr out. We want to avoid this.
+		lastMessageWasEmpty := false
+		if len(batMsg.Events) == 0 {
+			lastMessageWasEmpty = true
+		}
+
 		//log.Infoln("[broker] Batsim -> Broker:\n", string(batMsgBytes))
 		for _, event := range batMsg.Events {
 			if event.Type == "SIMULATION_ENDS" {
@@ -195,22 +206,21 @@ func Run(batEndpoint string) {
 		elapsedSinceLastMessage := time.Duration(0)
 		lastMessageTime := time.Now()
 		stopReceivingEvents := false
+		loopStartTime := time.Now()
 		for !stopReceivingEvents {
 			updateNow(now, batMsg)
 			select {
-			case event := <-timeEvents:
-				// Call me later events from time requests Note
-				// : rounding and adding to now value each time
-				// is not very precise. Errors due to rounded
-				// values add up over the many iterations of
-				// the loop. At the same time, it filters noise
-				// and only takes into account significant
-				// scheduler delays.
+			case event := <-timeEvents: // Call me later events from time requests
+				// Note : rounding and adding to now value each
+				// time is not very precise. Errors due to
+				// rounded values add up over the many
+				// iterations of the loop. At the same time, it
+				// filters noise and only takes into account
+				// significant scheduler delays.
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				batMsg.Events = append(batMsg.Events, event)
-				lastMessageTime = time.Now() // put this at the end to minimize batkube overhead
-			case pod := <-ToExecute:
-				// Jobs sent over by the api
+				lastMessageTime = time.Now()
+			case pod := <-ToExecute: // Jobs sent over by the api
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
 				if err != nil {
@@ -220,18 +230,20 @@ func Run(batEndpoint string) {
 				log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
 				lastMessageTime = time.Now()
 			default:
-				// TODO : removing outdated events takes time, which should not be accounted for in scheduler time
-				// (but it is negligeable, most probably)
-				if stopWaitingForMessages&nonEmpty != 0 {
-					if len(batMsg.Events) > 0 {
-						// TODO : Not sure why I did it this way.
-						stopReceivingEvents = !removeOutdatedEvents(&batMsg)
+				if time.Now().Sub(loopStartTime) < minimalWaitDelay {
+					continue
+				}
+				if sendMessageCondition&nonEmpty != 0 {
+					if len(batMsg.Events) > 0 && !lastMessageWasEmpty {
+						removeOutdatedEvents(&batMsg)
+						stopReceivingEvents = true
 					}
 				}
-				if stopWaitingForMessages&timeout != 0 {
+				if sendMessageCondition&timeout != 0 {
 					elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
 					if elapsedSinceLastMessage >= timeoutValue {
-						stopReceivingEvents = !removeOutdatedEvents(&batMsg)
+						removeOutdatedEvents(&batMsg)
+						stopReceivingEvents = true
 					}
 				}
 			}
@@ -289,7 +301,7 @@ Remove any call_me_later that would be outdated
 
 Returns if events have been removed
 */
-func removeOutdatedEvents(batMsg *translate.BatMessage) bool {
+func removeOutdatedEvents(batMsg *translate.BatMessage) {
 	toRemove := make([]int, 0)
 	for i, event := range batMsg.Events {
 		if event.Type == "CALL_ME_LATER" && event.Data["timestamp"].(float64) <= batMsg.Now {
@@ -306,7 +318,6 @@ func removeOutdatedEvents(batMsg *translate.BatMessage) bool {
 			batMsg.Events[reverse_i+1:]...,
 		)
 	}
-	return len(toRemove) > 0
 }
 
 func addAndRound(now float64, d time.Duration) float64 {
