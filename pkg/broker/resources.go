@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/mitchellh/mapstructure"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
@@ -150,22 +149,51 @@ func InitResources() {
 	}
 }
 
-// TODO : there are issues with that function : objects are not really copied over
+// TODO : there are issues with that function : objects are not really copied.
+//func AddEvent(eventType *string, object interface{}) {
+//	v := reflect.ValueOf(object)
+//	for v.Kind() == reflect.Ptr {
+//		v = v.Elem()
+//	}
+//	object = v.Interface()
+//
+//	var objectDeepCopy interface{}
+//	if err := mapstructure.Decode(object, &objectDeepCopy); err != nil {
+//		panic(fmt.Sprintf("Error while copying %T to add to event list: %s", object, err))
+//	}
+//	events = append(events, &models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
+//		Type:   eventType,
+//		Object: objectDeepCopy,
+//	})
+//}
+
+// Temporarily, AddEvent simply changes the event Type.
 func AddEvent(eventType *string, object interface{}) {
 	v := reflect.ValueOf(object)
-	for v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
 	object = v.Interface()
-
-	var objectDeepCopy interface{}
-	if err := mapstructure.Decode(object, &objectDeepCopy); err != nil {
-		panic(fmt.Sprintf("Error while copying %T to add to event list: %s", object, err))
+	meta := v.FieldByName("Metadata")
+	if !meta.IsValid() {
+		panic(fmt.Sprintf("could not find metadata field in %T", object))
 	}
-	events = append(events, &models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
-		Type:   eventType,
-		Object: objectDeepCopy,
-	})
+	uid := meta.Elem().FieldByName("UID").String()
+	eventList, err := FilterEventListOnFieldSelector(GetEvents(), "metadata.uid="+uid)
+	if err != nil {
+		panic(err)
+	}
+	if len(eventList) == 0 {
+		// Object is not in event list yet
+		events = append(events, &models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
+			Type:   eventType,
+			Object: object,
+		})
+	} else if len(eventList) == 1 {
+		eventList[0].Type = eventType
+	} else {
+		panic("Two events with same resource were found")
+	}
 }
 
 func GetEvents() []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {

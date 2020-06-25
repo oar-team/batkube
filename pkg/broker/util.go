@@ -428,10 +428,10 @@ tag : string representing the tagged field you want to extract. Ex : status.phas
 */
 func getValueFromTag(o interface{}, tag string) (string, error) {
 	v := indirect(reflect.ValueOf(o))
-	t := v.Type()
 	if v.Kind() != reflect.Struct {
 		return "", errors.Errorf("Expected a struct, got a %s\n", v.Kind().String())
 	}
+	t := v.Type()
 
 	tagsliced := strings.Split(tag, ".") // slice representation of the tag
 

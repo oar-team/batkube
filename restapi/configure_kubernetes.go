@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/yamlpc"
+	negronilogrus "github.com/meatballhat/negroni-logrus"
 	"github.com/mitchellh/mapstructure"
 	"github.com/urfave/negroni"
 
@@ -5270,11 +5270,11 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	// TODO read from env variables
-	debug := true
+	debug := false
 	if debug {
 		n := negroni.New()
-		//n.Use(negronilogrus.NewMiddleware())
-		n.Use(negroni.NewLogger())
+		n.Use(negronilogrus.NewMiddleware())
+		//n.Use(negroni.NewLogger())
 		n.UseHandler(handler)
 		handler = http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			n.ServeHTTP(rw, req)
@@ -5305,10 +5305,8 @@ func streamEvents(rw http.ResponseWriter, events []*models.IoK8sApimachineryPkgA
 	}
 	e := json.NewEncoder(fw)
 
-	// TODO : remove this
-	// This is here so kubernetes stops logging about short watches
 	if len(events) == 0 {
-		time.Sleep(1 * time.Second)
+		http.Error(rw, "Gone", http.StatusGone)
 	}
 
 	for _, event := range events {
