@@ -1,6 +1,10 @@
 package broker
 
 import (
+	"fmt"
+	"reflect"
+
+	"github.com/mitchellh/mapstructure"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
@@ -146,8 +150,22 @@ func InitResources() {
 	}
 }
 
-func AddEvent(event *models.IoK8sApimachineryPkgApisMetaV1WatchEvent) {
-	events = append(events, event)
+// TODO : there are issues with that function : objects are not really copied over
+func AddEvent(eventType *string, object interface{}) {
+	v := reflect.ValueOf(object)
+	for v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	object = v.Interface()
+
+	var objectDeepCopy interface{}
+	if err := mapstructure.Decode(object, &objectDeepCopy); err != nil {
+		panic(fmt.Sprintf("Error while copying %T to add to event list: %s", object, err))
+	}
+	events = append(events, &models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
+		Type:   eventType,
+		Object: objectDeepCopy,
+	})
 }
 
 func GetEvents() []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {

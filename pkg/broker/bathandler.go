@@ -27,10 +27,7 @@ func handleBatMessage(msg translate.BatMessage) {
 
 			// Add events to event list
 			for _, node := range NodeList.Items {
-				AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
-					Type:   &translate.Added,
-					Object: node,
-				})
+				AddEvent(&translate.Added, *node)
 			}
 
 			var nodeList []string
@@ -59,10 +56,7 @@ func handleBatMessage(msg translate.BatMessage) {
 			log.Infof("[broker:bathandler] pod %s is ready to be scheduled", pod.Metadata.Name)
 
 			// Add to event list
-			AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
-				Type:   &translate.Added,
-				Object: pod,
-			})
+			AddEvent(&translate.Added, pod)
 
 		case "NOTIFY":
 			log.Debugf("[broker:bathandler] Got notify : %s", spew.Sdump(event))
@@ -85,14 +79,23 @@ func handleBatMessage(msg translate.BatMessage) {
 				res, _, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
 				pod.Status.Phase = "Succeeded"
+				nodeName := pod.Spec.NodeName
 				pod.Spec.NodeName = ""
-				deletionTime := models.IoK8sApimachineryPkgApisMetaV1Time(translate.BatsimNowToTime(msg.Now))
-				pod.Metadata.DeletionTimestamp = &deletionTime
+				currentTime := translate.BatsimNowToMetaV1Time(msg.Now)
+				pod.Metadata.DeletionTimestamp = &currentTime
 				IncrementResourceVersion(pod.Metadata)
-				AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
-					Type:   &translate.Modified,
-					Object: pod,
-				})
+				AddEvent(&translate.Modified, *pod)
+
+				nodeInterface, _, _ := GetResource(&nodeName, nil, NodeList)
+				node := nodeInterface.(*models.IoK8sAPICoreV1Node)
+				for _, condition := range node.Status.Conditions {
+					if *condition.Type == "Ready" {
+						condition.LastHeartbeatTime = &currentTime
+						break
+					}
+				}
+				IncrementResourceVersion(node.Metadata)
+				AddEvent(&translate.Modified, *node)
 
 				// Remove the pod from the pod list
 				//AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{

@@ -19,10 +19,12 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 		scheduler = prof.Specs["scheduler"].(string)
 	}
 
+	readyConditionType := "Ready"
+	trueConditionStatus := "True"
 	switch prof.Type {
 	case "delay":
 		containerName := "sleep"
-		jobSubtime := models.IoK8sApimachineryPkgApisMetaV1Time(BatsimNowToTime(job.Subtime))
+		jobSubtime := BatsimNowToMetaV1Time(job.Subtime)
 		pod = models.IoK8sAPICoreV1Pod{
 			Kind:       "Pod",
 			APIVersion: "v1",
@@ -49,6 +51,12 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 			},
 			Status: &models.IoK8sAPICoreV1PodStatus{
 				Phase: "Pending",
+				Conditions: []*models.IoK8sAPICoreV1PodCondition{
+					{
+						Type:   &readyConditionType,
+						Status: &trueConditionStatus,
+					},
+				},
 			},
 		}
 

@@ -456,10 +456,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			broker.IncrementResourceVersion(pod.Metadata)
 
 			// Add modified event and let the broker know there is a pod to be executed
-			broker.AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
-				Type:   &translate.Modified,
-				Object: pod,
-			})
+			broker.AddEvent(&translate.Modified, *pod)
 			broker.ToExecute <- pod
 
 			success(rw, p)
