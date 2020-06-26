@@ -5270,7 +5270,7 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	// TODO read from env variables
-	debug := false
+	debug := true
 	if debug {
 		n := negroni.New()
 		n.Use(negronilogrus.NewMiddleware())
@@ -5280,6 +5280,7 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 			n.ServeHTTP(rw, req)
 		})
 	}
+
 	return handler
 }
 

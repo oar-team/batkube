@@ -22,12 +22,12 @@ const nonEmpty = 1 << 1
 // 	than timeoutValue
 // 	- OR if the Events slice is not empty.
 var sendMessageCondition = nonEmpty | timeout
-var timeoutValue = 400 * time.Millisecond
+var timeoutValue = 300 * time.Millisecond
 
 // Minimal amount of time to wait for messages from the scheduler.
 // Not having a minimal amount of waiting time leads to incorrect behavior from
 // the scheduler, for it needs a bit of time to send all its time requests.
-var minimalWaitDelay = 200 * time.Millisecond
+var minimalWaitDelay = 50 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -221,8 +221,13 @@ func Run(batEndpoint string) {
 				batMsg.Events = append(batMsg.Events, event)
 				lastMessageTime = time.Now()
 			case pod := <-ToExecute: // Jobs sent over by the api
+				if pod.Status.Phase == "Running" {
+					// This is an error. It means that the pod was binded twice.
+					continue
+				}
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
+				pod.Status.Phase = "Running"
 				if err != nil {
 					log.Panic("Failed to create event:", err)
 				}

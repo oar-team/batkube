@@ -76,35 +76,33 @@ func handleBatMessage(msg translate.BatMessage) {
 			case "COMPLETED_SUCCESSFULLY":
 				unfinishedJobs--
 				podName := translate.GetPodNameFromJobId(jobCompleted.JobId)
-				res, _, _ := GetResource(&podName, nil, PodList)
+				res, i, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
+				//fmt.Printf("got pod %s ", pod.Metadata.Name)
 				pod.Status.Phase = "Succeeded"
-				nodeName := pod.Spec.NodeName
+				//nodeName := pod.Spec.NodeName
+				//fmt.Printf("on node %s ", nodeName)
 				pod.Spec.NodeName = ""
 				currentTime := translate.BatsimNowToMetaV1Time(msg.Now)
 				pod.Metadata.DeletionTimestamp = &currentTime
 				IncrementResourceVersion(pod.Metadata)
-				AddEvent(&translate.Modified, *pod)
 
-				nodeInterface, _, _ := GetResource(&nodeName, nil, NodeList)
-				node := nodeInterface.(*models.IoK8sAPICoreV1Node)
-				for _, condition := range node.Status.Conditions {
-					if *condition.Type == "Ready" {
-						condition.LastHeartbeatTime = &currentTime
-						break
-					}
-				}
-				IncrementResourceVersion(node.Metadata)
-				AddEvent(&translate.Modified, *node)
+				//nodeInterface, _, _ := GetResource(&nodeName, nil, NodeList)
+				//node := nodeInterface.(*models.IoK8sAPICoreV1Node)
+				//for _, condition := range node.Status.Conditions {
+				//	if *condition.Type == "Ready" {
+				//		condition.LastHeartbeatTime = &currentTime
+				//		break
+				//	}
+				//}
+				//IncrementResourceVersion(node.Metadata)
+				//AddEvent(&translate.Modified, *node)
 
 				// Remove the pod from the pod list
-				//AddEvent(&models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
-				//	Type:   &translate.Deleted,
-				//	Object: pod,
-				//})
-				//n := len(PodList.Items)
-				//PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
-				//PodList.Items = PodList.Items[:n-1]
+				AddEvent(&translate.Deleted, pod)
+				n := len(PodList.Items)
+				PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
+				PodList.Items = PodList.Items[:n-1]
 				log.Infof("[broker:bathandler] pod %s completed successfully", podName)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)

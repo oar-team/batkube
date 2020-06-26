@@ -37,7 +37,7 @@
         "delay10": {
             "type": "delay",
             "delay": 10,
-	    "scheduler": "random-scheduler"
+	    "scheduler": "default"
         }
     }
 }

@@ -65,49 +65,49 @@ func InitResources() {
 		APIVersion: "policy/v1beta1",
 		Items:      []*models.IoK8sAPIPolicyV1beta1PodDisruptionBudget{},
 	}
-	createAPIResource("policy/v1beta1", "poddisruptionbudgets", "PodDisruptionBudget", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
+	//createAPIResource("policy/v1beta1", "poddisruptionbudgets", "PodDisruptionBudget", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	StorageClassList = models.IoK8sAPIStorageV1StorageClassList{
 		Kind:       "StorageClassList",
 		APIVersion: "storage.k8s.io/v1",
 		Items:      []*models.IoK8sAPIStorageV1StorageClass{},
 	}
-	createAPIResource("storage.k8s.io/v1", "storageclasses", "StorageClass", false, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
+	//createAPIResource("storage.k8s.io/v1", "storageclasses", "StorageClass", false, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	CSINodeList = models.IoK8sAPIStorageV1CSINodeList{
 		Kind:       "CSINodeList",
 		APIVersion: "storage.k8s.io/v1",
 		Items:      []*models.IoK8sAPIStorageV1CSINode{},
 	}
-	createAPIResource("storage.k8s.io/v1", "csinodes", "CSINode", false, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
+	//createAPIResource("storage.k8s.io/v1", "csinodes", "CSINode", false, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	PersistentVolumeClaimList = models.IoK8sAPICoreV1PersistentVolumeClaimList{
 		Kind:       "PersistentVolumeClaimList",
 		APIVersion: "v1",
 		Items:      []*models.IoK8sAPICoreV1PersistentVolumeClaim{},
 	}
-	createAPIResource("v1", "persistentvolumeclaims", "PersistentVolumeClaim", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
+	//createAPIResource("v1", "persistentvolumeclaims", "PersistentVolumeClaim", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	PersistentVolumeList = models.IoK8sAPICoreV1PersistentVolumeList{
 		Kind:       "PersistentVolumeList",
 		APIVersion: "v1",
 		Items:      []*models.IoK8sAPICoreV1PersistentVolume{},
 	}
-	createAPIResource("v1", "persistentvolume", "PersistentVolume", false, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
+	//createAPIResource("v1", "persistentvolume", "PersistentVolume", false, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	ServiceList = models.IoK8sAPICoreV1ServiceList{
 		Kind:       "ServiceList",
 		APIVersion: "v1",
 		Items:      []*models.IoK8sAPICoreV1Service{},
 	}
-	createAPIResource("v1", "services", "Service", true, []string{create, deleteVerb, get, list, patch, update, watch})
+	//createAPIResource("v1", "services", "Service", true, []string{create, deleteVerb, get, list, patch, update, watch})
 	EndpointsList = models.IoK8sAPICoreV1EndpointsList{
 		Kind:       "EndpointsList",
 		APIVersion: "v1",
 		Items:      []*models.IoK8sAPICoreV1Endpoints{},
 	}
-	createAPIResource("v1", "endpoints", "Endpoints", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
+	//createAPIResource("v1", "endpoints", "Endpoints", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	LeaseList = models.IoK8sAPICoordinationV1LeaseList{
 		Kind:       "LeaseList",
 		APIVersion: "coordination.k8s.io/v1",
 		Items:      []*models.IoK8sAPICoordinationV1Lease{},
 	}
-	createAPIResource("coordination.k8s.io/v1", "leases", "Lease", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
+	//createAPIResource("coordination.k8s.io/v1", "leases", "Lease", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	CoreV1EventList = models.IoK8sAPICoreV1EventList{
 		Kind:       "EventList",
 		APIVersion: "v1",
@@ -122,9 +122,9 @@ func InitResources() {
 	createAPIResource("events.k8s.io/v1beta1", "events", "Event", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 
 	// Made this loop to factorize a bit. It is still hard coded, though
-	APIGroupsMap["policy"] = []string{"v1beta1"}
-	APIGroupsMap["storage.k8s.io"] = []string{"v1"}
-	APIGroupsMap["coordination.k8s.io"] = []string{"v1"}
+	//APIGroupsMap["policy"] = []string{"v1beta1"}
+	//APIGroupsMap["storage.k8s.io"] = []string{"v1"}
+	//APIGroupsMap["coordination.k8s.io"] = []string{"v1"}
 	APIGroupsMap["events.k8s.io"] = []string{"v1beta1"}
 	APIGroupList = models.IoK8sApimachineryPkgApisMetaV1APIGroupList{
 		Kind:       "APIGroupList",

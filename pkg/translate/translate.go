@@ -87,9 +87,9 @@ func ComputeResourcesToNodes(simData SimulationBeginsData) (error, []*models.IoK
 		capacity["memory"] = memory
 		capacity["cpu"] = core
 		var pods = "1"
-		if simData.AllowComputeSharing {
-			pods = "110"
-		}
+		//if simData.AllowComputeSharing {
+		//	pods = "110"
+		//}
 		capacity["pods"] = models.IoK8sApimachineryPkgAPIResourceQuantity(pods)
 
 		var node models.IoK8sAPICoreV1Node = models.IoK8sAPICoreV1Node{
