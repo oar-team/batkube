@@ -155,9 +155,9 @@
     "profiles": {
         "delay10": {
             "type": "delay",
-            "delay": 10,
+            "delay": 50,
 	    "scheduler": "default",
-	    "cpu": "1"
+	    "cpu": "4"
         }
     }
 }
