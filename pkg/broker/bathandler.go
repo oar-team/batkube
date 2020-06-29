@@ -8,9 +8,11 @@ import (
 )
 
 func handleBatMessage(msg translate.BatMessage) {
+	expectedEmptyResponse = false
 	for _, event := range msg.Events {
 		switch event.Type {
 		case "SIMULATION_BEGINS":
+			expectedEmptyResponse = true
 			log.Debugln("[broker:bathandler] Deserializing SIMULATION_BEGINS event")
 			if err := translate.DeserializeSimulationBegins(event.Data, &simData); err != nil {
 				log.Panic("[broker:bathandler] Error deserializing SIMULATION_BEGINS event: ", err)
@@ -59,12 +61,14 @@ func handleBatMessage(msg translate.BatMessage) {
 			AddEvent(&translate.Added, pod)
 
 		case "NOTIFY":
+			expectedEmptyResponse = true
 			log.Debugf("[broker:bathandler] Got notify : %s", spew.Sdump(event))
 			if event.Data["type"] == "no_more_static_job_to_submit" {
 				noMoreJobs = true
 			}
 
 		case "JOB_COMPLETED":
+			expectedEmptyResponse = true
 			log.Debugln("[broker:bathandler] Deserializing JOB_COMPLETED event")
 			var jobCompleted translate.JobCompletedData
 			if err := translate.DeserializeJobCompleted(event.Data, &jobCompleted); err != nil {
@@ -103,15 +107,17 @@ func handleBatMessage(msg translate.BatMessage) {
 				n := len(PodList.Items)
 				PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
 				PodList.Items = PodList.Items[:n-1]
-				log.Infof("[broker:bathandler] pod %s completed successfully", podName)
+				log.Infof("[broker:bathandler] pod %s completed successfully %d left to execute", podName, unfinishedJobs)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)
 
 			}
 
 		case "REQUESTED_CALL":
+			callMeLaters--
 
 		case "SIMULATION_ENDS":
+			expectedEmptyResponse = true
 			log.Infoln("[broker:bathandler] Bye bye")
 			// TODO : gracefully shutdown the server
 

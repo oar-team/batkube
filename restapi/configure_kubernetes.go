@@ -5,7 +5,6 @@ package restapi
 import (
 	"bytes"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -5270,7 +5269,7 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	// TODO read from env variables
-	debug := true
+	debug := false
 	if debug {
 		n := negroni.New()
 		n.Use(negronilogrus.NewMiddleware())
@@ -5300,22 +5299,23 @@ func (fw *flushWriter) Write(p []byte) (n int, err error) {
 }
 
 func streamEvents(rw http.ResponseWriter, events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent) {
-	fw := &flushWriter{
-		f: rw.(http.Flusher),
-		w: rw,
-	}
-	e := json.NewEncoder(fw)
+	//fw := &flushWriter{
+	//	f: rw.(http.Flusher),
+	//	w: rw,
+	//}
+	//e := json.NewEncoder(fw)
 
-	if len(events) == 0 {
-		http.Error(rw, "Gone", http.StatusGone)
-	}
+	return
+	//if len(events) == 0 {
+	//	http.Error(rw, "Gone", http.StatusGone)
+	//}
 
-	for _, event := range events {
-		err := e.Encode(event)
-		if err != nil {
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-		}
-	}
+	//for _, event := range events {
+	//	err := e.Encode(event)
+	//	if err != nil {
+	//		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	//	}
+	//}
 }
 
 /*

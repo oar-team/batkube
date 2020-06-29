@@ -20,23 +20,39 @@ const nonEmpty = 1 << 1
 // stopWaitingForMessages = nonEmpty | timeout will stop waiting for messages if
 // 	- the waiting time since the last message from the scheduler is higher
 // 	than timeoutValue
-// 	- OR if the Events slice is not empty.
+// 	- OR if the Events slice contained in the response is not empty.
 var sendMessageCondition = nonEmpty | timeout
-var timeoutValue = 300 * time.Millisecond
+var timeoutValue = 200 * time.Millisecond
 
-// Minimal amount of time to wait for messages from the scheduler.
-// Not having a minimal amount of waiting time leads to incorrect behavior from
-// the scheduler, for it needs a bit of time to send all its time requests.
-var minimalWaitDelay = 50 * time.Millisecond
+// Minimal amount of time to wait for messages from the scheduler.  Not having
+// a minimal amount of waiting time leads to incorrect behavior from the
+// scheduler. Most of the time, it gets stuck, though I am not sure why.
+var minimalWaitDelay = 10 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
 
-// Number of jobs left runinning or pending.
+// Number of pods in running or pending status.
 var unfinishedJobs int
 
-// It is possible that batsim and batkube are still exchanging but the
-// simulation actually ended. This variable tells us the difference.
+// Number of unanswered call_me_later events. If that number reached zero and
+// an empty response is not excepted, batkube should not reply with an empty
+// message.
+var callMeLaters int
+
+// It is ok to send empty messages (that is to say, with an empty event list)
+// upon reception of certain events from batsim as Batsim will not error out on those.
+// Those events are :
+// - SIMULATION_BEGINS
+// - NOTIFY
+// - JOB_COMPLETED
+// - SIMULATION_ENDS
+//
+// Note that empty messages may still be sent for the other types if the
+// callMeLaters count is above 0, as Batsim will not error out on this case.
+var expectedEmptyResponse bool
+
+// Batkube received a SIMULATION_ENDS event.
 var receivedSimulationEnded bool
 
 /*
@@ -235,15 +251,21 @@ func Run(batEndpoint string) {
 				log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
 				lastMessageTime = time.Now()
 			default:
+				// Wait at least minimalWaitDelay
 				if time.Now().Sub(loopStartTime) < minimalWaitDelay {
+					continue
+				}
+				// If Batsim has no pending requested calls and a response is expected,
+				// do not send an empty message
+				if len(batMsg.Events) == 0 && callMeLaters == 0 && !expectedEmptyResponse {
 					continue
 				}
 				if sendMessageCondition&nonEmpty != 0 {
 					if len(batMsg.Events) > 0 && !lastMessageWasEmpty {
 						removeOutdatedEvents(&batMsg)
-						if len(batMsg.Events) > 0 {
-							stopReceivingEvents = true
-						}
+					}
+					if len(batMsg.Events) > 0 {
+						stopReceivingEvents = true
 					}
 				}
 				if sendMessageCondition&timeout != 0 {
@@ -269,6 +291,8 @@ func Run(batEndpoint string) {
 			}
 		}
 
+		countCallMeLaters(batMsg)
+
 		batMsgBytes, err = json.Marshal(batMsg)
 		if err != nil {
 			log.Panicln("Error in message merging: " + err.Error())
@@ -280,6 +304,17 @@ func Run(batEndpoint string) {
 		//log.Infoln("[broker] Broker -> Batsim:\n", string(batMsgBytes))
 	}
 	log.Infoln("[broker] Simulation finished successfully!")
+}
+
+// Counting the amount of unanswered call_me_laters can be done on the go,
+// without a separate function, but it is done this was to simplify the code.
+// This counter is decremented upon reception of REQUESTED_CALLs (in bathandler)
+func countCallMeLaters(batMsg translate.BatMessage) {
+	for _, event := range batMsg.Events {
+		if event.Type == "CALL_ME_LATER" {
+			callMeLaters++
+		}
+	}
 }
 
 // Sync with handleTimeRequests
