@@ -5,6 +5,7 @@ package restapi
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -455,7 +456,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			broker.IncrementResourceVersion(pod.Metadata)
 
 			// Add modified event and let the broker know there is a pod to be executed
-			broker.AddEvent(&translate.Modified, *pod)
+			broker.AddEvent(&translate.Modified, pod)
 			broker.ToExecute <- pod
 
 			success(rw, p)
@@ -468,6 +469,18 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 
 	// Nodes
+	api.CoreV1ReadCoreV1NodeHandler = core_v1.ReadCoreV1NodeHandlerFunc(func(params core_v1.ReadCoreV1NodeParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			node, _, err := broker.GetResource(&params.Name, nil, broker.NodeList)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if err := p.Produce(rw, node); err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+			}
+		})
+	})
 	api.CoreV1ListCoreV1NodeHandler = core_v1.ListCoreV1NodeHandlerFunc(func(params core_v1.ListCoreV1NodeParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Node", &broker.NodeList, rw, p)
@@ -3518,11 +3531,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation core_v1.ReadCoreV1NamespacedServiceStatus has not yet been implemented")
 		})
 	}
-	if api.CoreV1ReadCoreV1NodeHandler == nil {
-		api.CoreV1ReadCoreV1NodeHandler = core_v1.ReadCoreV1NodeHandlerFunc(func(params core_v1.ReadCoreV1NodeParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ReadCoreV1Node has not yet been implemented")
-		})
-	}
 	if api.CoreV1ReadCoreV1NodeStatusHandler == nil {
 		api.CoreV1ReadCoreV1NodeStatusHandler = core_v1.ReadCoreV1NodeStatusHandlerFunc(func(params core_v1.ReadCoreV1NodeStatusParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ReadCoreV1NodeStatus has not yet been implemented")
@@ -5299,23 +5307,22 @@ func (fw *flushWriter) Write(p []byte) (n int, err error) {
 }
 
 func streamEvents(rw http.ResponseWriter, events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent) {
-	//fw := &flushWriter{
-	//	f: rw.(http.Flusher),
-	//	w: rw,
-	//}
-	//e := json.NewEncoder(fw)
+	fw := &flushWriter{
+		f: rw.(http.Flusher),
+		w: rw,
+	}
+	e := json.NewEncoder(fw)
 
-	return
 	//if len(events) == 0 {
 	//	http.Error(rw, "Gone", http.StatusGone)
 	//}
 
-	//for _, event := range events {
-	//	err := e.Encode(event)
-	//	if err != nil {
-	//		http.Error(rw, err.Error(), http.StatusInternalServerError)
-	//	}
-	//}
+	for _, event := range events {
+		err := e.Encode(event)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+		}
+	}
 }
 
 /*

@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -479,4 +480,19 @@ func IncrementResourceVersion(meta *models.IoK8sApimachineryPkgApisMetaV1ObjectM
 		log.Panic(err)
 	}
 	meta.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
+}
+
+/*
+Naive deepcopy function, before getting real ones
+*/
+func DeepCopy(input, output interface{}) error {
+	b, err := json.Marshal(input)
+	if err != nil {
+		return errors.New(fmt.Sprintf("error while marshaling %T: %s", input, err))
+	}
+	err = json.Unmarshal(b, output)
+	if err != nil {
+		return errors.New(fmt.Sprintf("error while unmarshaling into a %T: %s", output, err))
+	}
+	return nil
 }

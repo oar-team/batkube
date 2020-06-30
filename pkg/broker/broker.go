@@ -101,21 +101,22 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 			seen = append(seen, d)
 
 			requested := addAndRound(nowValue, time.Duration(d))
-			// TODO : can the contrary ever happen? What to do if it happens?
-			if requested > nowValue {
-				err, callMeLater := translate.MakeEvent(nowValue, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: requested})
-				if err != nil {
-					log.Panic("Failed to create event:", err)
-				}
-				// Non blocking send. Select isn't used to make sure it is actually sent.
-				go func() {
-					events <- callMeLater
-				}()
+			if requested < nowValue {
+				panic("Requested a timer prior of current time")
 			}
+
+			err, callMeLater := translate.MakeEvent(nowValue, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: requested})
+			if err != nil {
+				log.Panic("Failed to create event:", err)
+			}
+			// Non blocking send. Select isn't used to make sure it is actually sent.
+			go func() {
+				events <- callMeLater
+			}()
 		}
 
 		// Answer the time requests
-		nowNano := uint64(nowValue * 1e9)
+		nowNano := uint64(nowValue*1e9) + 1
 		b := make([]byte, 8)
 		binary.LittleEndian.PutUint64(b, nowNano)
 		_, err = timeSock.SendBytes(b, 0)
@@ -226,7 +227,8 @@ func Run(batEndpoint string) {
 		for !stopReceivingEvents {
 			updateNow(now, batMsg)
 			select {
-			case event := <-timeEvents: // Call me later events from time requests
+			case event := <-timeEvents:
+				// Call me later events from time requests
 				// Note : rounding and adding to now value each
 				// time is not very precise. Errors due to
 				// rounded values add up over the many
@@ -237,13 +239,15 @@ func Run(batEndpoint string) {
 				batMsg.Events = append(batMsg.Events, event)
 				lastMessageTime = time.Now()
 			case pod := <-ToExecute: // Jobs sent over by the api
-				if pod.Status.Phase == "Running" {
-					// This is an error. It means that the pod was binded twice.
-					continue
-				}
+				//if pod.Status.Phase == "Running" {
+				//	// This is an error. It means that the pod was binded twice.
+				//	continue
+				//}
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
 				pod.Status.Phase = "Running"
+				IncrementResourceVersion(pod.Metadata)
+				AddEvent(&translate.Modified, pod)
 				if err != nil {
 					log.Panic("Failed to create event:", err)
 				}
@@ -251,6 +255,7 @@ func Run(batEndpoint string) {
 				log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
 				lastMessageTime = time.Now()
 			default:
+				elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
 				// Wait at least minimalWaitDelay
 				if time.Now().Sub(loopStartTime) < minimalWaitDelay {
 					continue
@@ -269,7 +274,6 @@ func Run(batEndpoint string) {
 					}
 				}
 				if sendMessageCondition&timeout != 0 {
-					elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
 					if elapsedSinceLastMessage >= timeoutValue {
 						removeOutdatedEvents(&batMsg)
 						stopReceivingEvents = true

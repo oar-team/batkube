@@ -308,8 +308,7 @@
             "type": "delay",
             "delay": 10,
 	    "scheduler": "default",
-	    "cpu": "1"
-
+	    "cpu": "4"
         }
     }
 }

@@ -107,7 +107,8 @@
         "delay10": {
             "type": "delay",
             "delay": 100,
-	    "scheduler": "default"
+	    "scheduler": "default",
+	    "cpu": "4000m"
         }
     }
 }

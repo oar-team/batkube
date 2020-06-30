@@ -29,7 +29,7 @@ func handleBatMessage(msg translate.BatMessage) {
 
 			// Add events to event list
 			for _, node := range NodeList.Items {
-				AddEvent(&translate.Added, *node)
+				AddEvent(&translate.Added, node)
 			}
 
 			var nodeList []string
@@ -58,7 +58,7 @@ func handleBatMessage(msg translate.BatMessage) {
 			log.Infof("[broker:bathandler] pod %s is ready to be scheduled", pod.Metadata.Name)
 
 			// Add to event list
-			AddEvent(&translate.Added, pod)
+			AddEvent(&translate.Added, &pod)
 
 		case "NOTIFY":
 			expectedEmptyResponse = true
@@ -82,32 +82,22 @@ func handleBatMessage(msg translate.BatMessage) {
 				podName := translate.GetPodNameFromJobId(jobCompleted.JobId)
 				res, i, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
-				//fmt.Printf("got pod %s ", pod.Metadata.Name)
+
 				pod.Status.Phase = "Succeeded"
-				//nodeName := pod.Spec.NodeName
-				//fmt.Printf("on node %s ", nodeName)
 				pod.Spec.NodeName = ""
+				IncrementResourceVersion(pod.Metadata)
+				AddEvent(&translate.Modified, pod)
+
 				currentTime := translate.BatsimNowToMetaV1Time(msg.Now)
 				pod.Metadata.DeletionTimestamp = &currentTime
 				IncrementResourceVersion(pod.Metadata)
-
-				//nodeInterface, _, _ := GetResource(&nodeName, nil, NodeList)
-				//node := nodeInterface.(*models.IoK8sAPICoreV1Node)
-				//for _, condition := range node.Status.Conditions {
-				//	if *condition.Type == "Ready" {
-				//		condition.LastHeartbeatTime = &currentTime
-				//		break
-				//	}
-				//}
-				//IncrementResourceVersion(node.Metadata)
-				//AddEvent(&translate.Modified, *node)
+				AddEvent(&translate.Deleted, pod)
 
 				// Remove the pod from the pod list
-				AddEvent(&translate.Deleted, pod)
 				n := len(PodList.Items)
 				PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
 				PodList.Items = PodList.Items[:n-1]
-				log.Infof("[broker:bathandler] pod %s completed successfully %d left to execute", podName, unfinishedJobs)
+				log.Infof("[broker:bathandler] pod %s completed successfully. %d left to execute", podName, unfinishedJobs)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)
 
