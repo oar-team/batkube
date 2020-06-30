@@ -2,7 +2,6 @@ package broker
 
 import (
 	"fmt"
-	"reflect"
 
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
@@ -52,12 +51,14 @@ func InitResources() {
 		Kind:       "NodeList",
 		APIVersion: "v1",
 		Items:      []*models.IoK8sAPICoreV1Node{},
+		Metadata:   &models.IoK8sApimachineryPkgApisMetaV1ListMeta{},
 	}
 	createAPIResource("v1", "nodes", "Node", false, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	PodList = models.IoK8sAPICoreV1PodList{
 		Kind:       "PodList",
 		APIVersion: "v1",
 		Items:      []*models.IoK8sAPICoreV1Pod{},
+		Metadata:   &models.IoK8sApimachineryPkgApisMetaV1ListMeta{},
 	}
 	createAPIResource("v1", "pods", "Pod", true, []string{create, deleteVerb, deletecollection, get, list, patch, update, watch})
 	PodDisruptionBudgetList = models.IoK8sAPIPolicyV1beta1PodDisruptionBudgetList{
@@ -150,10 +151,10 @@ func InitResources() {
 }
 
 func AddEvent(eventType *string, object interface{}) {
-	v := reflect.ValueOf(object)
-	if v.Kind() != reflect.Ptr {
-		object = v.Addr().Interface()
-	}
+	//v := reflect.ValueOf(object)
+	//if v.Kind() != reflect.Ptr {
+	//	object = v.Addr().Interface()
+	//}
 
 	// Hard coded, temporary solution to the deepcopy problem
 	switch object.(type) {
@@ -168,6 +169,24 @@ func AddEvent(eventType *string, object interface{}) {
 		})
 	case *models.IoK8sAPICoreV1Node:
 		var objectCopy models.IoK8sAPICoreV1Node
+		if err := DeepCopy(object, &objectCopy); err != nil {
+			panic(fmt.Sprintf("Error while adding event to EventList : %s", err))
+		}
+		events = append(events, &models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
+			Type:   eventType,
+			Object: objectCopy,
+		})
+	case *models.IoK8sAPICoreV1NodeList:
+		var objectCopy models.IoK8sAPICoreV1NodeList
+		if err := DeepCopy(object, &objectCopy); err != nil {
+			panic(fmt.Sprintf("Error while adding event to EventList : %s", err))
+		}
+		events = append(events, &models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
+			Type:   eventType,
+			Object: objectCopy,
+		})
+	case *models.IoK8sAPICoreV1PodList:
+		var objectCopy models.IoK8sAPICoreV1PodList
 		if err := DeepCopy(object, &objectCopy); err != nil {
 			panic(fmt.Sprintf("Error while adding event to EventList : %s", err))
 		}

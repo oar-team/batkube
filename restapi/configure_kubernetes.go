@@ -451,6 +451,12 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				return
 			}
 			pod.Spec.NodeName = params.Body.Target.Name
+			status := "true"
+			conditionType := "PodScheduled"
+			pod.Status.Conditions = append(pod.Status.Conditions, &models.IoK8sAPICoreV1PodCondition{
+				Status: &status,
+				Type:   &conditionType,
+			})
 
 			// Increment resource version
 			broker.IncrementResourceVersion(pod.Metadata)

@@ -54,6 +54,8 @@ func handleBatMessage(msg translate.BatMessage) {
 				log.Panic("[broker:bathandler] error translating a job to a pod: ", err)
 			}
 			PodList.Items = append(PodList.Items, &pod)
+			IncrementResourceVersion(PodList.Metadata)
+			AddEvent(&translate.Modified, PodList)
 			log.Tracef("pods : %s", spew.Sdump(PodList))
 			log.Infof("[broker:bathandler] pod %s is ready to be scheduled", pod.Metadata.Name)
 

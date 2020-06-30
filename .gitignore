@@ -8,3 +8,4 @@ report/master-project-blx.bib
 *.blg
 !examples
 expe-out/*
+Rplots.pdf

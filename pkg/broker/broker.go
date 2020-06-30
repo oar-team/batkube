@@ -25,8 +25,9 @@ var sendMessageCondition = nonEmpty | timeout
 var timeoutValue = 200 * time.Millisecond
 
 // Minimal amount of time to wait for messages from the scheduler.  Not having
-// a minimal amount of waiting time leads to incorrect behavior from the
-// scheduler. Most of the time, it gets stuck, though I am not sure why.
+// a minimal waiting time or having an insufficient minimal time leads to
+// incorrect behavior from the scheduler, which does not have enough time to
+// react.
 var minimalWaitDelay = 20 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
@@ -245,6 +246,8 @@ func Run(batEndpoint string) {
 				//}
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
+
+				// Update pod status
 				pod.Status.Phase = "Running"
 				IncrementResourceVersion(pod.Metadata)
 				AddEvent(&translate.Modified, pod)
