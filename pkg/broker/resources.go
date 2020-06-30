@@ -229,3 +229,17 @@ func AddEvent(eventType *string, object interface{}) {
 func GetEvents() []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	return events
 }
+
+func UpdateProbeAndHeartbeatTimes(now float64) {
+	currentTime := translate.BatsimNowToMetaV1Time(now)
+	for _, pod := range PodList.Items {
+		for _, condition := range pod.Status.Conditions {
+			condition.LastProbeTime = &currentTime
+		}
+	}
+	for _, node := range NodeList.Items {
+		for _, condition := range node.Status.Conditions {
+			condition.LastHeartbeatTime = &currentTime
+		}
+	}
+}

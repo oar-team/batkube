@@ -28,7 +28,7 @@ var timeoutValue = 200 * time.Millisecond
 // a minimal waiting time or having an insufficient minimal time leads to
 // incorrect behavior from the scheduler, which does not have enough time to
 // react.
-var minimalWaitDelay = 20 * time.Millisecond
+var minimalWaitDelay = 50 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -197,6 +197,7 @@ func Run(batEndpoint string) {
 		}
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
 		updateNow(now, batMsg)
+		UpdateProbeAndHeartbeatTimes(batMsg.Now)
 
 		// Sending an mepty message as a response to an empty message
 		// makes Batsim erorr out. We want to avoid this.

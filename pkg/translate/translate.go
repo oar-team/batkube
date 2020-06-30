@@ -66,8 +66,9 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 				Phase: "Pending",
 				Conditions: []*models.IoK8sAPICoreV1PodCondition{
 					{
-						Type:   &readyConditionType,
-						Status: &trueConditionStatus,
+						Type:               &readyConditionType,
+						Status:             &trueConditionStatus,
+						LastTransitionTime: &jobSubtime,
 					},
 				},
 			},
@@ -116,8 +117,9 @@ func ComputeResourcesToNodes(simData SimulationBeginsData) (error, []*models.IoK
 					{
 						// Is the initial state of the
 						// resource always idle?
-						Type:   &readyConditionType,
-						Status: &trueConditionStatus,
+						Type:               &readyConditionType,
+						Status:             &trueConditionStatus,
+						LastTransitionTime: &models.IoK8sApimachineryPkgApisMetaV1Time{},
 					},
 				},
 				Capacity:    capacity,

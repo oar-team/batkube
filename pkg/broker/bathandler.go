@@ -87,6 +87,7 @@ func handleBatMessage(msg translate.BatMessage) {
 
 				pod.Status.Phase = "Succeeded"
 				pod.Spec.NodeName = ""
+				// TODO update conditions
 				IncrementResourceVersion(pod.Metadata)
 				AddEvent(&translate.Modified, pod)
 
