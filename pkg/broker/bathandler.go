@@ -69,6 +69,7 @@ func handleBatMessage(msg translate.BatMessage) {
 			}
 
 		case "JOB_COMPLETED":
+			expectedEmptyResponse = false
 			log.Debugln("[broker:bathandler] Deserializing JOB_COMPLETED event")
 			unfinishedJobs--
 			runningJobs--
@@ -110,6 +111,7 @@ func handleBatMessage(msg translate.BatMessage) {
 			callMeLaters--
 
 		case "SIMULATION_ENDS":
+			receivedSimulationEnded = true
 			log.Infoln("[broker:bathandler] Bye bye")
 			// TODO : gracefully shutdown the server
 

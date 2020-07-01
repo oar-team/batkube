@@ -472,6 +472,17 @@ func indirect(v reflect.Value) reflect.Value {
 }
 
 func IncrementResourceVersion(metadata interface{}) {
+	// Piece of code for experiments on resourceVersions
+
+	//PodList.Metadata.ResourceVersion = incrementStr(PodList.Metadata.ResourceVersion)
+	//NodeList.Metadata.ResourceVersion = incrementStr(NodeList.Metadata.ResourceVersion)
+	//for _, pod := range PodList.Items {
+	//	pod.Metadata.ResourceVersion = incrementStr(pod.Metadata.ResourceVersion)
+	//}
+	//for _, node := range NodeList.Items {
+	//	node.Metadata.ResourceVersion = incrementStr(node.Metadata.ResourceVersion)
+	//}
+
 	switch metadata.(type) {
 	case *models.IoK8sApimachineryPkgApisMetaV1ObjectMeta:
 		meta := metadata.(*models.IoK8sApimachineryPkgApisMetaV1ObjectMeta)
@@ -496,6 +507,17 @@ func IncrementResourceVersion(metadata interface{}) {
 	default:
 		panic(fmt.Sprintf("Unknown metadata type : %T", metadata))
 	}
+}
+
+func incrementStr(str string) string {
+	if str == "" {
+		return "1"
+	}
+	n, err := strconv.Atoi(str)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("%d", n+1)
 }
 
 /*
