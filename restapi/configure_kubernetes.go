@@ -463,7 +463,9 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 
 			// Add modified event and let the broker know there is a pod to be executed
 			broker.AddEvent(&translate.Modified, pod)
-			broker.ToExecute <- pod
+			go func() {
+				broker.ToExecute <- pod
+			}()
 
 			success(rw, p)
 		})

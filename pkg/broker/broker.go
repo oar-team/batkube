@@ -22,19 +22,33 @@ const nonEmpty = 1 << 1
 // 	than timeoutValue
 // 	- OR if the Events slice contained in the response is not empty.
 var sendMessageCondition = nonEmpty | timeout
-var timeoutValue = 200 * time.Millisecond
+var timeoutValue = 500 * time.Millisecond
+
+// Enable CALL_ME__LATER events. These events originate from timer requests
+// from the scheduler, allowing to fast forward in time
+var enableCallMeLaters bool = false
+
+// Enable time incremental increases. When waiting for a response from the
+// scheduler, increment the simulated time with a real time period defined by
+// incrementTimeStep
+var enableIncrementalTime bool = true
+var incrementTimeStep = 100 * time.Millisecond
+var incrementValue time.Duration = 1 * time.Millisecond
 
 // Minimal amount of time to wait for messages from the scheduler.  Not having
 // a minimal waiting time or having an insufficient minimal time leads to
 // incorrect behavior from the scheduler, which does not have enough time to
 // react.
-var minimalWaitDelay = 50 * time.Millisecond
+var minimalWaitDelay = 0 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
 
 // Number of pods in running or pending status.
 var unfinishedJobs int
+
+// Number of jobs that are still running
+var runningJobs int
 
 // Number of unanswered call_me_later events. If that number reached zero and
 // an empty response is not excepted, batkube should not reply with an empty
@@ -73,7 +87,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 	for !thisIsTheEnd {
 		// Get latest now value, if it is there
 		// Note : to make message passing between time, batkube and
-		// batsim synchronous again, make this a blocking receive.
+		// batsim completely synchronous, make this a blocking receive.
 		select {
 		case nowValue = <-now:
 		default:
@@ -89,31 +103,33 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 			panic("Could not unmarshal data:" + err.Error())
 		}
 
-		seen := make([]int64, 0)
-		for _, d := range durations {
-			if d <= 0 {
-				panic("Got a negative duration")
-			}
+		if enableCallMeLaters {
+			seen := make([]int64, 0)
+			for _, d := range durations {
+				if d <= 0 {
+					panic("Got a negative duration")
+				}
 
-			// remove duplicates
-			if isIn(d, seen) {
-				continue
-			}
-			seen = append(seen, d)
+				// remove duplicates
+				if isIn(d, seen) {
+					continue
+				}
+				seen = append(seen, d)
 
-			requested := addAndRound(nowValue, time.Duration(d))
-			if requested < nowValue {
-				panic("Requested a timer prior of current time")
-			}
+				requested := addAndRound(nowValue, time.Duration(d))
+				if requested < nowValue {
+					panic("Requested a timer prior of current time")
+				}
 
-			err, callMeLater := translate.MakeEvent(nowValue, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: requested})
-			if err != nil {
-				log.Panic("Failed to create event:", err)
+				err, callMeLater := translate.MakeEvent(nowValue, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: requested})
+				if err != nil {
+					log.Panic("Failed to create event:", err)
+				}
+				// Non blocking send. Select isn't used to make sure it is actually sent.
+				go func() {
+					events <- callMeLater
+				}()
 			}
-			// Non blocking send. Select isn't used to make sure it is actually sent.
-			go func() {
-				events <- callMeLater
-			}()
 		}
 
 		// Answer the time requests
@@ -197,7 +213,7 @@ func Run(batEndpoint string) {
 		}
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
 		updateNow(now, batMsg)
-		UpdateProbeAndHeartbeatTimes(batMsg.Now)
+		UpdateProbeAndHeartbeatTimes(batMsg.Now) // Notify that the resources are still alive
 
 		// Sending an mepty message as a response to an empty message
 		// makes Batsim erorr out. We want to avoid this.
@@ -226,6 +242,7 @@ func Run(batEndpoint string) {
 		lastMessageTime := time.Now()
 		stopReceivingEvents := false
 		loopStartTime := time.Now()
+		lastIncrement := time.Now()
 		for !stopReceivingEvents {
 			updateNow(now, batMsg)
 			select {
@@ -247,6 +264,7 @@ func Run(batEndpoint string) {
 				//}
 				batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 				err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
+				runningJobs++
 
 				// Update pod status
 				pod.Status.Phase = "Running"
@@ -260,15 +278,28 @@ func Run(batEndpoint string) {
 				lastMessageTime = time.Now()
 			default:
 				elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
+
+				if enableIncrementalTime && time.Now().Sub(lastIncrement) > incrementTimeStep {
+					batMsg.Now = addAndRound(batMsg.Now, incrementValue)
+					updateNow(now, batMsg)
+					lastIncrement = time.Now()
+				}
+
 				// Wait at least minimalWaitDelay
 				if time.Now().Sub(loopStartTime) < minimalWaitDelay {
 					continue
 				}
-				// If Batsim has no pending requested calls and a response is expected,
-				// do not send an empty message
-				if len(batMsg.Events) == 0 && callMeLaters == 0 && !expectedEmptyResponse {
+				// These conditions are here to prevent sending
+				// an empty message that would make Batsim
+				// error out
+				if len(batMsg.Events) == 0 &&
+					callMeLaters == 0 &&
+					runningJobs == 0 &&
+					unfinishedJobs > 0 &&
+					!expectedEmptyResponse {
 					continue
 				}
+				//fmt.Printf("len(events) %d; callMeLaters %d; unfinishedJobs %d; runningJobs %d\n", callMeLaters, unfinishedJobs, runningJobs, len(batMsg.Events))
 				if sendMessageCondition&nonEmpty != 0 {
 					if len(batMsg.Events) > 0 && !lastMessageWasEmpty {
 						removeOutdatedEvents(&batMsg)

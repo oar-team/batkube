@@ -8,11 +8,10 @@ import (
 )
 
 func handleBatMessage(msg translate.BatMessage) {
-	expectedEmptyResponse = false
+	expectedEmptyResponse = true
 	for _, event := range msg.Events {
 		switch event.Type {
 		case "SIMULATION_BEGINS":
-			expectedEmptyResponse = true
 			log.Debugln("[broker:bathandler] Deserializing SIMULATION_BEGINS event")
 			if err := translate.DeserializeSimulationBegins(event.Data, &simData); err != nil {
 				log.Panic("[broker:bathandler] Error deserializing SIMULATION_BEGINS event: ", err)
@@ -39,6 +38,7 @@ func handleBatMessage(msg translate.BatMessage) {
 			log.Infof("[broker:bathandler] Available nodes : %s", nodeList)
 
 		case "JOB_SUBMITTED":
+			expectedEmptyResponse = false
 			log.Debugln("[broker:bathandler] Deserializing JOB_SUBMITTED event")
 			unfinishedJobs++
 			var job translate.Job
@@ -63,15 +63,15 @@ func handleBatMessage(msg translate.BatMessage) {
 			AddEvent(&translate.Added, &pod)
 
 		case "NOTIFY":
-			expectedEmptyResponse = true
 			log.Debugf("[broker:bathandler] Got notify : %s", spew.Sdump(event))
 			if event.Data["type"] == "no_more_static_job_to_submit" {
 				noMoreJobs = true
 			}
 
 		case "JOB_COMPLETED":
-			expectedEmptyResponse = true
 			log.Debugln("[broker:bathandler] Deserializing JOB_COMPLETED event")
+			unfinishedJobs--
+			runningJobs--
 			var jobCompleted translate.JobCompletedData
 			if err := translate.DeserializeJobCompleted(event.Data, &jobCompleted); err != nil {
 				log.Panic("[broker:bathandler] Error deserializing JOB_COMPLETED event: ", err)
@@ -80,7 +80,6 @@ func handleBatMessage(msg translate.BatMessage) {
 
 			switch jobCompleted.JobState {
 			case "COMPLETED_SUCCESSFULLY":
-				unfinishedJobs--
 				podName := translate.GetPodNameFromJobId(jobCompleted.JobId)
 				res, i, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
@@ -107,10 +106,10 @@ func handleBatMessage(msg translate.BatMessage) {
 			}
 
 		case "REQUESTED_CALL":
+			expectedEmptyResponse = false
 			callMeLaters--
 
 		case "SIMULATION_ENDS":
-			expectedEmptyResponse = true
 			log.Infoln("[broker:bathandler] Bye bye")
 			// TODO : gracefully shutdown the server
 
