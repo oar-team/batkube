@@ -22,7 +22,7 @@ const nonEmpty = 1 << 1
 // 	than timeoutValue
 // 	- OR if the Events slice contained in the response is not empty.
 var sendMessageCondition = timeout
-var timeoutValue = 1000 * time.Millisecond
+var timeoutValue = 30 * time.Millisecond
 
 // Minimal amount of time to wait for messages from the scheduler.  Not having
 // a minimal waiting time or having an insufficient minimal time leads to
@@ -43,7 +43,7 @@ var enableCallMeLaters bool = true
 // created for experiment purposes.
 var enableIncrementalTime bool = false
 var incrementTimeStep = 1 * time.Millisecond
-var incrementValue = 1 * time.Millisecond
+var incrementValue = 10 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -89,7 +89,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 
 	thisIsTheEnd := false
 	for !thisIsTheEnd {
-		// Get latest now value, if it is there
+		// Get latest now value (if it is there).
 		// Note : to make message passing between time, batkube and
 		// batsim completely synchronous, make this a blocking receive.
 		select {
@@ -108,32 +108,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 		}
 
 		if enableCallMeLaters {
-			seen := make([]int64, 0)
-			for _, d := range durations {
-				if d <= 0 {
-					panic("Got a negative duration")
-				}
-
-				// remove duplicates
-				if isIn(d, seen) {
-					continue
-				}
-				seen = append(seen, d)
-
-				requested := addAndRound(nowValue, time.Duration(d))
-				if requested < nowValue {
-					panic("Requested a timer prior of current time")
-				}
-
-				err, callMeLater := translate.MakeEvent(nowValue, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: requested})
-				if err != nil {
-					log.Panic("Failed to create event:", err)
-				}
-				// Non blocking send. Select isn't used to make sure it is actually sent.
-				go func() {
-					events <- callMeLater
-				}()
-			}
+			processTimerRequests(nowValue, durations, events)
 		}
 
 		// Answer the time requests
@@ -158,6 +133,42 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 			thisIsTheEnd = true
 		default:
 		}
+	}
+}
+
+/*
+durations is an integer slice representing the durations of the timers
+requested by the scheduler. For each of these timers, this function emits a
+CALL_ME_LATER event to the events channel.
+*/
+func processTimerRequests(nowValue float64, durations []int64, events chan translate.Event) {
+	seen := make([]int64, 0)
+	for _, d := range durations {
+		if d <= 0 {
+			panic("Got a negative duration")
+		}
+
+		// remove duplicates
+		// TODO : do this in batsky-go to save some bytes in zmq
+		// exchanges.
+		if isIn(d, seen) {
+			continue
+		}
+		seen = append(seen, d)
+
+		requested := addAndRound(nowValue, time.Duration(d))
+		if requested < nowValue {
+			panic("Requested a timer prior of current time")
+		}
+
+		err, callMeLater := translate.MakeEvent(nowValue, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: requested})
+		if err != nil {
+			log.Panic("Failed to create event:", err)
+		}
+		// Non blocking send. Select isn't used to make sure it is actually sent.
+		go func() {
+			events <- callMeLater
+		}()
 	}
 }
 
