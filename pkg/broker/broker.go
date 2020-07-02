@@ -33,7 +33,7 @@ var minimalWaitDelay = 0 * time.Millisecond
 // Enable CALL_ME__LATER events. These events originate from timer requests
 // from the scheduler, allowing to fast forward in time to the next timestamp
 // where a timer is supposed to fire.
-var enableCallMeLaters bool = true
+var enableCallMeLaters bool = false
 
 // Enable time incremental increases. When waiting for a response from the
 // scheduler, increment the simulated time with a real time period defined by
@@ -41,7 +41,7 @@ var enableCallMeLaters bool = true
 // This could be useful in case there are hidden timers that wouldn't rely on
 // time.Timers or time.Tickers. This option shouldn't be useful, then. It was
 // created for experiment purposes.
-var enableIncrementalTime bool = false
+var enableIncrementalTime bool = true
 var incrementTimeStep = 1 * time.Millisecond
 var incrementValue = 10 * time.Millisecond
 
@@ -316,6 +316,9 @@ func Run(batEndpoint string) {
 		}
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
 		updateNow(now, batMsg)
+
+		//UpdateProbeAndHeartbeatTimes(batMsg.Now)
+		//IncrementAllResourceVersions()
 
 		// Handle the message
 		handleBatMessage(batMsg)

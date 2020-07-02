@@ -91,17 +91,6 @@ func UpdatePodStatusForScheduling(pod *models.IoK8sAPICoreV1Pod, now models.IoK8
 }
 
 func IncrementResourceVersion(metadata interface{}) {
-	// Piece of code for experiments on resourceVersions
-
-	//PodList.Metadata.ResourceVersion = incrementStr(PodList.Metadata.ResourceVersion)
-	//NodeList.Metadata.ResourceVersion = incrementStr(NodeList.Metadata.ResourceVersion)
-	//for _, pod := range PodList.Items {
-	//	pod.Metadata.ResourceVersion = incrementStr(pod.Metadata.ResourceVersion)
-	//}
-	//for _, node := range NodeList.Items {
-	//	node.Metadata.ResourceVersion = incrementStr(node.Metadata.ResourceVersion)
-	//}
-
 	switch metadata.(type) {
 	case *models.IoK8sApimachineryPkgApisMetaV1ObjectMeta:
 		meta := metadata.(*models.IoK8sApimachineryPkgApisMetaV1ObjectMeta)

@@ -83,7 +83,8 @@ func handleBatMessage(msg translate.BatMessage) {
 			switch jobCompleted.JobState {
 			case "COMPLETED_SUCCESSFULLY":
 				podName := translate.GetPodNameFromJobId(jobCompleted.JobId)
-				res, i, _ := GetResource(&podName, nil, PodList)
+				//res, i, _ := GetResource(&podName, nil, PodList)
+				res, _, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
 
 				//pod.Status.Phase = "Succeeded"
@@ -115,15 +116,14 @@ func handleBatMessage(msg translate.BatMessage) {
 				translate.IncrementResourceVersion(pod.Metadata)
 				AddEvent(&translate.Modified, pod)
 
-				currentTime := translate.BatsimNowToMetaV1Time(msg.Now)
-				pod.Metadata.DeletionTimestamp = &currentTime
-				translate.IncrementResourceVersion(pod.Metadata)
-				AddEvent(&translate.Deleted, pod)
-
 				// Remove the pod from the pod list
-				n := len(PodList.Items)
-				PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
-				PodList.Items = PodList.Items[:n-1]
+				//currentTime := translate.BatsimNowToMetaV1Time(msg.Now)
+				//pod.Metadata.DeletionTimestamp = &currentTime
+				//translate.IncrementResourceVersion(pod.Metadata)
+				//AddEvent(&translate.Deleted, pod)
+				//n := len(PodList.Items)
+				//PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
+				//PodList.Items = PodList.Items[:n-1]
 				log.Infof("[broker:bathandler] pod %s completed successfully. %d left to execute", podName, unfinishedJobs)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)

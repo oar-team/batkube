@@ -394,6 +394,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 
 			*res.(*models.IoK8sAPICoreV1Pod) = *params.Body
+			broker.AddEvent(&translate.Modified, res)
 			success(rw, p)
 		})
 	})
