@@ -265,3 +265,21 @@ func IncrementAllResourceVersions() {
 		AddEvent(&translate.Modified, node)
 	}
 }
+
+func ClearEmptyEvents() {
+	toRemove := make([]int, 0)
+	for i, event := range events {
+		if event.Type == nil {
+			toRemove = append(toRemove, i)
+		}
+	}
+
+	last := len(toRemove) - 1
+	for i := range toRemove {
+		reverse_i := toRemove[last-i]
+		events = append(
+			events[:reverse_i],
+			events[reverse_i+1:]...,
+		)
+	}
+}

@@ -5325,6 +5325,10 @@ func streamEvents(rw http.ResponseWriter, events []*models.IoK8sApimachineryPkgA
 		if err != nil {
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		}
+
+		// Clear the events we already sent. We have no obligation to keep them.
+		*event = models.IoK8sApimachineryPkgApisMetaV1WatchEvent{}
+		broker.ClearEmptyEvents()
 	}
 }
 
