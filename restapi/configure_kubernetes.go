@@ -235,7 +235,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			broker.IncrementResourceVersion(event.(*models.IoK8sAPIEventsV1beta1Event).Metadata)
+			translate.IncrementResourceVersion(event.(*models.IoK8sAPIEventsV1beta1Event).Metadata)
 
 			success(rw, p)
 		})
@@ -451,15 +451,9 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				return
 			}
 			pod.Spec.NodeName = params.Body.Target.Name
-			status := "true"
-			conditionType := "PodScheduled"
-			pod.Status.Conditions = append(pod.Status.Conditions, &models.IoK8sAPICoreV1PodCondition{
-				Status: &status,
-				Type:   &conditionType,
-			})
 
 			// Increment resource version
-			broker.IncrementResourceVersion(pod.Metadata)
+			translate.IncrementResourceVersion(pod.Metadata)
 
 			// Add modified event and let the broker know there is a pod to be executed
 			broker.AddEvent(&translate.Modified, pod)
@@ -508,7 +502,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			broker.IncrementResourceVersion(node.(*models.IoK8sAPICoreV1Node).Metadata)
+			translate.IncrementResourceVersion(node.(*models.IoK8sAPICoreV1Node).Metadata)
 			success(rw, p)
 		})
 	})

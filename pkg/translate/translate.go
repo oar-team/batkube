@@ -28,8 +28,6 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 		requests["cpu"] = models.IoK8sApimachineryPkgAPIResourceQuantity(cpu.(string))
 	}
 
-	readyConditionType := "Ready"
-	trueConditionStatus := "True"
 	switch prof.Type {
 	case "delay":
 		containerName := "sleep"
@@ -50,7 +48,7 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 				Containers: []*models.IoK8sAPICoreV1Container{
 					{
 						Name:  &containerName,
-						Image: "tutum/curl",
+						Image: "nginx",
 						Command: []string{
 							"/bin/sleep",
 							fmt.Sprintf("%f", prof.Specs["delay"].(float64)),
@@ -64,13 +62,6 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 			},
 			Status: &models.IoK8sAPICoreV1PodStatus{
 				Phase: "Pending",
-				Conditions: []*models.IoK8sAPICoreV1PodCondition{
-					{
-						Type:               &readyConditionType,
-						Status:             &trueConditionStatus,
-						LastTransitionTime: &jobSubtime,
-					},
-				},
 			},
 		}
 

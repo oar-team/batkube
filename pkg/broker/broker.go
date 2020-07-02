@@ -209,11 +209,10 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 			//}
 			batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 			err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
-			runningJobs++
 
-			// Update pod status
-			pod.Status.Phase = "Running"
-			IncrementResourceVersion(pod.Metadata)
+			translate.UpdatePodStatusForScheduling(pod, translate.BatsimNowToMetaV1Time(batMsg.Now))
+
+			runningJobs++
 			AddEvent(&translate.Modified, pod)
 			if err != nil {
 				log.Panic("Failed to create event:", err)
@@ -317,7 +316,6 @@ func Run(batEndpoint string) {
 		}
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
 		updateNow(now, batMsg)
-		UpdateProbeAndHeartbeatTimes(batMsg.Now) // Notify that the resources are still alive
 
 		// Handle the message
 		handleBatMessage(batMsg)

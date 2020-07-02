@@ -53,8 +53,9 @@ func handleBatMessage(msg translate.BatMessage) {
 			if err != nil {
 				log.Panic("[broker:bathandler] error translating a job to a pod: ", err)
 			}
+
 			PodList.Items = append(PodList.Items, &pod)
-			IncrementResourceVersion(PodList.Metadata)
+			translate.IncrementResourceVersion(PodList.Metadata)
 			AddEvent(&translate.Modified, PodList)
 			log.Tracef("pods : %s", spew.Sdump(PodList))
 			log.Infof("[broker:bathandler] pod %s is ready to be scheduled", pod.Metadata.Name)
@@ -85,15 +86,38 @@ func handleBatMessage(msg translate.BatMessage) {
 				res, i, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
 
-				pod.Status.Phase = "Succeeded"
-				pod.Spec.NodeName = ""
-				// TODO update conditions
-				IncrementResourceVersion(pod.Metadata)
+				//pod.Status.Phase = "Succeeded"
+
+				// update conditions and conditions
+				var falseBool bool
+				falseStr := "False"
+				var exitCode0 int32
+				currMetaV1Time := translate.BatsimNowToMetaV1Time(msg.Now)
+				pod.Status.ContainerStatuses = []*models.IoK8sAPICoreV1ContainerStatus{
+					{
+						Name:  pod.Spec.Containers[0].Name,
+						Ready: &falseBool,
+						LastState: &models.IoK8sAPICoreV1ContainerState{
+							Terminated: &models.IoK8sAPICoreV1ContainerStateTerminated{
+								ExitCode:   &exitCode0,
+								FinishedAt: &currMetaV1Time,
+								Reason:     "Completed",
+							},
+						},
+					},
+				}
+				for _, condition := range pod.Status.Conditions {
+					if *condition.Type == "Ready" || *condition.Type == "ContainersReady" {
+						condition.Status = &falseStr
+						condition.LastTransitionTime = &currMetaV1Time
+					}
+				}
+				translate.IncrementResourceVersion(pod.Metadata)
 				AddEvent(&translate.Modified, pod)
 
 				currentTime := translate.BatsimNowToMetaV1Time(msg.Now)
 				pod.Metadata.DeletionTimestamp = &currentTime
-				IncrementResourceVersion(pod.Metadata)
+				translate.IncrementResourceVersion(pod.Metadata)
 				AddEvent(&translate.Deleted, pod)
 
 				// Remove the pod from the pod list

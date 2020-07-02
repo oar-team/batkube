@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
 
@@ -307,7 +306,6 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 
 // TODO : these next two filters can be handled as fieldSelectors.
 // This will reduce the amount of filters to one only, based on json tags.
-
 func FilterObjectOnKind(o interface{}, kind string) (bool, error) {
 	if kind == "" || kind == "*" {
 		return true, nil
@@ -469,44 +467,6 @@ func indirect(v reflect.Value) reflect.Value {
 		return indirect(v.Elem())
 	}
 	return v
-}
-
-func IncrementResourceVersion(metadata interface{}) {
-	// Piece of code for experiments on resourceVersions
-
-	//PodList.Metadata.ResourceVersion = incrementStr(PodList.Metadata.ResourceVersion)
-	//NodeList.Metadata.ResourceVersion = incrementStr(NodeList.Metadata.ResourceVersion)
-	//for _, pod := range PodList.Items {
-	//	pod.Metadata.ResourceVersion = incrementStr(pod.Metadata.ResourceVersion)
-	//}
-	//for _, node := range NodeList.Items {
-	//	node.Metadata.ResourceVersion = incrementStr(node.Metadata.ResourceVersion)
-	//}
-
-	switch metadata.(type) {
-	case *models.IoK8sApimachineryPkgApisMetaV1ObjectMeta:
-		meta := metadata.(*models.IoK8sApimachineryPkgApisMetaV1ObjectMeta)
-		if meta.ResourceVersion == "" {
-			meta.ResourceVersion = "0"
-		}
-		resourceVersion, err := strconv.Atoi(meta.ResourceVersion)
-		if err != nil {
-			log.Panic(err)
-		}
-		meta.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
-	case *models.IoK8sApimachineryPkgApisMetaV1ListMeta:
-		meta := metadata.(*models.IoK8sApimachineryPkgApisMetaV1ListMeta)
-		if meta.ResourceVersion == "" {
-			meta.ResourceVersion = "0"
-		}
-		resourceVersion, err := strconv.Atoi(meta.ResourceVersion)
-		if err != nil {
-			log.Panic(err)
-		}
-		meta.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
-	default:
-		panic(fmt.Sprintf("Unknown metadata type : %T", metadata))
-	}
 }
 
 func incrementStr(str string) string {

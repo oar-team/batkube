@@ -230,6 +230,10 @@ func GetEvents() []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	return events
 }
 
+/*
+Updates LastProbeTime for pods containers and LastHeartbeatTime for nodes.
+Attempt at resolving the resource update issues
+*/
 func UpdateProbeAndHeartbeatTimes(now float64) {
 	currentTime := translate.BatsimNowToMetaV1Time(now)
 	for _, pod := range PodList.Items {
