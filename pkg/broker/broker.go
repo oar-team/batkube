@@ -22,7 +22,9 @@ const nonEmpty = 1 << 1
 // 	than timeoutValue
 // 	- OR if the Events slice contained in the response is not empty.
 var sendMessageCondition = timeout
-var timeoutValue = 30 * time.Millisecond
+var timeoutValue = 20 * time.Millisecond
+
+//var hardTimeout = 200 * time.Millisecond
 
 // Minimal amount of time to wait for messages from the scheduler.  Not having
 // a minimal waiting time or having an insufficient minimal time leads to
@@ -42,6 +44,7 @@ var enableCallMeLaters bool = false
 // time.Timers or time.Tickers. This option shouldn't be useful, then. It was
 // created for experiment purposes.
 var enableIncrementalTime bool = true
+var maxIncrement = float64(1000) // In seconds, simulation time
 var incrementTimeStep = 1 * time.Millisecond
 var incrementValue = 10 * time.Millisecond
 
@@ -187,6 +190,7 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 	lastMessageTime := time.Now()
 	stopReceivingEvents := false
 	loopStartTime := time.Now()
+	loopStartSimTime := batMsg.Now
 	lastIncrement := time.Now()
 	for !stopReceivingEvents {
 		updateNow(now, *batMsg)
@@ -223,18 +227,22 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 		default:
 			//fmt.Printf("[%f] len(events) %d; callMeLaters %d; unfinishedJobs %d; runningJobs %d\n", batMsg.Now, len(batMsg.Events), callMeLaters, unfinishedJobs, runningJobs)
 			elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
-			removeOutdatedEvents(batMsg)
-
-			if enableIncrementalTime && time.Now().Sub(lastIncrement) > incrementTimeStep {
-				batMsg.Now = addAndRound(batMsg.Now, incrementValue)
-				updateNow(now, *batMsg)
-				lastIncrement = time.Now()
-			}
 
 			// Wait at least minimalWaitDelay
 			if time.Now().Sub(loopStartTime) < minimalWaitDelay {
 				continue
 			}
+
+			if enableIncrementalTime &&
+				time.Now().Sub(lastIncrement) > incrementTimeStep &&
+				batMsg.Now-loopStartSimTime < maxIncrement {
+				batMsg.Now = addAndRound(batMsg.Now, incrementValue)
+				updateNow(now, *batMsg)
+				lastIncrement = time.Now()
+			}
+
+			removeOutdatedEvents(batMsg)
+
 			// These conditions are here to prevent sending
 			// an empty message that would make Batsim
 			// error out
@@ -245,18 +253,29 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 				!expectedEmptyResponse {
 				continue
 			}
-			if sendMessageCondition&nonEmpty != 0 {
-				if len(batMsg.Events) > 0 {
-					stopReceivingEvents = true
-				}
+
+			if sendMessageCondition&nonEmpty != 0 && len(batMsg.Events) > 0 {
+				stopReceivingEvents = true
 			}
-			if sendMessageCondition&timeout != 0 {
-				if elapsedSinceLastMessage >= timeoutValue {
-					stopReceivingEvents = true
+			//if sendMessageCondition&timeout != 0 && time.Now().Sub(loopStartTime) > hardTimeout {
+			if sendMessageCondition&timeout != 0 && elapsedSinceLastMessage > timeoutValue {
+				if enableIncrementalTime {
+					batMsg.Now = addAndRound(batMsg.Now, -timeoutValue)
 				}
+				stopReceivingEvents = true
 			}
 		}
 	}
+
+	// If there are pending jobs, the scheduler might mae a decision
+	//if unfinishedJobs-runningJobs > 0 && len(batMsg.Events) == 0 {
+	//	err, callMeLater := translate.MakeEvent(batMsg.Now, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: addAndRound(batMsg.Now, 1*time.Millisecond)})
+	//	if err != nil {
+	//		log.Panic("Failed to create event:", err)
+	//	}
+	//	batMsg.Events = append(batMsg.Events, callMeLater)
+	//}
+
 	countCallMeLaters(*batMsg)
 }
 
