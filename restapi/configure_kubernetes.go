@@ -5343,6 +5343,11 @@ Otherwise, resourceList will be used.
 */
 func listResource(watch *bool, fieldSelector *string, resourceVersion *string, resourceKind string, resourceList interface{}, rw http.ResponseWriter, p runtime.Producer) {
 	var err error
+	if resourceVersion != nil {
+		// Little hack to avoid handling resourceVersions internally.
+		// It makes sure the scheduler gets the latest changes.
+		broker.IncrementAllResourceVersionsTo(*resourceVersion)
+	}
 	if watch != nil && *watch {
 		filteredEvents := broker.FilterEventListOnKind(broker.GetEvents(), resourceKind)
 		if fieldSelector != nil {
@@ -5353,7 +5358,6 @@ func listResource(watch *bool, fieldSelector *string, resourceVersion *string, r
 			}
 		}
 		if resourceVersion != nil {
-			broker.IncrementAllResourceVersionsTo(*resourceVersion) // Make sure the scheduler gets the latest changes
 			filteredEvents = broker.FilterEventListOnResourceVersion(filteredEvents, *resourceVersion)
 		}
 		streamEvents(rw, filteredEvents)

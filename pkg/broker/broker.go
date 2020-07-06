@@ -16,13 +16,13 @@ import (
 // If the duration since the last message received by the scheduler exceeds
 // timeoutValue, Batkube will consider it as a timeout and will proceed with
 // sending a message to Batsim
-var timeoutValue = 30 * time.Millisecond
+var timeoutValue = 40 * time.Millisecond
 
 // Minimal amount of time to wait for messages from the scheduler.  Not having
 // a minimal waiting time or having an insufficient minimal time leads to
 // incorrect behavior from the scheduler, which does not have enough time to
 // react.
-var minimalWaitDelay = 0 * time.Millisecond
+var minimalWaitDelay = 10 * time.Millisecond
 
 // Enable CALL_ME__LATER events. These events originate from timer requests
 // from the scheduler, allowing to fast forward in time to the next timestamp
@@ -33,7 +33,7 @@ var enableCallMeLaters bool = false
 // incrementValue will be sent everytime. If it is false, it is only sent when
 // necessary (as to populate batMsg.Events and not make Batsim error out on a
 // deadlock)
-var forceBatsimExchange bool = false
+var forceBatsimExchange bool = true
 
 // Enable time incremental increases. When waiting for a response from the
 // scheduler, increment the simulated time with a real time period defined by
