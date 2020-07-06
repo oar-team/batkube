@@ -13,18 +13,10 @@ import (
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
 
-const timeout = 1
-const nonEmpty = 1 << 1
-
-// Stop condition when waiting for new messages to send to Batsim. Ex :
-// stopWaitingForMessages = nonEmpty | timeout will stop waiting for messages if
-// 	- the waiting time since the last message from the scheduler is higher
-// 	than timeoutValue
-// 	- OR if the Events slice contained in the response is not empty.
-var sendMessageCondition = timeout
-var timeoutValue = 20 * time.Millisecond
-
-//var hardTimeout = 200 * time.Millisecond
+// If the duration since the last message received by the scheduler exceeds
+// timeoutValue, Batkube will consider it as a timeout and will proceed with
+// sending a message to Batsim
+var timeoutValue = 30 * time.Millisecond
 
 // Minimal amount of time to wait for messages from the scheduler.  Not having
 // a minimal waiting time or having an insufficient minimal time leads to
@@ -37,6 +29,12 @@ var minimalWaitDelay = 0 * time.Millisecond
 // where a timer is supposed to fire.
 var enableCallMeLaters bool = false
 
+// If forceBatsimExchange is true, a CALL_ME_LATER with timestamp now +
+// incrementValue will be sent everytime. If it is false, it is only sent when
+// necessary (as to populate batMsg.Events and not make Batsim error out on a
+// deadlock)
+var forceBatsimExchange bool = false
+
 // Enable time incremental increases. When waiting for a response from the
 // scheduler, increment the simulated time with a real time period defined by
 // incrementTimeStep.
@@ -44,9 +42,12 @@ var enableCallMeLaters bool = false
 // time.Timers or time.Tickers. This option shouldn't be useful, then. It was
 // created for experiment purposes.
 var enableIncrementalTime bool = true
-var maxIncrement = float64(1000) // In seconds, simulation time
+var incrementUpperLimit = 10 * time.Second
 var incrementTimeStep = 1 * time.Millisecond
 var incrementValue = 10 * time.Millisecond
+
+// Reset the time at wich we start counting to determine a timeout at each increment
+var resetLoopTimeOnIncrement bool = false
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -186,12 +187,12 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 	batMsg.Events = make([]translate.Event, 0)
 
 	// Get pending events to send to Batsim
-	elapsedSinceLastMessage := time.Duration(0)
+	var elapsedSinceLastMessage time.Duration
+	var incremented time.Duration
 	lastMessageTime := time.Now()
-	stopReceivingEvents := false
 	loopStartTime := time.Now()
-	loopStartSimTime := batMsg.Now
 	lastIncrement := time.Now()
+	var stopReceivingEvents bool
 	for !stopReceivingEvents {
 		updateNow(now, *batMsg)
 		select {
@@ -233,48 +234,48 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 				continue
 			}
 
+			// increment simulation time if nothing happened
 			if enableIncrementalTime &&
-				time.Now().Sub(lastIncrement) > incrementTimeStep &&
-				batMsg.Now-loopStartSimTime < maxIncrement {
+				incremented < incrementUpperLimit &&
+				time.Now().Sub(lastIncrement) > incrementTimeStep {
+
 				batMsg.Now = addAndRound(batMsg.Now, incrementValue)
 				updateNow(now, *batMsg)
 				lastIncrement = time.Now()
-			}
-
-			removeOutdatedEvents(batMsg)
-
-			// These conditions are here to prevent sending
-			// an empty message that would make Batsim
-			// error out
-			if len(batMsg.Events) == 0 &&
-				callMeLaters == 0 &&
-				runningJobs == 0 &&
-				unfinishedJobs > 0 &&
-				!expectedEmptyResponse {
-				continue
-			}
-
-			if sendMessageCondition&nonEmpty != 0 && len(batMsg.Events) > 0 {
-				stopReceivingEvents = true
-			}
-			//if sendMessageCondition&timeout != 0 && time.Now().Sub(loopStartTime) > hardTimeout {
-			if sendMessageCondition&timeout != 0 && elapsedSinceLastMessage > timeoutValue {
-				if enableIncrementalTime {
-					batMsg.Now = addAndRound(batMsg.Now, -timeoutValue)
+				incremented += incrementValue
+				if resetLoopTimeOnIncrement {
+					// Reset the loop start time value,
+					// resulting in a minimal wait time
+					// once again.
+					loopStartTime = time.Now()
 				}
+			}
+
+			if elapsedSinceLastMessage > timeoutValue {
 				stopReceivingEvents = true
 			}
 		}
 	}
 
-	// If there are pending jobs, the scheduler might mae a decision
-	//if unfinishedJobs-runningJobs > 0 && len(batMsg.Events) == 0 {
-	//	err, callMeLater := translate.MakeEvent(batMsg.Now, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: addAndRound(batMsg.Now, 1*time.Millisecond)})
-	//	if err != nil {
-	//		log.Panic("Failed to create event:", err)
-	//	}
-	//	batMsg.Events = append(batMsg.Events, callMeLater)
-	//}
+	removeOutdatedEvents(batMsg)
+
+	// These conditions are here to prevent sending an empty message that
+	// would make Batsim error out, while reducing the amount of messages
+	// we send to Batsim.
+	if forceBatsimExchange ||
+		len(batMsg.Events) == 0 &&
+			callMeLaters == 0 &&
+			runningJobs == 0 &&
+			unfinishedJobs > 0 &&
+			!expectedEmptyResponse {
+		err, callMeLater := translate.MakeEvent(batMsg.Now, "CALL_ME_LATER", translate.CallMeLaterData{
+			Timestamp: addAndRound(batMsg.Now, incrementValue),
+		})
+		if err != nil {
+			log.Panic("Failed to create event:", err)
+		}
+		batMsg.Events = append(batMsg.Events, callMeLater)
+	}
 
 	countCallMeLaters(*batMsg)
 }
