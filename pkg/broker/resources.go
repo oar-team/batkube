@@ -240,29 +240,13 @@ func UpdateProbeAndHeartbeatTimes(now float64) {
 		for _, condition := range pod.Status.Conditions {
 			condition.LastProbeTime = &currentTime
 		}
-		translate.IncrementResourceVersion(pod.Metadata)
+		IncrementResourceVersion(pod.Metadata)
 	}
 	for _, node := range NodeList.Items {
 		for _, condition := range node.Status.Conditions {
 			condition.LastHeartbeatTime = &currentTime
 		}
-		translate.IncrementResourceVersion(node.Metadata)
-	}
-}
-
-/*
-Attempt at fixing watch events
-*/
-func IncrementAllResourceVersions() {
-	PodList.Metadata.ResourceVersion = incrementStr(PodList.Metadata.ResourceVersion)
-	NodeList.Metadata.ResourceVersion = incrementStr(NodeList.Metadata.ResourceVersion)
-	for _, pod := range PodList.Items {
-		pod.Metadata.ResourceVersion = incrementStr(pod.Metadata.ResourceVersion)
-		AddEvent(&translate.Modified, pod)
-	}
-	for _, node := range NodeList.Items {
-		node.Metadata.ResourceVersion = incrementStr(node.Metadata.ResourceVersion)
-		AddEvent(&translate.Modified, node)
+		IncrementResourceVersion(node.Metadata)
 	}
 }
 

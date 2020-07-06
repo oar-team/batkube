@@ -235,7 +235,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			translate.IncrementResourceVersion(event.(*models.IoK8sAPIEventsV1beta1Event).Metadata)
+			broker.IncrementResourceVersion(event.(*models.IoK8sAPIEventsV1beta1Event).Metadata)
 
 			success(rw, p)
 		})
@@ -454,7 +454,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			pod.Spec.NodeName = params.Body.Target.Name
 
 			// Increment resource version
-			translate.IncrementResourceVersion(pod.Metadata)
+			broker.IncrementResourceVersion(pod.Metadata)
 
 			// Add modified event and let the broker know there is a pod to be executed
 			broker.AddEvent(&translate.Modified, pod)
@@ -503,7 +503,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			translate.IncrementResourceVersion(node.(*models.IoK8sAPICoreV1Node).Metadata)
+			broker.IncrementResourceVersion(node.(*models.IoK8sAPICoreV1Node).Metadata)
 			success(rw, p)
 		})
 	})
@@ -5353,6 +5353,7 @@ func listResource(watch *bool, fieldSelector *string, resourceVersion *string, r
 			}
 		}
 		if resourceVersion != nil {
+			broker.IncrementAllResourceVersionsTo(*resourceVersion) // Make sure the scheduler gets the latest changes
 			filteredEvents = broker.FilterEventListOnResourceVersion(filteredEvents, *resourceVersion)
 		}
 		streamEvents(rw, filteredEvents)

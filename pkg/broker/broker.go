@@ -216,6 +216,7 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 			err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
 
 			translate.UpdatePodStatusForScheduling(pod, translate.BatsimNowToMetaV1Time(batMsg.Now))
+			IncrementResourceVersion(pod.Metadata)
 
 			runningJobs++
 			AddEvent(&translate.Modified, pod)

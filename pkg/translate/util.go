@@ -1,9 +1,6 @@
 package translate
 
 import (
-	"fmt"
-	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -87,32 +84,4 @@ func UpdatePodStatusForScheduling(pod *models.IoK8sAPICoreV1Pod, now models.IoK8
 	}
 
 	pod.Status.Phase = "Running"
-	IncrementResourceVersion(pod.Metadata)
-}
-
-func IncrementResourceVersion(metadata interface{}) {
-	switch metadata.(type) {
-	case *models.IoK8sApimachineryPkgApisMetaV1ObjectMeta:
-		meta := metadata.(*models.IoK8sApimachineryPkgApisMetaV1ObjectMeta)
-		if meta.ResourceVersion == "" {
-			meta.ResourceVersion = "0"
-		}
-		resourceVersion, err := strconv.Atoi(meta.ResourceVersion)
-		if err != nil {
-			log.Panic(err)
-		}
-		meta.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
-	case *models.IoK8sApimachineryPkgApisMetaV1ListMeta:
-		meta := metadata.(*models.IoK8sApimachineryPkgApisMetaV1ListMeta)
-		if meta.ResourceVersion == "" {
-			meta.ResourceVersion = "0"
-		}
-		resourceVersion, err := strconv.Atoi(meta.ResourceVersion)
-		if err != nil {
-			log.Panic(err)
-		}
-		meta.ResourceVersion = fmt.Sprintf("%d", resourceVersion+1)
-	default:
-		panic(fmt.Sprintf("Unknown metadata type : %T", metadata))
-	}
 }

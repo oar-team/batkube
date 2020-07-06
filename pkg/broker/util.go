@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
 
 /*
@@ -60,6 +61,9 @@ func GetResource(name *string, namespace *string, resourceList interface{}) (int
 }
 
 func getFieldByName(resource reflect.Value, fieldName string) (reflect.Value, error) {
+	if resource.Kind() == reflect.Ptr {
+		resource = resource.Elem()
+	}
 	fieldValue := resource.FieldByName(fieldName)
 	if !fieldValue.IsValid() {
 		return reflect.Value{}, errors.Errorf("Type %s has no %s field", resource.Type(), fieldName)
@@ -481,6 +485,27 @@ func incrementStr(str string) string {
 }
 
 /*
+Returns if int(str1) > int(str2)
+*/
+func compareStr(str1, str2 string) bool {
+	//if str1 == "" {
+	//	str1 = "0"
+	//}
+	//if str2 == "" {
+	//	str2 = "0"
+	//}
+	n1, err := strconv.Atoi(str1)
+	if err != nil {
+		panic(err)
+	}
+	n2, err := strconv.Atoi(str2)
+	if err != nil {
+		panic(err)
+	}
+	return n1 > n2
+}
+
+/*
 Naive deepcopy function, before getting real ones
 */
 func DeepCopy(input, output interface{}) error {
@@ -493,4 +518,53 @@ func DeepCopy(input, output interface{}) error {
 		return errors.New(fmt.Sprintf("error while unmarshaling into a %T: %s", output, err))
 	}
 	return nil
+}
+
+/*
+If the given object's resource version is lower than given resource version,
+set its resourceVersion to given value
+Returns if the value was incremented
+*/
+func IncrementResourceVersionTo(metadata interface{}, value string) bool {
+	rv, err := getFieldByName(reflect.ValueOf(metadata), "ResourceVersion")
+	if err != nil {
+		panic(err)
+	}
+	if compareStr(value, rv.String()) {
+		rv.SetString(value)
+		return true
+	}
+	return false
+}
+
+/*
+Does IncrementResourceVersionTo and all pods and nodes, and adds a modified event for each of the increased nodes
+*/
+func IncrementAllResourceVersionsTo(value string) {
+	for _, pod := range PodList.Items {
+		if IncrementResourceVersionTo(pod.Metadata, value) {
+			AddEvent(&translate.Modified, pod)
+		}
+	}
+	for _, node := range NodeList.Items {
+		if IncrementResourceVersionTo(node.Metadata, value) {
+			AddEvent(&translate.Modified, node)
+		}
+	}
+}
+
+/*
+Increments the resource version of the given metadata by 1
+*/
+func IncrementResourceVersion(metadata interface{}) {
+	rv, err := getFieldByName(reflect.ValueOf(metadata), "ResourceVersion")
+	if err != nil {
+		panic(err)
+	}
+	rv.SetString(incrementStr(rv.String()))
+}
+
+func DeleteAllEventsPrior(resourceVersion string) {
+	// TODO
+	// Remove events that are too old to free memory
 }
