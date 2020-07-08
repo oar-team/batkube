@@ -473,27 +473,21 @@ func indirect(v reflect.Value) reflect.Value {
 	return v
 }
 
-func incrementStr(str string) string {
+func incrementStr(str string, x int) string {
 	if str == "" {
-		return "1"
+		return fmt.Sprintf("%d", x)
 	}
 	n, err := strconv.Atoi(str)
 	if err != nil {
 		panic(err)
 	}
-	return fmt.Sprintf("%d", n+1)
+	return fmt.Sprintf("%d", n+x)
 }
 
 /*
 Returns if int(str1) > int(str2)
 */
 func compareStr(str1, str2 string) bool {
-	//if str1 == "" {
-	//	str1 = "0"
-	//}
-	//if str2 == "" {
-	//	str2 = "0"
-	//}
 	n1, err := strconv.Atoi(str1)
 	if err != nil {
 		panic(err)
@@ -561,10 +555,5 @@ func IncrementResourceVersion(metadata interface{}) {
 	if err != nil {
 		panic(err)
 	}
-	rv.SetString(incrementStr(rv.String()))
-}
-
-func DeleteAllEventsPrior(resourceVersion string) {
-	// TODO
-	// Remove events that are too old to free memory
+	rv.SetString(incrementStr(rv.String(), 1))
 }

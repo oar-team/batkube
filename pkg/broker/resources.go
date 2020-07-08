@@ -2,6 +2,7 @@ package broker
 
 import (
 	"fmt"
+	"reflect"
 
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
@@ -9,6 +10,9 @@ import (
 
 // Resources protected by getters and setters
 var events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent
+
+// Discard events older than most recent resourceVersion - maxResourceAge to free memory.
+var maxResourceAge int = 100
 
 // Kubernetes resources
 var APIGroupList models.IoK8sApimachineryPkgApisMetaV1APIGroupList
@@ -197,35 +201,6 @@ func AddEvent(eventType *string, object interface{}) {
 	}
 }
 
-// Temporarily, AddEvent simply changes the event Type.
-//func AddEvent(eventType *string, object interface{}) {
-//	v := reflect.ValueOf(object)
-//	if v.Kind() == reflect.Ptr {
-//		v = v.Elem()
-//	}
-//	object = v.Interface()
-//	meta := v.FieldByName("Metadata")
-//	if !meta.IsValid() {
-//		panic(fmt.Sprintf("could not find metadata field in %T", object))
-//	}
-//	uid := meta.Elem().FieldByName("UID").String()
-//	eventList, err := FilterEventListOnFieldSelector(GetEvents(), "metadata.uid="+uid)
-//	if err != nil {
-//		panic(err)
-//	}
-//	if len(eventList) == 0 {
-//		// Object is not in event list yet
-//		events = append(events, &models.IoK8sApimachineryPkgApisMetaV1WatchEvent{
-//			Type:   eventType,
-//			Object: object,
-//		})
-//	} else if len(eventList) == 1 {
-//		eventList[0].Type = eventType
-//	} else {
-//		panic("Two events with same resource were found")
-//	}
-//}
-
 func GetEvents() []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent {
 	return events
 }
@@ -257,7 +232,51 @@ func ClearEmptyEvents() {
 			toRemove = append(toRemove, i)
 		}
 	}
+	deleteEvents(toRemove)
+}
 
+/*
+Warning : not usable in its current state.
+The fact that resources are stored in non thread safe data structures make this code really vulnerable
+*/
+func ClearOldEvents() {
+	// First pass : get the most recent resourceVersion.
+	var maxResourceVersion string = "0"
+	for _, event := range events {
+		meta, err := getFieldByName(reflect.ValueOf(event.Object), "Metadata")
+		if err != nil {
+			panic(err)
+		}
+		rvValue, err := getFieldByName(meta, "ResourceVersion")
+		if err != nil {
+			panic(err)
+		}
+		rv := rvValue.String()
+		if compareStr(rv, maxResourceVersion) {
+			maxResourceVersion = rv
+		}
+	}
+
+	// Second pass : determine which events need to be cleared
+	toRemove := make([]int, 0)
+	for i, event := range events {
+		meta, err := getFieldByName(reflect.ValueOf(event.Object), "Metadata")
+		if err != nil {
+			panic(err)
+		}
+		rvValue, err := getFieldByName(meta, "ResourceVersion")
+		if err != nil {
+			panic(err)
+		}
+		rv := rvValue.String()
+		if compareStr(maxResourceVersion, incrementStr(rv, maxResourceAge)) {
+			toRemove = append(toRemove, i)
+		}
+	}
+	deleteEvents(toRemove)
+}
+
+func deleteEvents(toRemove []int) {
 	last := len(toRemove) - 1
 	for i := range toRemove {
 		reverse_i := toRemove[last-i]

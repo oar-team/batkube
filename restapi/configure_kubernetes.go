@@ -5328,8 +5328,11 @@ func streamEvents(rw http.ResponseWriter, events []*models.IoK8sApimachineryPkgA
 
 		// Clear the events we already sent. We have no obligation to keep them.
 		*event = models.IoK8sApimachineryPkgApisMetaV1WatchEvent{}
-		broker.ClearEmptyEvents()
 	}
+
+	// This will be possible with thread safe structures
+	//broker.ClearEmptyEvents()
+	//broker.ClearOldEvents()
 }
 
 /*

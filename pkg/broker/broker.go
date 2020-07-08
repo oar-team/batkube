@@ -286,7 +286,7 @@ func Run(batEndpoint string) {
 		if err != nil {
 			log.Errorln("[broker] Error while closing Batsim socket: ", err)
 		}
-		log.Infoln("[broker] Batsim socket closed.") //TODO : is it?
+		log.Infoln("[broker] Batsim socket closed.") // TODO : is it?
 
 		if err = timeSock.Close(); err != nil {
 			log.Errorln("[broker] Error while closing time socket: ", err)
