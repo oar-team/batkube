@@ -23,7 +23,7 @@ const simulationTimeout = 1 << 2 // Just like the real time timeout, but for sim
 // 	- the waiting time since the last message from the scheduler is higher
 // 	than timeoutValue
 // 	- OR if the Events slice contained in the response is not empty.
-var sendMessageCondition = timeout | simulationTimeout | nonEmpty
+var sendMessageCondition = timeout | simulationTimeout
 
 // If the duration since the last message received by the scheduler exceeds
 // timeoutValue, Batkube will consider it as a timeout and will proceed with
@@ -43,27 +43,22 @@ var minimalWaitDelay = 0 * time.Millisecond
 // where a timer is supposed to fire.
 var enableCallMeLaters bool = true
 
-// If forceCallMeLaters is true, a CALL_ME_LATER with specified delay will be
-// sent everytime. If it is false, it is only sent when necessary (as to
-// populate batMsg.Events and not make Batsim error out on a deadlock).
-//
-// Greatly reduces simulation speed when set to true, but prevents Batsim from
-// jumping forward in time too much causing scheduler decisions to be delayed.
-// TODO : replace this with a queue that keeps track of call me laters and adds
-// a new call me later if the next one is too far ahead in time
-var forceCallMeLaters bool = false
-var forceCallMeLatersDelay = 10 * time.Second
+// Maximum time step to advance in the simulation. This prevents Batsim to jump
+// too much forward in time, preventing the scheduler to properly take
+// decisions.
+var simulationTimestep = 500 * time.Millisecond
 
 // Enable time incremental increases. When waiting for a response from the
-// scheduler, increment the simulated time with a real time period defined by
-// incrementTimeStep.
-// This could be useful in case there are hidden timers that wouldn't rely on
-// time.Timers or time.Tickers. This option shouldn't be useful, then. It was
-// created for experiment purposes.
+// scheduler, increase the simulated time with a real time period by
+// incrementValue with a real time period of incrementTimeStep.
+// It is more efficient than waking up Batsim constantly with call_me_laters,
+// but also makes the simulation slightly less accurate as events could happen
+// during this time, that Batsim would have to wait for the next exchange to
+// send.
 var enableIncrementalTime bool = false
-var incrementUpperLimit = 1 * time.Second
-var incrementTimeStep = 1 * time.Millisecond // Basically, slows down the simulation
-var incrementValue = 10 * time.Millisecond
+var incrementUpperLimit = 1 * time.Second    // Setting a fair upper limit moderates the effect described above.
+var incrementTimeStep = 1 * time.Millisecond // Basically, slows down the simulation to give more time for the scheduler.
+var incrementValue = 10 * time.Millisecond   // Having a low increment may (or may not) result in a more accurate simulation.
 
 // Reset the time at wich we start counting to determine a timeout at each increment
 // TODO : remove this
@@ -78,10 +73,8 @@ var unfinishedJobs int
 // Number of jobs that are still running
 var runningJobs int
 
-// Number of unanswered call_me_later events. If that number reached zero and
-// an empty response is not excepted, batkube should not reply with an empty
-// message.
-var callMeLaters int
+// Allows us to keep track of pending requested calls
+var requestedCalls []float64 = make([]float64, 0)
 
 // It is ok to send empty messages (that is to say, with an empty event list)
 // upon reception of certain events from batsim as Batsim will not error out on those.
@@ -105,7 +98,7 @@ end : send a boolean on this channel to end the loop.
 now : whenever now is updated, send it to this channel.
 events : CALL_ME_LATER events are sent to this channel. They are stacked and sent whenever the receiver is ready.
 */
-func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, events chan translate.Event) {
+func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, timers chan float64) {
 	if cap(now) != 1 {
 		panic("now should be a buffered channel with capacity 1")
 	}
@@ -132,7 +125,7 @@ func handleTimeRequests(timeSock *zmq.Socket, end chan bool, now chan float64, e
 		}
 
 		if enableCallMeLaters {
-			processTimerRequests(nowValue, durations, events)
+			processTimerRequests(nowValue, durations, timers)
 		}
 
 		// Answer the time requests
@@ -165,33 +158,20 @@ durations is an integer slice representing the durations of the timers
 requested by the scheduler. For each of these timers, this function emits a
 CALL_ME_LATER event to the events channel.
 */
-func processTimerRequests(nowValue float64, durations []int64, events chan translate.Event) {
-	seen := make([]int64, 0)
+func processTimerRequests(nowValue float64, durations []int64, timers chan float64) {
 	for _, d := range durations {
 		if d <= 0 {
 			panic("Got a negative duration")
 		}
-
-		// remove duplicates
-		// TODO : do this in batsky-go to save some bytes in zmq
-		// exchanges.
-		if isIn(d, seen) {
-			continue
-		}
-		seen = append(seen, d)
 
 		requested := addAndRound(nowValue, time.Duration(d))
 		if requested < nowValue {
 			panic("Requested a timer prior of current time")
 		}
 
-		err, callMeLater := translate.MakeEvent(nowValue, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: requested})
-		if err != nil {
-			log.Panic("Failed to create event:", err)
-		}
 		// Non blocking send. Select isn't used to make sure it is actually sent.
 		go func() {
-			events <- callMeLater
+			timers <- requested
 		}()
 	}
 }
@@ -203,7 +183,7 @@ with them.
 It handles all the options defined above regarding timing and other message
 sending conditions.
 */
-func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeEvents chan translate.Event) {
+func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timers chan float64) {
 	batMsg.Events = make([]translate.Event, 0)
 
 	// Get pending events to send to Batsim
@@ -217,19 +197,14 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 	for !stopReceivingEvents {
 		updateNow(now, *batMsg)
 		select {
-		case event := <-timeEvents:
-			// Call me later events from time requests
-			// Note : rounding and adding to now value each
-			// time is not very precise. Errors due to
-			// rounded values add up over the many
-			// iterations of the loop. At the same time, it
-			// filters noise and only takes into account
-			// significant scheduler delays.
-			batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
-			batMsg.Events = append(batMsg.Events, event)
-			lastMessageTime = time.Now()
+		case requested := <-timers:
+			// Duplicates cause issues when keeping track of requested calls
+			if !isAlreadyRequested(requested) {
+				batMsg.Events = append(batMsg.Events, newCallMeLater(batMsg.Now, requested))
+			}
 		case pod := <-ToExecute: // Jobs sent over by the api
 			messageIsNotEmpty = true
+			// TODO : better study how to account for scheduling time
 			batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
 
 			err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
@@ -281,25 +256,12 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timeE
 
 	removeOutdatedEvents(batMsg)
 
-	// These conditions are here to prevent sending an empty message that
-	// would make Batsim error out.
-	// We can send a call_me_later everytime if we desire to.:
-	if forceCallMeLaters ||
-		len(batMsg.Events) == 0 &&
-			callMeLaters == 0 &&
-			runningJobs == 0 &&
-			unfinishedJobs > 0 &&
-			!expectedEmptyResponse {
-		err, callMeLater := translate.MakeEvent(batMsg.Now, "CALL_ME_LATER", translate.CallMeLaterData{
-			Timestamp: addAndRound(batMsg.Now, forceCallMeLatersDelay),
-		})
-		if err != nil {
-			log.Panic("Failed to create event:", err)
-		}
-		batMsg.Events = append(batMsg.Events, callMeLater)
+	// We don't want to jump too much forward in time, so the scheduler can
+	// make its decisions in time
+	nextStep := addAndRound(batMsg.Now, simulationTimestep)
+	if len(requestedCalls) == 0 || requestedCalls[0] > nextStep {
+		batMsg.Events = append(batMsg.Events, newCallMeLater(batMsg.Now, nextStep))
 	}
-
-	countCallMeLaters(*batMsg)
 }
 
 func Run(batEndpoint string) {
@@ -338,8 +300,8 @@ func Run(batEndpoint string) {
 	// Loop responsible for time requests
 	var now = make(chan float64, 1)
 	var end = make(chan bool)
-	var timeEvents = make(chan translate.Event)
-	go handleTimeRequests(timeSock, end, now, timeEvents)
+	var timers = make(chan float64)
+	go handleTimeRequests(timeSock, end, now, timers)
 
 	// Main loop
 	var batMsg translate.BatMessage
@@ -385,7 +347,7 @@ func Run(batEndpoint string) {
 				emptyRequestedCallStack(&batMsg, batSock)
 			}
 		} else {
-			processMessagesToSend(&batMsg, now, timeEvents)
+			processMessagesToSend(&batMsg, now, timers)
 		}
 
 		batMsgBytes, err = json.Marshal(batMsg)
@@ -401,17 +363,6 @@ func Run(batEndpoint string) {
 	log.Infoln("[broker] Simulation finished successfully!")
 }
 
-// Counting the amount of unanswered call_me_laters can be done on the go,
-// without a separate function, but it is done this was to simplify the code.
-// This counter is decremented upon reception of REQUESTED_CALLs (in bathandler)
-func countCallMeLaters(batMsg translate.BatMessage) {
-	for _, event := range batMsg.Events {
-		if event.Type == "CALL_ME_LATER" {
-			callMeLaters++
-		}
-	}
-}
-
 // Sync with handleTimeRequests
 func updateNow(now chan float64, batMsg translate.BatMessage) {
 	// This is a non blocking send because now is buffered
@@ -424,15 +375,6 @@ func updateNow(now chan float64, batMsg translate.BatMessage) {
 	now <- batMsg.Now
 }
 
-func isIn(i int64, s []int64) bool {
-	for _, e := range s {
-		if i == e {
-			return true
-		}
-	}
-	return false
-}
-
 /*
 Remove any call_me_later that would be outdated
 
@@ -443,6 +385,7 @@ func removeOutdatedEvents(batMsg *translate.BatMessage) {
 	for i, event := range batMsg.Events {
 		if event.Type == "CALL_ME_LATER" && event.Data["timestamp"].(float64) <= batMsg.Now {
 			toRemove = append(toRemove, i)
+			deleteRequestedCall(event.Data["timestamp"].(float64))
 		}
 	}
 
@@ -495,4 +438,56 @@ func emptyRequestedCallStack(batMsg *translate.BatMessage, batSock *zmq.Socket) 
 		}
 		batMsg.Events = make([]translate.Event, 0)
 	}
+}
+
+/*
+Warning : not thread safe.
+*/
+func newCallMeLater(now, timestamp float64) translate.Event {
+	err, callMeLater := translate.MakeEvent(now, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: timestamp})
+	if err != nil {
+		log.Panic("Failed to create event:", err)
+	}
+
+	// Add a new requested call to the stack
+	added := false
+	for i, call := range requestedCalls {
+		if call > timestamp {
+			requestedCalls = append(requestedCalls, 0)
+			copy(requestedCalls[i+1:], requestedCalls[i:])
+			requestedCalls[i] = timestamp
+			added = true
+			break
+		}
+	}
+	// If nothing was done, it means that either requestedCalls is empty or
+	// timestamp exceeds every other value in the slice
+	if !added {
+		requestedCalls = append(requestedCalls, timestamp)
+	}
+
+	return callMeLater
+}
+
+/*
+Warning : not thread safe.
+*/
+func deleteRequestedCall(timestamp float64) {
+	for i, requested := range requestedCalls {
+		if requested == timestamp {
+			n := len(requestedCalls)
+			requestedCalls[n-1], requestedCalls[i] = requestedCalls[i], requestedCalls[n-1]
+			requestedCalls = requestedCalls[:n-1]
+			break
+		}
+	}
+}
+
+func isAlreadyRequested(requested float64) bool {
+	for _, timestamp := range requestedCalls {
+		if requested == timestamp {
+			return true
+		}
+	}
+	return false
 }

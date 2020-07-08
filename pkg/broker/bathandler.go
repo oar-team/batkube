@@ -132,7 +132,7 @@ func handleBatMessage(msg translate.BatMessage) {
 
 		case "REQUESTED_CALL":
 			expectedEmptyResponse = false
-			callMeLaters--
+			requestedCalls = requestedCalls[1:]
 
 		case "SIMULATION_ENDS":
 			receivedSimulationEnded = true
