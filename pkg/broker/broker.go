@@ -13,55 +13,20 @@ import (
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
 
-// stop conditions for the loop responsible of transfering scheduler decisions.
-const timeout = 1                // Real time timeout
-const nonEmpty = 1 << 1          // A non-empty message is defined as a message containing at least one event that is not a CALL_ME_LATER
-const simulationTimeout = 1 << 2 // Just like the real time timeout, but for simulation time.
-
-// Stop condition when waiting for new messages to send to Batsim. Ex :
-// stopWaitingForMessages = nonEmpty | timeout will stop waiting for messages if
-// 	- the waiting time since the last message from the scheduler is higher
-// 	than timeoutValue
-// 	- OR if the Events slice contained in the response is not empty.
-var sendMessageCondition = timeout | nonEmpty
-
 // If the duration since the last message received by the scheduler exceeds
 // timeoutValue, Batkube will consider it as a timeout and will proceed with
 // sending a message to Batsim
 var timeoutValue = 20 * time.Millisecond
 
-// Minimal amount of time to wait for messages from the scheduler.  Not having
-// a minimal waiting time or having an insufficient minimal time leads to
-// incorrect behavior from the scheduler, which does not have enough time to
-// react.
-// TODO : remove this variable, as it does not affect the simulation in any
-// way. timeout is enough.
-var minimalWaitDelay = 0 * time.Millisecond
-
-// Enable CALL_ME__LATER events. These events originate from timer requests
-// from the scheduler, allowing to fast forward in time to the next timestamp
-// where a timer is supposed to fire.
-var enableCallMeLaters bool = true
+// Enable CALL_ME_LATER events triggered by scheduler timers. That way, the
+// scheduler gets control back whenever a timer is supposed to  fire.  This
+// results in scheduler code executing at the exact time it is supposed to be
+// executed, at the expense of very slow simulations.
+var enableCallMeLaters bool = false
 
 // Maximum amount of time Batsim is allowed to jump forward in time, so the
 // scheduler can take its decision in time.
-var simulationTimestep = 50000 * time.Millisecond
-
-// Enable time incremental increases. When waiting for a response from the
-// scheduler, increase the simulated time with a real time period by
-// incrementValue with a real time period of incrementTimeStep.
-// It is more efficient than waking up Batsim constantly with call_me_laters,
-// but also makes the simulation slightly less accurate as events could happen
-// during this time, that Batsim would have to wait for the next exchange to
-// send.
-var enableIncrementalTime bool = false
-var incrementUpperLimit = 2 * time.Second     // Setting a fair upper limit moderates the effect described above.
-var incrementTimeStep = 10 * time.Microsecond // Basically, slows down the simulation to give more time for the scheduler.
-var incrementValue = 1 * time.Millisecond     // Having a low increment may (or may not) result in a more accurate simulation.
-
-// Reset the time at wich we start counting to determine a timeout at each increment
-// TODO : remove this
-var resetLoopTimeOnIncrement bool = false
+var simulationTimestep = 1000 * time.Millisecond
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -74,18 +39,6 @@ var runningJobs int
 
 // Allows us to keep track of pending requested calls
 var requestedCalls []float64 = make([]float64, 0)
-
-// It is ok to send empty messages (that is to say, with an empty event list)
-// upon reception of certain events from batsim as Batsim will not error out on those.
-// Those events are :
-// - SIMULATION_BEGINS
-// - NOTIFY
-// - JOB_COMPLETED
-// - SIMULATION_ENDS
-//
-// Note that empty messages may still be sent for the other types if the
-// callMeLaters count is above 0, as Batsim will not error out on this case.
-var expectedEmptyResponse bool
 
 // Batkube received a SIMULATION_ENDS event.
 var receivedSimulationEnded bool
@@ -168,7 +121,9 @@ func processTimerRequests(nowValue float64, durations []int64, timers chan float
 			panic("Requested a timer prior of current time")
 		}
 
-		// Non blocking send. Select isn't used to make sure it is actually sent.
+		// Non blocking send. Select isn't used to make sure it is
+		// actually sent.  The send has to be non blocking so the
+		// scheduler gets the time as quickly as possible.
 		go func() {
 			timers <- requested
 		}()
@@ -186,78 +141,55 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timer
 	batMsg.Events = make([]translate.Event, 0)
 
 	// Get pending events to send to Batsim
-	var elapsedSinceLastMessage time.Duration
-	var incremented time.Duration
-	lastMessageTime := time.Now()
 	loopStartTime := time.Now()
-	lastIncrement := time.Now()
+	loopSimulatedStartTime := batMsg.Now
+	var elapsedSinceLoopStart time.Duration
 	var stopReceivingEvents bool // Go compiler does not like infinite loops
 	var messageIsNotEmpty bool
 	for !stopReceivingEvents {
-		updateNow(now, *batMsg)
 		select {
 		case requested := <-timers:
-			// Duplicates cause issues when keeping track of requested calls
+			// Duplicates cause issues when keeping track of
+			// requested calls A check for duplicates is already
+			// made when receiving timer requests but it does not
+			// account for previous requests.
 			if !isAlreadyRequested(requested) {
 				batMsg.Events = append(batMsg.Events, newCallMeLater(batMsg.Now, requested))
 			}
 		case pod := <-ToExecute: // Jobs sent over by the api
 			messageIsNotEmpty = true
-			// TODO : better study how to account for scheduling time
-			batMsg.Now = addAndRound(batMsg.Now, elapsedSinceLastMessage)
+			runningJobs++
 
 			err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
-
 			translate.UpdatePodStatusForScheduling(pod, translate.BatsimNowToMetaV1Time(batMsg.Now))
 			IncrementResourceVersion(pod.Metadata)
-
-			runningJobs++
 			AddEvent(&translate.Modified, pod)
 			if err != nil {
 				log.Panic("Failed to create event:", err)
 			}
 			batMsg.Events = append(batMsg.Events, executeJob)
 			log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
-			lastMessageTime = time.Now()
 		default:
-			//fmt.Printf("[%f] len(events) %d; callMeLaters %d; unfinishedJobs %d; runningJobs %d\n", batMsg.Now, len(batMsg.Events), callMeLaters, unfinishedJobs, runningJobs)
-			elapsedSinceLastMessage = time.Now().Sub(lastMessageTime)
+		}
 
-			// Wait at least minimalWaitDelay
-			if time.Now().Sub(loopStartTime) < minimalWaitDelay {
-				continue
-			}
+		elapsedSinceLoopStart = time.Now().Sub(loopStartTime)
+		batMsg.Now = addAndRound(loopSimulatedStartTime, elapsedSinceLoopStart)
+		updateNow(now, *batMsg)
 
-			// increment simulation time if nothing happened
-			if enableIncrementalTime &&
-				incremented < incrementUpperLimit &&
-				time.Now().Sub(lastIncrement) > incrementTimeStep {
-
-				batMsg.Now = addAndRound(batMsg.Now, incrementValue)
-				updateNow(now, *batMsg)
-				lastIncrement = time.Now()
-				incremented += incrementValue
-				if resetLoopTimeOnIncrement {
-					// Reset the loop start time value,
-					// resulting in a minimal wait time
-					// once again.
-					loopStartTime = time.Now()
-				}
-			}
-
-			if sendMessageCondition&nonEmpty != 0 && messageIsNotEmpty ||
-				sendMessageCondition&timeout != 0 && elapsedSinceLastMessage > timeoutValue ||
-				sendMessageCondition&simulationTimeout != 0 && incremented >= incrementUpperLimit {
-				stopReceivingEvents = true
-			}
+		if messageIsNotEmpty || elapsedSinceLoopStart > timeoutValue {
+			stopReceivingEvents = true
 		}
 	}
 
-	removeOutdatedEvents(batMsg)
+	// If CALL_ME_LATER on scheduler timers are enables, some may point to
+	// timestamps in the past now
+	removeOutdatedCML(batMsg)
 
 	// We don't want to jump too much forward in time, so the scheduler can
-	// make its decisions in time
-	nextStep := addAndRound(batMsg.Now, simulationTimestep)
+	// make its decisions in time. This "not too much forward in time" is
+	// given by getNextWakeUp and depends on the context given to the
+	// simulator at startup.
+	nextStep := getNextWakeUp(batMsg.Now)
 	if len(requestedCalls) == 0 || requestedCalls[0] > nextStep {
 		batMsg.Events = append(batMsg.Events, newCallMeLater(batMsg.Now, nextStep))
 	}
@@ -364,13 +296,12 @@ func Run(batEndpoint string) {
 
 // Sync with handleTimeRequests
 func updateNow(now chan float64, batMsg translate.BatMessage) {
-	// This is a non blocking send because now is buffered
-	if len(now) == cap(now) {
-		select {
-		case <-now:
-		default:
-		}
+	// Empty any outdated value (there is one at most)
+	select {
+	case <-now:
+	default:
 	}
+	// This is a non blocking send because now is buffered
 	now <- batMsg.Now
 }
 
@@ -379,7 +310,7 @@ Remove any call_me_later that would be outdated
 
 Returns if events have been removed
 */
-func removeOutdatedEvents(batMsg *translate.BatMessage) {
+func removeOutdatedCML(batMsg *translate.BatMessage) {
 	toRemove := make([]int, 0)
 	for i, event := range batMsg.Events {
 		if event.Type == "CALL_ME_LATER" && event.Data["timestamp"].(float64) <= batMsg.Now {
@@ -489,4 +420,11 @@ func isAlreadyRequested(requested float64) bool {
 		}
 	}
 	return false
+}
+
+func getNextWakeUp(now float64) float64 {
+	// TODO Implement a backoff policy and some other logic depending on
+	// the context (e.g. with schedulers not using preemption, fast forward
+	// to next job submission when no job is in waitin state)
+	return addAndRound(now, simulationTimestep)
 }

@@ -8,7 +8,6 @@ import (
 )
 
 func handleBatMessage(msg translate.BatMessage) {
-	expectedEmptyResponse = true
 	for _, event := range msg.Events {
 		switch event.Type {
 		case "SIMULATION_BEGINS":
@@ -38,7 +37,6 @@ func handleBatMessage(msg translate.BatMessage) {
 			log.Infof("[broker:bathandler] Available nodes : %s", nodeList)
 
 		case "JOB_SUBMITTED":
-			expectedEmptyResponse = false
 			log.Debugln("[broker:bathandler] Deserializing JOB_SUBMITTED event")
 			unfinishedJobs++
 			var job translate.Job
@@ -70,7 +68,6 @@ func handleBatMessage(msg translate.BatMessage) {
 			}
 
 		case "JOB_COMPLETED":
-			expectedEmptyResponse = false
 			log.Debugln("[broker:bathandler] Deserializing JOB_COMPLETED event")
 			unfinishedJobs--
 			runningJobs--
@@ -131,7 +128,6 @@ func handleBatMessage(msg translate.BatMessage) {
 			}
 
 		case "REQUESTED_CALL":
-			expectedEmptyResponse = false
 			requestedCalls = requestedCalls[1:]
 
 		case "SIMULATION_ENDS":
