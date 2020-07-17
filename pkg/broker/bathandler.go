@@ -39,6 +39,8 @@ func handleBatMessage(msg translate.BatMessage) {
 		case "JOB_SUBMITTED":
 			log.Debugln("[broker:bathandler] Deserializing JOB_SUBMITTED event")
 			unfinishedJobs++
+			currentSimulationTimestep = baseSimulationTimestep // reset backoff
+
 			var job translate.Job
 			if err := translate.DeserializeJobSubmitted(event.Data, &job); err != nil {
 				log.Panic("[broker:bathandler] Error deserializing JOB_SUBMITTED event: ", err)
@@ -71,6 +73,8 @@ func handleBatMessage(msg translate.BatMessage) {
 			log.Debugln("[broker:bathandler] Deserializing JOB_COMPLETED event")
 			unfinishedJobs--
 			runningJobs--
+			currentSimulationTimestep = baseSimulationTimestep // reset backoff
+
 			var jobCompleted translate.JobCompletedData
 			if err := translate.DeserializeJobCompleted(event.Data, &jobCompleted); err != nil {
 				log.Panic("[broker:bathandler] Error deserializing JOB_COMPLETED event: ", err)

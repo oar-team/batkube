@@ -18,6 +18,8 @@ import (
 // sending a message to Batsim
 var timeoutValue = 20 * time.Millisecond
 
+// Note : deprecated (understand useless). Might be uselful in some cases, might not.
+//
 // Enable CALL_ME_LATER events triggered by scheduler timers. That way, the
 // scheduler gets control back whenever a timer is supposed to  fire.  This
 // results in scheduler code executing at the exact time it is supposed to be
@@ -25,8 +27,20 @@ var timeoutValue = 20 * time.Millisecond
 var enableCallMeLaters bool = false
 
 // Maximum amount of time Batsim is allowed to jump forward in time, so the
-// scheduler can take its decision in time.
-var simulationTimestep = 1000 * time.Millisecond
+// scheduler can take its decision in time.  This value is a starting point,
+// that will increase or decrease depending on a backoff policy and other logic
+// based on the context. See getNextWakeUp for implementation details
+var baseSimulationTimestep = 100 * time.Millisecond
+
+// Maximum amount of time Batsim is allowed to jump forward in time
+var maxSimulationTimestep = 50 * time.Second
+var backoffMultiplier = float64(2)
+
+// Schedulers may take a while to startup, this factors slows down the
+// simulation until Batkube gets it first decision from the scheduler.
+var startupSlowDownFactor = 5
+
+var currentSimulationTimestep time.Duration = baseSimulationTimestep
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -42,6 +56,10 @@ var requestedCalls []float64 = make([]float64, 0)
 
 // Batkube received a SIMULATION_ENDS event.
 var receivedSimulationEnded bool
+
+// The scheduler is a bit slow at startup, so the simulation shouldn't be too
+// fast before it reacts for the first time
+var firstJobWasScheduled bool
 
 /*
 Handles time requests asynchronously. All sends and receives are non blocking
@@ -158,6 +176,8 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timer
 			}
 		case pod := <-ToExecute: // Jobs sent over by the api
 			messageIsNotEmpty = true
+			firstJobWasScheduled = true
+			currentSimulationTimestep = baseSimulationTimestep
 			runningJobs++
 
 			err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
@@ -190,7 +210,7 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timer
 	// given by getNextWakeUp and depends on the context given to the
 	// simulator at startup.
 	nextStep := getNextWakeUp(batMsg.Now)
-	if len(requestedCalls) == 0 || requestedCalls[0] > nextStep {
+	if nextStep > batMsg.Now && (len(requestedCalls) == 0 || requestedCalls[0] > nextStep) {
 		batMsg.Events = append(batMsg.Events, newCallMeLater(batMsg.Now, nextStep))
 	}
 }
@@ -423,8 +443,22 @@ func isAlreadyRequested(requested float64) bool {
 }
 
 func getNextWakeUp(now float64) float64 {
-	// TODO Implement a backoff policy and some other logic depending on
-	// the context (e.g. with schedulers not using preemption, fast forward
-	// to next job submission when no job is in waitin state)
-	return addAndRound(now, simulationTimestep)
+	// TODO : parameterize this condition. You don't want to do that if the
+	// scheduler has preemption or any kind of policy that could make him
+	// make a decision when there is no jobs in a pending state
+	var timestep time.Duration
+
+	if !firstJobWasScheduled {
+		// It does make sense to to this : Durations are nothing more than int64.
+		timestep = baseSimulationTimestep / time.Duration(startupSlowDownFactor)
+	} else if unfinishedJobs-runningJobs == 0 {
+		timestep = 0
+	} else if currentSimulationTimestep < maxSimulationTimestep {
+		currentSimulationTimestep = time.Duration(float64(currentSimulationTimestep) * backoffMultiplier)
+		if currentSimulationTimestep > maxSimulationTimestep {
+			currentSimulationTimestep = maxSimulationTimestep
+		}
+		timestep = currentSimulationTimestep
+	}
+	return addAndRound(now, timestep)
 }
