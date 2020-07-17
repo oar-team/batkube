@@ -26,21 +26,27 @@ var timeoutValue = 20 * time.Millisecond
 // executed, at the expense of very slow simulations.
 var enableCallMeLaters bool = false
 
-// Maximum amount of time Batsim is allowed to jump forward in time, so the
-// scheduler can take its decision in time.  This value is a starting point,
-// that will increase or decrease depending on a backoff policy and other logic
-// based on the context. See getNextWakeUp for implementation details
+// Each cycle, a call me later event is emitted in order to advance in the
+// simulation, fast forwarding into the future with a certain timestep value.
+// This value is a starting point, that will increase or decrease depending on
+// a backoff policy and other logic based on the context. See getNextWakeUp for
+// implementation details
 var baseSimulationTimestep = 100 * time.Millisecond
 
 // Maximum amount of time Batsim is allowed to jump forward in time
 var maxSimulationTimestep = 50 * time.Second
 var backoffMultiplier = float64(2)
 
-// Schedulers may take a while to startup, this factors slows down the
+// Schedulers may take a while to startup. This factors slows down the
 // simulation until Batkube gets it first decision from the scheduler.
 var startupSlowDownFactor = 5
 
 var currentSimulationTimestep time.Duration = baseSimulationTimestep
+
+// Set this to true if the scheduler is not excepted to make any decisions if
+// no jobs are in a pending state. Set it to false otherwise (for exemple, if
+// the scheduler has policies like preemption).
+var fastForwardOnNoPendingJobs = true
 
 // Set to true when a no_more_static_job_to_submit NOTIFY is received.
 var noMoreJobs bool
@@ -180,6 +186,7 @@ func processMessagesToSend(batMsg *translate.BatMessage, now chan float64, timer
 			currentSimulationTimestep = baseSimulationTimestep
 			runningJobs++
 
+			// Resource housekeeping
 			err, executeJob := translate.MakeEvent(batMsg.Now, "EXECUTE_JOB", translate.PodToExecuteJobData(pod))
 			translate.UpdatePodStatusForScheduling(pod, translate.BatsimNowToMetaV1Time(batMsg.Now))
 			IncrementResourceVersion(pod.Metadata)
@@ -443,15 +450,12 @@ func isAlreadyRequested(requested float64) bool {
 }
 
 func getNextWakeUp(now float64) float64 {
-	// TODO : parameterize this condition. You don't want to do that if the
-	// scheduler has preemption or any kind of policy that could make him
-	// make a decision when there is no jobs in a pending state
 	var timestep time.Duration
 
 	if !firstJobWasScheduled {
 		// It does make sense to to this : Durations are nothing more than int64.
 		timestep = baseSimulationTimestep / time.Duration(startupSlowDownFactor)
-	} else if unfinishedJobs-runningJobs == 0 {
+	} else if fastForwardOnNoPendingJobs && unfinishedJobs-runningJobs == 0 {
 		timestep = 0
 	} else if currentSimulationTimestep < maxSimulationTimestep {
 		currentSimulationTimestep = time.Duration(float64(currentSimulationTimestep) * backoffMultiplier)
