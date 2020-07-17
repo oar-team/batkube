@@ -23,7 +23,7 @@ const simulationTimeout = 1 << 2 // Just like the real time timeout, but for sim
 // 	- the waiting time since the last message from the scheduler is higher
 // 	than timeoutValue
 // 	- OR if the Events slice contained in the response is not empty.
-var sendMessageCondition = simulationTimeout | nonEmpty
+var sendMessageCondition = timeout | nonEmpty
 
 // If the duration since the last message received by the scheduler exceeds
 // timeoutValue, Batkube will consider it as a timeout and will proceed with
@@ -41,11 +41,11 @@ var minimalWaitDelay = 0 * time.Millisecond
 // Enable CALL_ME__LATER events. These events originate from timer requests
 // from the scheduler, allowing to fast forward in time to the next timestamp
 // where a timer is supposed to fire.
-var enableCallMeLaters bool = false
+var enableCallMeLaters bool = true
 
 // Maximum amount of time Batsim is allowed to jump forward in time, so the
 // scheduler can take its decision in time.
-var simulationTimestep = 100 * time.Millisecond
+var simulationTimestep = 50000 * time.Millisecond
 
 // Enable time incremental increases. When waiting for a response from the
 // scheduler, increase the simulated time with a real time period by
@@ -54,8 +54,8 @@ var simulationTimestep = 100 * time.Millisecond
 // but also makes the simulation slightly less accurate as events could happen
 // during this time, that Batsim would have to wait for the next exchange to
 // send.
-var enableIncrementalTime bool = true
-var incrementUpperLimit = 5 * time.Second     // Setting a fair upper limit moderates the effect described above.
+var enableIncrementalTime bool = false
+var incrementUpperLimit = 2 * time.Second     // Setting a fair upper limit moderates the effect described above.
 var incrementTimeStep = 10 * time.Microsecond // Basically, slows down the simulation to give more time for the scheduler.
 var incrementValue = 1 * time.Millisecond     // Having a low increment may (or may not) result in a more accurate simulation.
 
