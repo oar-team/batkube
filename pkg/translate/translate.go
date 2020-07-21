@@ -1,17 +1,20 @@
 package translate
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
 )
 
 func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICoreV1Pod) {
-	prof := simData.Profiles[strings.Split(job.Id, "!")[0]][job.Profile]
+	prof, ok := simData.Profiles[strings.Split(job.Id, "!")[0]][job.Profile]
+	if !ok {
+		return errors.New(fmt.Sprintf("Could not find profile %s for workload %s\n", job.Profile, strings.Split(job.Id, "!")[0])), models.IoK8sAPICoreV1Pod{}
+	}
 	var pod models.IoK8sAPICoreV1Pod
 
 	var scheduler string
@@ -66,7 +69,7 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 		}
 
 	default:
-		log.Fatalf("[translate] I don't know this profile type : %s", prof.Type)
+		return errors.New(fmt.Sprintf("[translate] I don't know this profile type : %s", prof.Type)), models.IoK8sAPICoreV1Pod{}
 	}
 	return nil, pod
 }
