@@ -11,9 +11,14 @@ import (
 )
 
 func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICoreV1Pod) {
-	prof, ok := simData.Profiles[strings.Split(job.Id, "!")[0]][job.Profile]
+	jobIdsplit := strings.Split(job.Id, "!")
+	if len(jobIdsplit) <= 1 {
+		return errors.New("Job id must be of the form worklaod!jobId, as in a JOB_SUBMITTED event"), models.IoK8sAPICoreV1Pod{}
+	}
+	wl := jobIdsplit[0]
+	prof, ok := simData.Profiles[wl][job.Profile]
 	if !ok {
-		return errors.New(fmt.Sprintf("Could not find profile %s for workload %s\n", job.Profile, strings.Split(job.Id, "!")[0])), models.IoK8sAPICoreV1Pod{}
+		return errors.New(fmt.Sprintf("Could not find profile %s for workload %s\n", job.Profile, wl)), models.IoK8sAPICoreV1Pod{}
 	}
 	var pod models.IoK8sAPICoreV1Pod
 
