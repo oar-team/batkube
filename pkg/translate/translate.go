@@ -38,7 +38,6 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 
 	switch prof.Type {
 	case "delay":
-		containerName := "sleep"
 		jobSubtime := BatsimNowToMetaV1Time(job.Subtime)
 		pod = models.IoK8sAPICoreV1Pod{
 			Kind:       "Pod",
@@ -55,7 +54,7 @@ func JobToPod(job Job, simData SimulationBeginsData) (error, models.IoK8sAPICore
 				NodeName:      "",
 				Containers: []*models.IoK8sAPICoreV1Container{
 					{
-						Name:  &containerName,
+						Name:  &job.Profile,
 						Image: "nginx",
 						Command: []string{
 							"/bin/sleep",

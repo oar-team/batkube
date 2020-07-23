@@ -38,7 +38,7 @@
             "type": "delay",
             "delay": 50,
 	    "scheduler": "default",
-	    "cpu": 4
+	    "cpu": 1
         }
     }
 }
