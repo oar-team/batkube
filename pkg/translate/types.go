@@ -37,9 +37,9 @@ type SimulationBeginsData struct {
 }
 
 type Workload struct {
-	NbRes    int
-	Jobs     []Job
-	Profiles map[string]Profile
+	NbRes    int                `json:"nb_res"`
+	Jobs     []Job              `json:"jobs"`
+	Profiles map[string]Profile `json:"profiles"`
 }
 
 // TODO : config might be properly defined somewhere
@@ -56,11 +56,11 @@ type ComputeResource struct {
 
 type Job struct {
 	// Sometimes job id are written as integers
-	Id           string                 `mapstructure:"id"`
-	Subtime      float64                `mapstructure:"subtime"`
-	Res          int                    `mapstructure:"res"`
-	Profile      string                 `mapstructure:"profile"`
-	CustomFields map[string]interface{} `mapstructure:"-"`
+	Id           string                 `mapstructure:"id" json:"id"`
+	Subtime      float64                `mapstructure:"subtime" json:"subtime"`
+	Res          int                    `mapstructure:"res" json:"res"`
+	Profile      string                 `mapstructure:"profile" json:"profile"`
+	CustomFields map[string]interface{} `mapstructure:"-" json:"-"`
 }
 
 type Profile struct {
