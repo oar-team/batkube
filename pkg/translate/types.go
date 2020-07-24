@@ -66,7 +66,7 @@ type Job struct {
 type Profile struct {
 	Type  string                 `mapstructure:"type" json:"type"`
 	Ret   int                    `mapstructure:"ret" json:"ret"`
-	Specs map[string]interface{} `mapstructure:"-"`
+	Specs map[string]interface{} `mapstructure:"-" json:"-"`
 }
 
 type ExecuteJobData struct {
