@@ -125,7 +125,7 @@ func handleBatMessage(msg translate.BatMessage) {
 				n := len(PodList.Items)
 				PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
 				PodList.Items = PodList.Items[:n-1]
-				log.Infof("[broker:bathandler] pod %s completed successfully. %d left to execute", podName, unfinishedJobs)
+				log.Infof("[broker:bathandler] pod %s completed successfully. %d left to execute (%d running, %d pending)", podName, unfinishedJobs, runningJobs, unfinishedJobs-runningJobs)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)
 

@@ -449,6 +449,9 @@ func isAlreadyRequested(requested float64) bool {
 	return false
 }
 
+/*
+Returns the next step Batsim is allowed to fast forward to
+*/
 func getNextWakeUp(now float64) float64 {
 	var timestep time.Duration
 
@@ -463,6 +466,8 @@ func getNextWakeUp(now float64) float64 {
 			currentSimulationTimestep = maxSimulationTimestep
 		}
 		timestep = currentSimulationTimestep
+	} else {
+		timestep = maxSimulationTimestep
 	}
 	return addAndRound(now, timestep)
 }

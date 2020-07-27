@@ -73,3 +73,7 @@ changing the swagger spec.
     updated to this value. It works very well and doesn't need to be changed,
     for now. Maybe consider propely handling resourceVersions in the future.
 - Batkube only supports one workload.
+- Kubernetes scheduler may display this error : `Unable to write event:
+    'resource name may not be empty' (may retry after sleeping)` near the end
+    of the simulation. In that case, the scheduler is stuck and the simulation
+    needs to be run again. The reason for this is unknown.
