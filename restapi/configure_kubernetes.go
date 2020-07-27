@@ -3,7 +3,6 @@
 package restapi
 
 import (
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -201,7 +200,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 	api.CoreV1CreateCoreV1NamespacedEventHandler = core_v1.CreateCoreV1NamespacedEventHandlerFunc(func(params core_v1.CreateCoreV1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			broker.CoreV1EventList.Items = append(broker.CoreV1EventList.Items, params.Body)
+			//broker.CoreV1EventList.Items = append(broker.CoreV1EventList.Items, params.Body)
 			success(rw, p)
 		})
 	})
@@ -209,33 +208,33 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Events
 	api.EventsV1beta1CreateEventsV1beta1NamespacedEventHandler = events_v1beta1.CreateEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.CreateEventsV1beta1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			broker.EventV1beta1EventList.Items = append(broker.EventV1beta1EventList.Items, params.Body)
+			//broker.EventV1beta1EventList.Items = append(broker.EventV1beta1EventList.Items, params.Body)
 			success(rw, p)
 		})
 	})
 	api.EventsV1beta1PatchEventsV1beta1NamespacedEventHandler = events_v1beta1.PatchEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.PatchEventsV1beta1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
-			event, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.EventV1beta1EventList)
-			if err != nil {
-				http.Error(rw, err.Error(), http.StatusBadRequest)
-				return
-			} else if event == nil {
-				failureNotFound(rw, p)
-				return
-			}
+			//event, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.EventV1beta1EventList)
+			//if err != nil {
+			//	http.Error(rw, err.Error(), http.StatusBadRequest)
+			//	return
+			//} else if event == nil {
+			//	failureNotFound(rw, p)
+			//	return
+			//}
 
-			// mapstructure.Decode does not work. Encoding and decoding again as a quick fix.
-			var patchBytes []byte
-			b := bytes.NewBuffer(patchBytes)
-			if err := runtime.JSONProducer().Produce(b, params.Body); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			if err := runtime.JSONConsumer().Consume(b, event); err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			broker.IncrementResourceVersion(event.(*models.IoK8sAPIEventsV1beta1Event).Metadata)
+			//// mapstructure.Decode does not work. Encoding and decoding again as a quick fix.
+			//var patchBytes []byte
+			//b := bytes.NewBuffer(patchBytes)
+			//if err := runtime.JSONProducer().Produce(b, params.Body); err != nil {
+			//	http.Error(rw, err.Error(), http.StatusInternalServerError)
+			//	return
+			//}
+			//if err := runtime.JSONConsumer().Consume(b, event); err != nil {
+			//	http.Error(rw, err.Error(), http.StatusInternalServerError)
+			//	return
+			//}
+			//broker.IncrementResourceVersion(event.(*models.IoK8sAPIEventsV1beta1Event).Metadata)
 
 			success(rw, p)
 		})

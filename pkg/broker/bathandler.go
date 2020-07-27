@@ -88,7 +88,7 @@ func handleBatMessage(msg translate.BatMessage) {
 				//res, _, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
 
-				//pod.Status.Phase = "Succeeded"
+				pod.Status.Phase = "Succeeded"
 
 				// update conditions and conditions
 				var falseBool bool
@@ -97,6 +97,7 @@ func handleBatMessage(msg translate.BatMessage) {
 				currMetaV1Time := translate.BatsimNowToMetaV1Time(msg.Now)
 				pod.Status.ContainerStatuses = []*models.IoK8sAPICoreV1ContainerStatus{
 					{
+						Image: &pod.Spec.Containers[0].Image,
 						Name:  pod.Spec.Containers[0].Name,
 						Ready: &falseBool,
 						LastState: &models.IoK8sAPICoreV1ContainerState{
@@ -125,6 +126,7 @@ func handleBatMessage(msg translate.BatMessage) {
 				n := len(PodList.Items)
 				PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
 				PodList.Items = PodList.Items[:n-1]
+
 				log.Infof("[broker:bathandler] pod %s completed successfully. %d left to execute (%d running, %d pending)", podName, unfinishedJobs, runningJobs, unfinishedJobs-runningJobs)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)
