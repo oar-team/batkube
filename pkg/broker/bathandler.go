@@ -7,7 +7,7 @@ import (
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
 
-func handleBatMessage(msg translate.BatMessage) {
+func handleBatMessage(b *broker, msg translate.BatMessage) {
 	for _, event := range msg.Events {
 		switch event.Type {
 		case "SIMULATION_BEGINS":
@@ -38,8 +38,8 @@ func handleBatMessage(msg translate.BatMessage) {
 
 		case "JOB_SUBMITTED":
 			log.Debugln("[broker:bathandler] Deserializing JOB_SUBMITTED event")
-			unfinishedJobs++
-			currentSimulationTimestep = baseSimulationTimestep // reset backoff
+			b.unfinishedJobs++
+			b.currentSimulationTimestep = b.baseSimulationTimestep // reset backoff
 
 			var job translate.Job
 			if err := translate.DeserializeJobSubmitted(event.Data, &job); err != nil {
@@ -66,14 +66,14 @@ func handleBatMessage(msg translate.BatMessage) {
 		case "NOTIFY":
 			log.Debugf("[broker:bathandler] Got notify : %s", spew.Sdump(event))
 			if event.Data["type"] == "no_more_static_job_to_submit" {
-				noMoreJobs = true
+				b.noMoreJobs = true
 			}
 
 		case "JOB_COMPLETED":
 			log.Debugln("[broker:bathandler] Deserializing JOB_COMPLETED event")
-			unfinishedJobs--
-			runningJobs--
-			currentSimulationTimestep = baseSimulationTimestep // reset backoff
+			b.unfinishedJobs--
+			b.runningJobs--
+			b.currentSimulationTimestep = b.baseSimulationTimestep // reset backoff
 
 			var jobCompleted translate.JobCompletedData
 			if err := translate.DeserializeJobCompleted(event.Data, &jobCompleted); err != nil {
@@ -127,17 +127,17 @@ func handleBatMessage(msg translate.BatMessage) {
 				PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
 				PodList.Items = PodList.Items[:n-1]
 
-				log.Infof("[broker:bathandler] pod %s completed successfully. %d left to execute (%d running, %d pending)", podName, unfinishedJobs, runningJobs, unfinishedJobs-runningJobs)
+				log.Infof("[broker:bathandler] pod %s completed successfully. %d left to execute (%d running, %d pending)", podName, b.unfinishedJobs, b.runningJobs, b.unfinishedJobs-b.runningJobs)
 			default:
 				log.Errorf("[broker:bathandler] I don't know about this job state: %s", jobCompleted.JobState)
 
 			}
 
 		case "REQUESTED_CALL":
-			requestedCalls = requestedCalls[1:]
+			b.requestedCalls = b.requestedCalls[1:]
 
 		case "SIMULATION_ENDS":
-			receivedSimulationEnded = true
+			b.receivedSimulationEnded = true
 			log.Infoln("[broker:bathandler] Bye bye")
 			// TODO : gracefully shutdown the server
 

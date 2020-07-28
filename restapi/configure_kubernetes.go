@@ -121,7 +121,9 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	// Example:
 	// api.Logger = log.Printf
 
-	go broker.Run("tcp://127.0.0.1:28000")
+	b := broker.NewBroker()
+
+	go b.Run("tcp://127.0.0.1:28000")
 
 	api.EmptyConsumer = runtime.ConsumerFunc(func(r io.Reader, target interface{}) error {
 		return errors.NotImplemented(" consumer has not yet been implemented")
