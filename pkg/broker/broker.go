@@ -69,10 +69,23 @@ type broker struct {
 	firstJobWasScheduled bool
 }
 
-func NewBroker() *broker {
+type BatkubeOptions struct {
+	TimeoutValue               int64   `long:"timeout-value" description:"maximum amount of time spent waiting for messages from the scheduler, in milliseconds" default:"20"`
+	BaseSimulationTimestep     int64   `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time, in milliseconds. This value increases according to a backoff policy, up to a maximum amount" default:"100"`
+	MaxSimulationTimestep      int64   `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"50"`
+	BackoffMultiplier          float64 `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
+	FastForwardOnNoPendingJobs bool    `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
+}
+
+func NewBroker(options *BatkubeOptions) *broker {
 	return &broker{
-		startupSlowDownFactor: 5,
-		requestedCalls:        make([]float64, 0),
+		startupSlowDownFactor:      5,
+		requestedCalls:             make([]float64, 0),
+		timeoutValue:               time.Duration(options.TimeoutValue) * time.Millisecond,
+		baseSimulationTimestep:     time.Duration(options.BaseSimulationTimestep) * time.Millisecond,
+		maxSimulationTimestep:      time.Duration(options.MaxSimulationTimestep) * time.Second,
+		backoffMultiplier:          options.BackoffMultiplier,
+		fastForwardOnNoPendingJobs: options.FastForwardOnNoPendingJobs,
 	}
 }
 
@@ -109,6 +122,7 @@ func (b *broker) Run(batEndpoint string) {
 		// WARNING: This is required to avoid stalling of the connection: the
 		// last message is never sent if not called
 		zmq.Term()
+		os.Exit(1)
 	}()
 
 	// Loop responsible for time requests
