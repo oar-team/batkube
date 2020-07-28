@@ -13,6 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/runtime/yamlpc"
+	"github.com/go-openapi/swag"
 	negronilogrus "github.com/meatballhat/negroni-logrus"
 	"github.com/mitchellh/mapstructure"
 	"github.com/urfave/negroni"
@@ -92,8 +93,22 @@ import (
 
 //go:generate swagger generate server --target ../../batkube --name Kubernetes --spec ../swagger.json
 
+type batkubeOptions struct {
+	TimeoutValue               int64   `long:"timeout-value" description:"maximum amount of time spent waiting for messages from the scheduler, in milliseconds" default:"20"`
+	BaseSimulationTimestep     int64   `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time, in milliseconds. This value increases according to a backoff policy, up to a maximum amount" default:"100"`
+	MaxSimulationTimestep      int64   `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"50"`
+	BackoffMultiplier          float64 `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
+	FastForwardOnNoPendingJobs bool    `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
+}
+
 func configureFlags(api *operations.KubernetesAPI) {
-	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
+	api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{
+		{
+			ShortDescription: "Batkube Options",
+			LongDescription:  "Options related to the simulator itself",
+			Options:          &batkubeOptions{},
+		},
+	}
 }
 
 func configureAPI(api *operations.KubernetesAPI) http.Handler {
