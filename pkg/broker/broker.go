@@ -338,6 +338,11 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 		}
 
 		elapsedSinceLoopStart = time.Now().Sub(loopStartTime)
+
+		if elapsedSinceLoopStart < time.Millisecond*5 {
+			continue
+		}
+
 		batMsg.Now = addAndRound(loopSimulatedStartTime, elapsedSinceLoopStart)
 		b.updateNow(batMsg.Now)
 
