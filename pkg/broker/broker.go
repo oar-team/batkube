@@ -67,6 +67,16 @@ type broker struct {
 	// The scheduler is a bit slow at startup, so the simulation shouldn't be too
 	// fast before it reacts for the first time
 	firstJobWasScheduled bool
+
+	// Channel for sharing the current time accross the different routines.
+	// Must be of capacity 1.
+	now chan float64
+
+	// Let the broker know the simulation ended through this channel
+	end chan bool
+
+	// Timers requests are sent to this channel
+	timers chan float64
 }
 
 type BatkubeOptions struct {
@@ -86,13 +96,14 @@ func NewBroker(options *BatkubeOptions) *broker {
 		maxSimulationTimestep:      time.Duration(options.MaxSimulationTimestep) * time.Second,
 		backoffMultiplier:          options.BackoffMultiplier,
 		fastForwardOnNoPendingJobs: options.FastForwardOnNoPendingJobs,
+		now:                        make(chan float64, 1),
+		end:                        make(chan bool),
+		timers:                     make(chan float64),
 	}
 }
 
 func (b *broker) Run(batEndpoint string) {
 	var err error
-
-	//TODO: set currentSimulationTimestep
 
 	logrus.SetLevel(logrus.InfoLevel)
 	if level, err := logrus.ParseLevel(os.Getenv("LOGLEVEL")); err == nil {
@@ -125,11 +136,10 @@ func (b *broker) Run(batEndpoint string) {
 		os.Exit(1)
 	}()
 
+	b.currentSimulationTimestep = b.baseSimulationTimestep
+
 	// Loop responsible for time requests
-	var now = make(chan float64, 1)
-	var end = make(chan bool)
-	var timers = make(chan float64)
-	go handleTimeRequests(b, timeSock, end, now, timers)
+	go b.handleTimeRequests(timeSock)
 
 	// Main loop
 	var batMsg translate.BatMessage
@@ -147,7 +157,7 @@ func (b *broker) Run(batEndpoint string) {
 			log.Panicln(err)
 		}
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
-		updateNow(now, batMsg)
+		b.updateNow(batMsg.Now)
 
 		//UpdateProbeAndHeartbeatTimes(batMsg.Now)
 		//IncrementAllResourceVersions()
@@ -168,14 +178,14 @@ func (b *broker) Run(batEndpoint string) {
 			// terminating zmq right now.
 			log.Info("It seems like the simulation ended.")
 			go func() {
-				end <- true
+				b.end <- true
 			}()
 
 			if !b.receivedSimulationEnded {
-				emptyRequestedCallStack(b, &batMsg, batSock)
+				b.emptyRequestedCallStack(&batMsg, batSock)
 			}
 		} else {
-			processMessagesToSend(b, &batMsg, now, timers)
+			b.processMessagesToSend(&batMsg)
 		}
 
 		batMsgBytes, err = json.Marshal(batMsg)
@@ -198,11 +208,11 @@ end : send a boolean on this channel to end the loop.
 now : whenever now is updated, send it to this channel.
 events : CALL_ME_LATER events are sent to this channel. They are stacked and sent whenever the receiver is ready.
 */
-func handleTimeRequests(b *broker, timeSock *zmq.Socket, end chan bool, now chan float64, timers chan float64) {
-	if cap(now) != 1 {
+func (b *broker) handleTimeRequests(timeSock *zmq.Socket) {
+	if cap(b.now) != 1 {
 		panic("now should be a buffered channel with capacity 1")
 	}
-	nowValue := <-now // Blocking receive : the value has to be initialized
+	nowValue := <-b.now // Blocking receive : the value has to be initialized
 
 	thisIsTheEnd := false
 	for !thisIsTheEnd {
@@ -210,7 +220,7 @@ func handleTimeRequests(b *broker, timeSock *zmq.Socket, end chan bool, now chan
 		// Note : to make message passing between time, batkube and
 		// batsim completely synchronous, make this a blocking receive.
 		select {
-		case nowValue = <-now:
+		case nowValue = <-b.now:
 		default:
 		}
 
@@ -225,14 +235,14 @@ func handleTimeRequests(b *broker, timeSock *zmq.Socket, end chan bool, now chan
 		}
 
 		if b.enableCallMeLaters {
-			processTimerRequests(nowValue, durations, timers)
+			b.processTimerRequests(nowValue, durations)
 		}
 
 		// Answer the time requests
 		nowNano := uint64(nowValue * 1e9)
-		b := make([]byte, 8)
-		binary.LittleEndian.PutUint64(b, nowNano)
-		_, err = timeSock.SendBytes(b, 0)
+		bytes := make([]byte, 8)
+		binary.LittleEndian.PutUint64(bytes, nowNano)
+		_, err = timeSock.SendBytes(bytes, 0)
 		if err != nil {
 			panic("Error sending message: " + err.Error())
 		}
@@ -246,7 +256,7 @@ func handleTimeRequests(b *broker, timeSock *zmq.Socket, end chan bool, now chan
 		}
 
 		select {
-		case <-end:
+		case <-b.end:
 			thisIsTheEnd = true
 		default:
 		}
@@ -258,7 +268,7 @@ durations is an integer slice representing the durations of the timers
 requested by the scheduler. For each of these timers, this function emits a
 CALL_ME_LATER event to the events channel.
 */
-func processTimerRequests(nowValue float64, durations []int64, timers chan float64) {
+func (b *broker) processTimerRequests(nowValue float64, durations []int64) {
 	for _, d := range durations {
 		if d <= 0 {
 			panic("Got a negative duration")
@@ -273,7 +283,7 @@ func processTimerRequests(nowValue float64, durations []int64, timers chan float
 		// actually sent.  The send has to be non blocking so the
 		// scheduler gets the time as quickly as possible.
 		go func() {
-			timers <- requested
+			b.timers <- requested
 		}()
 	}
 }
@@ -285,7 +295,7 @@ with them.
 It handles all the options defined above regarding timing and other message
 sending conditions.
 */
-func processMessagesToSend(b *broker, batMsg *translate.BatMessage, now chan float64, timers chan float64) {
+func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 	batMsg.Events = make([]translate.Event, 0)
 
 	// Get pending events to send to Batsim
@@ -296,13 +306,13 @@ func processMessagesToSend(b *broker, batMsg *translate.BatMessage, now chan flo
 	var messageIsNotEmpty bool
 	for !stopReceivingEvents {
 		select {
-		case requested := <-timers:
+		case requested := <-b.timers:
 			// Duplicates cause issues when keeping track of
 			// requested calls A check for duplicates is already
 			// made when receiving timer requests but it does not
 			// account for previous requests.
-			if !isAlreadyRequested(b, requested) {
-				batMsg.Events = append(batMsg.Events, newCallMeLater(b, batMsg.Now, requested))
+			if !b.isAlreadyRequested(requested) {
+				batMsg.Events = append(batMsg.Events, b.newCallMeLater(batMsg.Now, requested))
 			}
 		case pod := <-ToExecute: // Jobs sent over by the api
 			messageIsNotEmpty = true
@@ -325,7 +335,7 @@ func processMessagesToSend(b *broker, batMsg *translate.BatMessage, now chan flo
 
 		elapsedSinceLoopStart = time.Now().Sub(loopStartTime)
 		batMsg.Now = addAndRound(loopSimulatedStartTime, elapsedSinceLoopStart)
-		updateNow(now, *batMsg)
+		b.updateNow(batMsg.Now)
 
 		if messageIsNotEmpty || elapsedSinceLoopStart > b.timeoutValue {
 			stopReceivingEvents = true
@@ -334,27 +344,27 @@ func processMessagesToSend(b *broker, batMsg *translate.BatMessage, now chan flo
 
 	// If CALL_ME_LATER on scheduler timers are enables, some may point to
 	// timestamps in the past now
-	removeOutdatedCML(b, batMsg)
+	b.removeOutdatedCML(batMsg)
 
 	// We don't want to jump too much forward in time, so the scheduler can
 	// make its decisions in time. This "not too much forward in time" is
 	// given by getNextWakeUp and depends on the context given to the
 	// simulator at startup.
-	nextStep := getNextWakeUp(b, batMsg.Now)
+	nextStep := b.getNextWakeUp(batMsg.Now)
 	if nextStep > batMsg.Now && (len(b.requestedCalls) == 0 || b.requestedCalls[0] > nextStep) {
-		batMsg.Events = append(batMsg.Events, newCallMeLater(b, batMsg.Now, nextStep))
+		batMsg.Events = append(batMsg.Events, b.newCallMeLater(batMsg.Now, nextStep))
 	}
 }
 
 // Sync with handleTimeRequests
-func updateNow(now chan float64, batMsg translate.BatMessage) {
+func (b *broker) updateNow(nowValue float64) {
 	// Empty any outdated value (there is one at most)
 	select {
-	case <-now:
+	case <-b.now:
 	default:
 	}
 	// This is a non blocking send because now is buffered
-	now <- batMsg.Now
+	b.now <- nowValue
 }
 
 /*
@@ -362,12 +372,12 @@ Remove any call_me_later that would be outdated
 
 Returns if events have been removed
 */
-func removeOutdatedCML(b *broker, batMsg *translate.BatMessage) {
+func (b *broker) removeOutdatedCML(batMsg *translate.BatMessage) {
 	toRemove := make([]int, 0)
 	for i, event := range batMsg.Events {
 		if event.Type == "CALL_ME_LATER" && event.Data["timestamp"].(float64) <= batMsg.Now {
 			toRemove = append(toRemove, i)
-			deleteRequestedCall(b, event.Data["timestamp"].(float64))
+			b.deleteRequestedCall(event.Data["timestamp"].(float64))
 		}
 	}
 
@@ -391,7 +401,7 @@ func round(now float64) float64 {
 	return math.Round(now*1000) / 1000 // we want to round to the closest millisecond
 }
 
-func emptyRequestedCallStack(b *broker, batMsg *translate.BatMessage, batSock *zmq.Socket) {
+func (b *broker) emptyRequestedCallStack(batMsg *translate.BatMessage, batSock *zmq.Socket) {
 	if len(batMsg.Events) != 0 {
 		log.Panicf("emptyRequestedCallStack called with non-empty event list")
 	}
@@ -425,7 +435,7 @@ func emptyRequestedCallStack(b *broker, batMsg *translate.BatMessage, batSock *z
 /*
 Warning : not thread safe.
 */
-func newCallMeLater(b *broker, now, timestamp float64) translate.Event {
+func (b *broker) newCallMeLater(now, timestamp float64) translate.Event {
 	err, callMeLater := translate.MakeEvent(now, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: timestamp})
 	if err != nil {
 		log.Panic("Failed to create event:", err)
@@ -454,7 +464,7 @@ func newCallMeLater(b *broker, now, timestamp float64) translate.Event {
 /*
 Warning : not thread safe.
 */
-func deleteRequestedCall(b *broker, timestamp float64) {
+func (b *broker) deleteRequestedCall(timestamp float64) {
 	for i, requested := range b.requestedCalls {
 		if requested == timestamp {
 			n := len(b.requestedCalls)
@@ -465,7 +475,7 @@ func deleteRequestedCall(b *broker, timestamp float64) {
 	}
 }
 
-func isAlreadyRequested(b *broker, requested float64) bool {
+func (b *broker) isAlreadyRequested(requested float64) bool {
 	for _, timestamp := range b.requestedCalls {
 		if requested == timestamp {
 			return true
@@ -477,7 +487,7 @@ func isAlreadyRequested(b *broker, requested float64) bool {
 /*
 Returns the next step Batsim is allowed to fast forward to
 */
-func getNextWakeUp(b *broker, now float64) float64 {
+func (b *broker) getNextWakeUp(now float64) float64 {
 	var timestep time.Duration
 
 	if !b.firstJobWasScheduled {
