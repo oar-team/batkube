@@ -77,18 +77,31 @@ type broker struct {
 
 	// Timers requests are sent to this channel
 	timers chan float64
+
+	batSock  *zmq.Socket
+	timeSock *zmq.Socket
 }
 
+/*
+Flag options from the api
+*/
 type BatkubeOptions struct {
 	TimeoutValue               int64   `long:"timeout-value" description:"maximum amount of time spent waiting for messages from the scheduler, in milliseconds" default:"20"`
 	BaseSimulationTimestep     int64   `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time, in milliseconds. This value increases according to a backoff policy, up to a maximum amount" default:"100"`
 	MaxSimulationTimestep      int64   `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"50"`
 	BackoffMultiplier          float64 `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
 	FastForwardOnNoPendingJobs bool    `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
+	BatEndpoint                string  `long:"batkube-endpoint" description:"batkube zmq socket endpoint" default:"tcp://127.0.0.1:28000"`
+	TimeEndpoint               string  `long:"batsky-endpoint" description:"batsky-go zmq socket endpoint" default:"tcp://127.0.0.1:27000"`
 }
 
 func NewBroker(options *BatkubeOptions) *broker {
-	return &broker{
+	logrus.SetLevel(logrus.InfoLevel)
+	if level, err := logrus.ParseLevel(os.Getenv("LOGLEVEL")); err == nil {
+		logrus.SetLevel(level)
+	}
+
+	b := broker{
 		startupSlowDownFactor:      5,
 		requestedCalls:             make([]float64, 0),
 		timeoutValue:               time.Duration(options.TimeoutValue) * time.Millisecond,
@@ -100,33 +113,27 @@ func NewBroker(options *BatkubeOptions) *broker {
 		end:                        make(chan bool),
 		timers:                     make(chan float64),
 	}
-}
-
-func (b *broker) Run(batEndpoint string) {
-	var err error
-
-	logrus.SetLevel(logrus.InfoLevel)
-	if level, err := logrus.ParseLevel(os.Getenv("LOGLEVEL")); err == nil {
-		logrus.SetLevel(level)
-	}
+	b.currentSimulationTimestep = b.baseSimulationTimestep
 
 	log.Infoln("[broker] Launching the Broker")
 	InitResources()
+	log.Infoln("[broker] Listening to batsim on", options.BatEndpoint)
+	b.batSock = NewReplySocket(options.BatEndpoint)
+	b.timeSock = NewRequestSocket(options.TimeEndpoint)
 
-	log.Infoln("[broker] Listening to batsim on", batEndpoint)
-	batSock := NewReplySocket(batEndpoint)
+	return &b
+}
 
-	timeSock := NewRequestSocket("tcp://127.0.0.1:27000")
-
+func (b *broker) Run() {
 	defer func() {
 		log.Infoln("[broker] Closing Batsim socket...")
-		err = batSock.Close()
+		err := b.batSock.Close()
 		if err != nil {
 			log.Errorln("[broker] Error while closing Batsim socket: ", err)
 		}
 		log.Infoln("[broker] Batsim socket closed.") // TODO : is it?
 
-		if err = timeSock.Close(); err != nil {
+		if err = b.timeSock.Close(); err != nil {
 			log.Errorln("[broker] Error while closing time socket: ", err)
 		}
 
@@ -136,20 +143,17 @@ func (b *broker) Run(batEndpoint string) {
 		os.Exit(1)
 	}()
 
-	b.currentSimulationTimestep = b.baseSimulationTimestep
-
 	// Loop responsible for time requests
-	go b.handleTimeRequests(timeSock)
+	go b.handleTimeRequests()
 
 	// Main loop
 	var batMsg translate.BatMessage
-	var batMsgBytes []byte
 	thisIsTheEnd := false
 	for !thisIsTheEnd {
 		batMsg = translate.BatMessage{}
 
 		// Batsim message : receive it, decode it, handle it
-		batMsgBytes, err = batSock.RecvBytes(0)
+		batMsgBytes, err := b.batSock.RecvBytes(0)
 		if err != nil {
 			log.Panicln("Error while receiving Batsim message: " + err.Error())
 		}
@@ -182,7 +186,7 @@ func (b *broker) Run(batEndpoint string) {
 			}()
 
 			if !b.receivedSimulationEnded {
-				b.emptyRequestedCallStack(&batMsg, batSock)
+				b.emptyRequestedCallStack(&batMsg)
 			}
 		} else {
 			b.processMessagesToSend(&batMsg)
@@ -192,7 +196,7 @@ func (b *broker) Run(batEndpoint string) {
 		if err != nil {
 			log.Panicln("Error in message merging: " + err.Error())
 		}
-		_, err = batSock.SendBytes(batMsgBytes, 0)
+		_, err = b.batSock.SendBytes(batMsgBytes, 0)
 		if err != nil {
 			log.Panicln("Error while sending message to batsim: " + err.Error())
 		}
@@ -208,7 +212,7 @@ end : send a boolean on this channel to end the loop.
 now : whenever now is updated, send it to this channel.
 events : CALL_ME_LATER events are sent to this channel. They are stacked and sent whenever the receiver is ready.
 */
-func (b *broker) handleTimeRequests(timeSock *zmq.Socket) {
+func (b *broker) handleTimeRequests() {
 	if cap(b.now) != 1 {
 		panic("now should be a buffered channel with capacity 1")
 	}
@@ -224,8 +228,8 @@ func (b *broker) handleTimeRequests(timeSock *zmq.Socket) {
 		default:
 		}
 
-		_, err := timeSock.SendBytes([]byte("ready"), 0) // Tell time we're ready to receive
-		timeMsgBytes, err := timeSock.RecvBytes(0)       //  Wait for next request from client
+		_, err := b.timeSock.SendBytes([]byte("ready"), 0) // Tell time we're ready to receive
+		timeMsgBytes, err := b.timeSock.RecvBytes(0)       //  Wait for next request from client
 		durations := make([]int64, 0)
 		if err != nil {
 			panic("Error receiving message:" + err.Error())
@@ -242,11 +246,11 @@ func (b *broker) handleTimeRequests(timeSock *zmq.Socket) {
 		nowNano := uint64(nowValue * 1e9)
 		bytes := make([]byte, 8)
 		binary.LittleEndian.PutUint64(bytes, nowNano)
-		_, err = timeSock.SendBytes(bytes, 0)
+		_, err = b.timeSock.SendBytes(bytes, 0)
 		if err != nil {
 			panic("Error sending message: " + err.Error())
 		}
-		timeMsgBytes, err = timeSock.RecvBytes(0)
+		timeMsgBytes, err = b.timeSock.RecvBytes(0)
 		if err != nil {
 			panic(err)
 		}
@@ -401,7 +405,7 @@ func round(now float64) float64 {
 	return math.Round(now*1000) / 1000 // we want to round to the closest millisecond
 }
 
-func (b *broker) emptyRequestedCallStack(batMsg *translate.BatMessage, batSock *zmq.Socket) {
+func (b *broker) emptyRequestedCallStack(batMsg *translate.BatMessage) {
 	if len(batMsg.Events) != 0 {
 		log.Panicf("emptyRequestedCallStack called with non-empty event list")
 	}
@@ -410,11 +414,11 @@ func (b *broker) emptyRequestedCallStack(batMsg *translate.BatMessage, batSock *
 		if err != nil {
 			log.Panicln("Error in message merging: " + err.Error())
 		}
-		_, err = batSock.SendBytes(batMsgBytes, 0)
+		_, err = b.batSock.SendBytes(batMsgBytes, 0)
 		if err != nil {
 			log.Panicln("Error while sending message to batsim: " + err.Error())
 		}
-		batMsgBytes, err = batSock.RecvBytes(0)
+		batMsgBytes, err = b.batSock.RecvBytes(0)
 		if err != nil {
 			log.Panicln("Error while receiving Batsim message: " + err.Error())
 		}

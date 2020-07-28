@@ -8,6 +8,8 @@ import (
 	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
 )
 
+// TODO: move all this under broker struct defined in broker.go
+
 // Resources protected by getters and setters
 var events []*models.IoK8sApimachineryPkgApisMetaV1WatchEvent
 

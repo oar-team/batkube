@@ -122,7 +122,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	}
 	b := broker.NewBroker(optionsGroup.Options.(*broker.BatkubeOptions))
 
-	go b.Run("tcp://127.0.0.1:28000")
+	go b.Run()
 
 	api.EmptyConsumer = runtime.ConsumerFunc(func(r io.Reader, target interface{}) error {
 		return errors.NotImplemented(" consumer has not yet been implemented")
