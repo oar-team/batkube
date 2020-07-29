@@ -396,6 +396,11 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			listAPIResources(rw, p, "coordination.k8s.io/v1beta1")
 		})
 	})
+	api.AppsV1GetAppsV1APIResourcesHandler = apps_v1.GetAppsV1APIResourcesHandlerFunc(func(params apps_v1.GetAppsV1APIResourcesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listAPIResources(rw, p, "apps/v1")
+		})
+	})
 
 	// Pods
 	api.CoreV1ReplaceCoreV1NamespacedPodStatusHandler = core_v1.ReplaceCoreV1NamespacedPodStatusHandlerFunc(func(params core_v1.ReplaceCoreV1NamespacedPodStatusParams) middleware.Responder {
@@ -521,6 +526,27 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			}
 			broker.IncrementResourceVersion(node.(*models.IoK8sAPICoreV1Node).Metadata)
 			success(rw, p)
+		})
+	})
+
+	// ReplicaSet
+	api.AppsV1ListAppsV1ReplicaSetForAllNamespacesHandler = apps_v1.ListAppsV1ReplicaSetForAllNamespacesHandlerFunc(func(params apps_v1.ListAppsV1ReplicaSetForAllNamespacesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "ReplicaSet", &broker.ReplicaSetList, rw, p)
+		})
+	})
+
+	// StatefulSet
+	api.AppsV1ListAppsV1StatefulSetForAllNamespacesHandler = apps_v1.ListAppsV1StatefulSetForAllNamespacesHandlerFunc(func(params apps_v1.ListAppsV1StatefulSetForAllNamespacesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "StatefulSet", &broker.StatefulSetList, rw, p)
+		})
+	})
+
+	// ReplicationController
+	api.CoreV1ListCoreV1ReplicationControllerForAllNamespacesHandler = core_v1.ListCoreV1ReplicationControllerForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1ReplicationControllerForAllNamespacesParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "ReplicationController", &broker.ReplicationControllerList, rw, p)
 		})
 	})
 
@@ -1970,11 +1996,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation apps.GetAppsAPIGroup has not yet been implemented")
 		})
 	}
-	if api.AppsV1GetAppsV1APIResourcesHandler == nil {
-		api.AppsV1GetAppsV1APIResourcesHandler = apps_v1.GetAppsV1APIResourcesHandlerFunc(func(params apps_v1.GetAppsV1APIResourcesParams) middleware.Responder {
-			return middleware.NotImplemented("operation apps_v1.GetAppsV1APIResources has not yet been implemented")
-		})
-	}
 	if api.AuditregistrationGetAuditregistrationAPIGroupHandler == nil {
 		api.AuditregistrationGetAuditregistrationAPIGroupHandler = auditregistration.GetAuditregistrationAPIGroupHandlerFunc(func(params auditregistration.GetAuditregistrationAPIGroupParams) middleware.Responder {
 			return middleware.NotImplemented("operation auditregistration.GetAuditregistrationAPIGroup has not yet been implemented")
@@ -2290,16 +2311,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation apps_v1.ListAppsV1NamespacedStatefulSet has not yet been implemented")
 		})
 	}
-	if api.AppsV1ListAppsV1ReplicaSetForAllNamespacesHandler == nil {
-		api.AppsV1ListAppsV1ReplicaSetForAllNamespacesHandler = apps_v1.ListAppsV1ReplicaSetForAllNamespacesHandlerFunc(func(params apps_v1.ListAppsV1ReplicaSetForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation apps_v1.ListAppsV1ReplicaSetForAllNamespaces has not yet been implemented")
-		})
-	}
-	if api.AppsV1ListAppsV1StatefulSetForAllNamespacesHandler == nil {
-		api.AppsV1ListAppsV1StatefulSetForAllNamespacesHandler = apps_v1.ListAppsV1StatefulSetForAllNamespacesHandlerFunc(func(params apps_v1.ListAppsV1StatefulSetForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation apps_v1.ListAppsV1StatefulSetForAllNamespaces has not yet been implemented")
-		})
-	}
 	if api.AuditregistrationV1alpha1ListAuditregistrationV1alpha1AuditSinkHandler == nil {
 		api.AuditregistrationV1alpha1ListAuditregistrationV1alpha1AuditSinkHandler = auditregistration_v1alpha1.ListAuditregistrationV1alpha1AuditSinkHandlerFunc(func(params auditregistration_v1alpha1.ListAuditregistrationV1alpha1AuditSinkParams) middleware.Responder {
 			return middleware.NotImplemented("operation auditregistration_v1alpha1.ListAuditregistrationV1alpha1AuditSink has not yet been implemented")
@@ -2458,11 +2469,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1ListCoreV1PodTemplateForAllNamespacesHandler == nil {
 		api.CoreV1ListCoreV1PodTemplateForAllNamespacesHandler = core_v1.ListCoreV1PodTemplateForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1PodTemplateForAllNamespacesParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.ListCoreV1PodTemplateForAllNamespaces has not yet been implemented")
-		})
-	}
-	if api.CoreV1ListCoreV1ReplicationControllerForAllNamespacesHandler == nil {
-		api.CoreV1ListCoreV1ReplicationControllerForAllNamespacesHandler = core_v1.ListCoreV1ReplicationControllerForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1ReplicationControllerForAllNamespacesParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.ListCoreV1ReplicationControllerForAllNamespaces has not yet been implemented")
 		})
 	}
 	if api.CoreV1ListCoreV1ResourceQuotaForAllNamespacesHandler == nil {
@@ -5343,7 +5349,7 @@ func streamEvents(rw http.ResponseWriter, events []*models.IoK8sApimachineryPkgA
 		}
 
 		// Clear the events we already sent. We have no obligation to keep them.
-		*event = models.IoK8sApimachineryPkgApisMetaV1WatchEvent{}
+		//*event = models.IoK8sApimachineryPkgApisMetaV1WatchEvent{}
 	}
 
 	// This will be possible with thread safe structures

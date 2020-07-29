@@ -49,6 +49,13 @@ type broker struct {
 	// the scheduler has policies like preemption).
 	fastForwardOnNoPendingJobs bool
 
+	// Allows the simulator to stop the simulation if it believes the
+	// scheduler crashed. A deadlock is detected when Batkube did not
+	// receive any decision, when no jobs are running and some are waiting
+	// to be scheduled.
+	detectSchedulerDeadlock bool
+	cyclesWithoutDecision   int
+
 	// Set to true when a no_more_static_job_to_submit NOTIFY is received.
 	noMoreJobs bool
 
@@ -91,6 +98,7 @@ type BatkubeOptions struct {
 	MaxSimulationTimestep      int64   `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"50"`
 	BackoffMultiplier          float64 `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
 	FastForwardOnNoPendingJobs bool    `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
+	DetectSchedulerDeadlock    bool    `long:"detect-scheduler-deadlock" description:"allow to stop the simulation if the simulator believes the scheduler crashed"`
 	BatEndpoint                string  `long:"batkube-endpoint" description:"batkube zmq socket endpoint" default:"tcp://127.0.0.1:28000"`
 	TimeEndpoint               string  `long:"batsky-endpoint" description:"batsky-go zmq socket endpoint" default:"tcp://127.0.0.1:27000"`
 }
@@ -109,6 +117,7 @@ func NewBroker(options *BatkubeOptions) *broker {
 		maxSimulationTimestep:      time.Duration(options.MaxSimulationTimestep) * time.Second,
 		backoffMultiplier:          options.BackoffMultiplier,
 		fastForwardOnNoPendingJobs: options.FastForwardOnNoPendingJobs,
+		detectSchedulerDeadlock:    options.DetectSchedulerDeadlock,
 		now:                        make(chan float64, 1),
 		end:                        make(chan bool),
 		timers:                     make(chan float64),
@@ -339,14 +348,16 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 
 		elapsedSinceLoopStart = time.Now().Sub(loopStartTime)
 
-		if elapsedSinceLoopStart < time.Millisecond*5 {
-			continue
-		}
-
 		batMsg.Now = addAndRound(loopSimulatedStartTime, elapsedSinceLoopStart)
 		b.updateNow(batMsg.Now)
 
-		if messageIsNotEmpty || elapsedSinceLoopStart > b.timeoutValue {
+		if messageIsNotEmpty {
+			stopReceivingEvents = true
+		} else if elapsedSinceLoopStart > b.timeoutValue {
+			if b.firstJobWasScheduled && b.detectSchedulerDeadlock && b.runningJobs == 0 && b.unfinishedJobs > 0 {
+				log.Error("Was expecting a decision from the scheduler")
+				os.Exit(2)
+			}
 			stopReceivingEvents = true
 		}
 	}

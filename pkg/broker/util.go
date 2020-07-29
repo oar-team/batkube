@@ -303,6 +303,45 @@ func FilterResourceList(resourceList interface{}, filterCondition string, filter
 		}
 		resourceListShallowCopy.Items = filteredItems
 		return resourceListShallowCopy, nil
+	case *models.IoK8sAPIAppsV1ReplicaSetList:
+		concreteResourceList := resourceList.(*models.IoK8sAPIAppsV1ReplicaSetList)
+		resourceListShallowCopy := &models.IoK8sAPIAppsV1ReplicaSetList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPIAppsV1ReplicaSet, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPIAppsV1StatefulSetList:
+		concreteResourceList := resourceList.(*models.IoK8sAPIAppsV1StatefulSetList)
+		resourceListShallowCopy := &models.IoK8sAPIAppsV1StatefulSetList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPIAppsV1StatefulSet, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
+	case *models.IoK8sAPICoreV1ReplicationControllerList:
+		concreteResourceList := resourceList.(*models.IoK8sAPICoreV1ReplicationControllerList)
+		resourceListShallowCopy := &models.IoK8sAPICoreV1ReplicationControllerList{
+			APIVersion: concreteResourceList.APIVersion,
+			Kind:       concreteResourceList.Kind,
+			Metadata:   concreteResourceList.Metadata,
+		}
+		filteredItems := make([]*models.IoK8sAPICoreV1ReplicationController, len(concreteResourceList.Items))
+		if err = filterItems(&concreteResourceList.Items, &filteredItems, filterCondition, filter); err != nil {
+			return nil, err
+		}
+		resourceListShallowCopy.Items = filteredItems
+		return resourceListShallowCopy, nil
 	default:
 		return nil, errors.Errorf("I don't know this resource type : %T", resourceList)
 	}
