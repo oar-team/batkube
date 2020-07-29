@@ -55,6 +55,8 @@ type broker struct {
 	// to be scheduled.
 	detectSchedulerDeadlock bool
 	cyclesWithoutDecision   int
+	// Number of acceptable cycles without decisions acceptable before deciding on a deadlock
+	noDecisionLeniency int
 
 	// Set to true when a no_more_static_job_to_submit NOTIFY is received.
 	noMoreJobs bool
@@ -121,6 +123,7 @@ func NewBroker(options *BatkubeOptions) *broker {
 		now:                        make(chan float64, 1),
 		end:                        make(chan bool),
 		timers:                     make(chan float64),
+		noDecisionLeniency:         20,
 	}
 	b.currentSimulationTimestep = b.baseSimulationTimestep
 
@@ -355,13 +358,24 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 		b.updateNow(batMsg.Now)
 
 		if messageIsNotEmpty {
+			b.cyclesWithoutDecision = 0
 			stopReceivingEvents = true
 		} else if elapsedSinceLoopStart > b.timeoutValue {
 			if b.firstJobWasScheduled && b.detectSchedulerDeadlock && b.runningJobs == 0 && b.unfinishedJobs > 0 {
-				log.Error("Was expecting a decision from the scheduler")
-				os.Exit(2)
+				// There are pending jobs meaning to be
+				// scheduled. If this goes on for too long,
+				// there may be a problem on the scheduler
+				// side.
+				b.cyclesWithoutDecision++
+			} else {
+				b.cyclesWithoutDecision = 0
 			}
 			stopReceivingEvents = true
+		}
+
+		if b.cyclesWithoutDecision > b.noDecisionLeniency {
+			log.Error("Was expecting a decision from the scheduler (number of cycles without decision exceeded the no decision leniency)")
+			os.Exit(2)
 		}
 	}
 
