@@ -84,8 +84,8 @@ func handleBatMessage(b *broker, msg translate.BatMessage) {
 			switch jobCompleted.JobState {
 			case "COMPLETED_SUCCESSFULLY":
 				podName := translate.GetPodNameFromJobId(jobCompleted.JobId)
-				res, _, _ := GetResource(&podName, nil, PodList)
-				//res, i, _ := GetResource(&podName, nil, PodList)
+				//res, _, _ := GetResource(&podName, nil, PodList)
+				res, i, _ := GetResource(&podName, nil, PodList)
 				pod := res.(*models.IoK8sAPICoreV1Pod)
 
 				// Uncomenting this results in the kube scheduler not getting the updates on terminated pods
@@ -119,14 +119,17 @@ func handleBatMessage(b *broker, msg translate.BatMessage) {
 				IncrementResourceVersion(pod.Metadata)
 				AddEvent(&translate.Modified, pod)
 
-				// Remove the pod from the pod list
-				//currentTime := translate.BatsimNowToMetaV1Time(msg.Now)
-				//pod.Metadata.DeletionTimestamp = &currentTime
-				//IncrementResourceVersion(pod.Metadata)
-				//AddEvent(&translate.Deleted, pod)
-				//n := len(PodList.Items)
-				//PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
-				//PodList.Items = PodList.Items[:n-1]
+				// Remove the pod from the pod list. Not
+				// removing the pod results in the scheduler
+				// not getting update on its termination. The
+				// reason for this is unknown yet.
+				currentTime := translate.BatsimNowToMetaV1Time(msg.Now)
+				pod.Metadata.DeletionTimestamp = &currentTime
+				IncrementResourceVersion(pod.Metadata)
+				AddEvent(&translate.Deleted, pod)
+				n := len(PodList.Items)
+				PodList.Items[n-1], PodList.Items[i] = PodList.Items[i], PodList.Items[n-1]
+				PodList.Items = PodList.Items[:n-1]
 
 				log.Infof("[broker:bathandler] pod %s completed successfully. %d left to execute (%d running, %d pending)", podName, b.unfinishedJobs, b.runningJobs, b.unfinishedJobs-b.runningJobs)
 			default:
