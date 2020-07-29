@@ -203,7 +203,22 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 
 	// Core v1 Events
-	// core v1 event endpoint is deprecateed. New api is on events.k8s.io
+	api.CoreV1PatchCoreV1NamespacedEventHandler = core_v1.PatchCoreV1NamespacedEventHandlerFunc(func(params core_v1.PatchCoreV1NamespacedEventParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			//res, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
+			//if err != nil {
+			//	http.Error(rw, err.Error(), http.StatusInternalServerError)
+			//	return
+			//} else if res == nil {
+			//	failureNotFound(rw, p)
+			//	return
+			//}
+
+			//*res.(*models.IoK8sAPICoreV1Event) = *params.Body
+			//broker.AddEvent(&translate.Modified, res)
+			success(rw, p)
+		})
+	})
 	api.CoreV1ListCoreV1EventForAllNamespacesHandler = core_v1.ListCoreV1EventForAllNamespacesHandlerFunc(func(params core_v1.ListCoreV1EventForAllNamespacesParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			listResource(params.Watch, params.FieldSelector, params.ResourceVersion, "Event", &broker.CoreV1EventList, rw, p)
@@ -222,7 +237,7 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 		})
 	})
 
-	// Events
+	// v1beta1 Events
 	api.EventsV1beta1CreateEventsV1beta1NamespacedEventHandler = events_v1beta1.CreateEventsV1beta1NamespacedEventHandlerFunc(func(params events_v1beta1.CreateEventsV1beta1NamespacedEventParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			broker.EventV1beta1EventList.Items = append(broker.EventV1beta1EventList.Items, params.Body)
@@ -403,6 +418,23 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	})
 
 	// Pods
+	api.CoreV1PatchCoreV1NamespacedPodStatusHandler = core_v1.PatchCoreV1NamespacedPodStatusHandlerFunc(func(params core_v1.PatchCoreV1NamespacedPodStatusParams) middleware.Responder {
+		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
+			res, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			} else if res == nil {
+				failureNotFound(rw, p)
+				return
+			}
+
+			mapstructure.Decode(params.Body, res.(*models.IoK8sAPICoreV1Pod).Status)
+			//*res.(*models.IoK8sAPICoreV1Pod) = *params.Body
+			broker.AddEvent(&translate.Modified, res)
+			success(rw, p)
+		})
+	})
 	api.CoreV1ReplaceCoreV1NamespacedPodStatusHandler = core_v1.ReplaceCoreV1NamespacedPodStatusHandlerFunc(func(params core_v1.ReplaceCoreV1NamespacedPodStatusParams) middleware.Responder {
 		return middleware.ResponderFunc(func(rw http.ResponseWriter, p runtime.Producer) {
 			res, _, err := broker.GetResource(&params.Name, &params.Namespace, broker.PodList)
@@ -2951,11 +2983,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 			return middleware.NotImplemented("operation core_v1.PatchCoreV1NamespacedEndpoints has not yet been implemented")
 		})
 	}
-	if api.CoreV1PatchCoreV1NamespacedEventHandler == nil {
-		api.CoreV1PatchCoreV1NamespacedEventHandler = core_v1.PatchCoreV1NamespacedEventHandlerFunc(func(params core_v1.PatchCoreV1NamespacedEventParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.PatchCoreV1NamespacedEvent has not yet been implemented")
-		})
-	}
 	if api.CoreV1PatchCoreV1NamespacedLimitRangeHandler == nil {
 		api.CoreV1PatchCoreV1NamespacedLimitRangeHandler = core_v1.PatchCoreV1NamespacedLimitRangeHandlerFunc(func(params core_v1.PatchCoreV1NamespacedLimitRangeParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.PatchCoreV1NamespacedLimitRange has not yet been implemented")
@@ -2974,11 +3001,6 @@ func configureAPI(api *operations.KubernetesAPI) http.Handler {
 	if api.CoreV1PatchCoreV1NamespacedPodHandler == nil {
 		api.CoreV1PatchCoreV1NamespacedPodHandler = core_v1.PatchCoreV1NamespacedPodHandlerFunc(func(params core_v1.PatchCoreV1NamespacedPodParams) middleware.Responder {
 			return middleware.NotImplemented("operation core_v1.PatchCoreV1NamespacedPod has not yet been implemented")
-		})
-	}
-	if api.CoreV1PatchCoreV1NamespacedPodStatusHandler == nil {
-		api.CoreV1PatchCoreV1NamespacedPodStatusHandler = core_v1.PatchCoreV1NamespacedPodStatusHandlerFunc(func(params core_v1.PatchCoreV1NamespacedPodStatusParams) middleware.Responder {
-			return middleware.NotImplemented("operation core_v1.PatchCoreV1NamespacedPodStatus has not yet been implemented")
 		})
 	}
 	if api.CoreV1PatchCoreV1NamespacedPodTemplateHandler == nil {
