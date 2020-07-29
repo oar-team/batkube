@@ -306,7 +306,7 @@
     "profiles": {
         "delay10": {
             "type": "delay",
-            "delay": 10,
+            "delay": 200,
 	    "scheduler": "default",
 	    "cpu": "1"
         }

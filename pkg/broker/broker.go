@@ -34,6 +34,11 @@ type broker struct {
 	// implementation details
 	baseSimulationTimestep time.Duration
 
+	// Minimum amount of time to spend in an exchange with the scheduler.
+	// Setting this too low may lead to wrong behaviors from the scheduler.
+	// The optimal value depends on the host system.
+	minDelay time.Duration
+
 	// Maximum amount of time Batsim is allowed to jump forward in time
 	maxSimulationTimestep time.Duration
 	backoffMultiplier     float64
@@ -95,14 +100,15 @@ type broker struct {
 Flag options from the api
 */
 type BatkubeOptions struct {
-	TimeoutValue               int64   `long:"timeout-value" description:"maximum amount of time spent waiting for messages from the scheduler, in milliseconds" default:"20"`
-	BaseSimulationTimestep     int64   `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time, in milliseconds. This value increases according to a backoff policy, up to a maximum amount" default:"100"`
-	MaxSimulationTimestep      int64   `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"50"`
-	BackoffMultiplier          float64 `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
-	FastForwardOnNoPendingJobs bool    `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
-	DetectSchedulerDeadlock    bool    `long:"detect-scheduler-deadlock" description:"allow to stop the simulation if the simulator believes the scheduler crashed"`
-	BatEndpoint                string  `long:"batkube-endpoint" description:"batkube zmq socket endpoint" default:"tcp://127.0.0.1:28000"`
-	TimeEndpoint               string  `long:"batsky-endpoint" description:"batsky-go zmq socket endpoint" default:"tcp://127.0.0.1:27000"`
+	TimeoutValue               time.Duration `long:"timeout-value" description:"maximum amount of time spent waiting for messages from the scheduler" default:"20ms"`
+	BaseSimulationTimestep     time.Duration `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time. This value increases according to a backoff policy, up to a maximum amount" default:"100ms"`
+	MaxSimulationTimestep      time.Duration `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"50s"`
+	BackoffMultiplier          float64       `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
+	FastForwardOnNoPendingJobs bool          `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
+	DetectSchedulerDeadlock    bool          `long:"detect-scheduler-deadlock" description:"allow to stop the simulation if the simulator believes the scheduler crashed"`
+	BatEndpoint                string        `long:"batkube-endpoint" description:"batkube zmq socket endpoint" default:"tcp://127.0.0.1:28000"`
+	TimeEndpoint               string        `long:"batsky-endpoint" description:"batsky-go zmq socket endpoint" default:"tcp://127.0.0.1:27000"`
+	MinDelay                   time.Duration `long:"min-delay" description:"minimum amount of time to spend in an exchange with the scheduler. Setting this too low may lead to wrong behaviors from the scheduler. The optimal value depends on the host system." default:"10ms"`
 }
 
 func NewBroker(options *BatkubeOptions) *broker {
@@ -114,12 +120,13 @@ func NewBroker(options *BatkubeOptions) *broker {
 	b := broker{
 		startupSlowDownFactor:      5,
 		requestedCalls:             make([]float64, 0),
-		timeoutValue:               time.Duration(options.TimeoutValue) * time.Millisecond,
-		baseSimulationTimestep:     time.Duration(options.BaseSimulationTimestep) * time.Millisecond,
-		maxSimulationTimestep:      time.Duration(options.MaxSimulationTimestep) * time.Second,
+		timeoutValue:               options.TimeoutValue,
+		baseSimulationTimestep:     options.BaseSimulationTimestep,
+		maxSimulationTimestep:      options.MaxSimulationTimestep,
 		backoffMultiplier:          options.BackoffMultiplier,
 		fastForwardOnNoPendingJobs: options.FastForwardOnNoPendingJobs,
 		detectSchedulerDeadlock:    options.DetectSchedulerDeadlock,
+		minDelay:                   options.MinDelay,
 		now:                        make(chan float64, 1),
 		end:                        make(chan bool),
 		timers:                     make(chan float64),
@@ -350,7 +357,7 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 		}
 
 		elapsedSinceLoopStart = time.Now().Sub(loopStartTime)
-		if elapsedSinceLoopStart < 20*time.Millisecond {
+		if elapsedSinceLoopStart < b.minDelay {
 			continue
 		}
 
