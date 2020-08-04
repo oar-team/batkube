@@ -77,3 +77,6 @@ changing the swagger spec.
     'resource name may not be empty' (may retry after sleeping)` near the end
     of the simulation. In that case, the scheduler is stuck and the simulation
     needs to be run again. The reason for this is unknown.
+- The combination between the workload `spaced_200_delay160.json` and platform
+    `platform_graphene_16nodes.xml` seem to make the scheduler crash. Use
+    `spaced_200_delay170.json` instead.
