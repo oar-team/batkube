@@ -12,11 +12,20 @@
 
 <AS id="AS_graphene_full" routing="Full" >
 
-<host id="graphene-1.nancy.grid5000.fr" speed="16.673E9f" core="4">
+<host id="graphene-0.nancy.grid5000.fr" speed="16.673E9f" core="4">
 	<prop id="speed" value="16.673E9f"/>
 	<prop id="core" value="1"/>
 	<prop id="memory" value="4Gi"/>
 	<prop id="role" value="master"/>
+</host>
+<link id="graphene-0.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
+<link id="graphene-0.nancy.grid5000.fr_UP" bandwidth="1.25E8Bps" latency="1.0E-4s" />
+<link id="graphene-0.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
+
+<host id="graphene-1.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="1"/>
+	<prop id="memory" value="4Gi"/>
 </host>
 <link id="graphene-1.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
 <link id="graphene-1.nancy.grid5000.fr_UP" bandwidth="1.25E8Bps" latency="1.0E-4s" />

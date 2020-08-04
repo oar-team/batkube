@@ -159,7 +159,7 @@ func (b *broker) Run() {
 		// WARNING: This is required to avoid stalling of the connection: the
 		// last message is never sent if not called
 		zmq.Term()
-		os.Exit(1)
+		os.Exit(0)
 	}()
 
 	// Loop responsible for time requests
@@ -382,7 +382,7 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 
 		if b.cyclesWithoutDecision > b.noDecisionLeniency {
 			log.Error("Was expecting a decision from the scheduler (number of cycles without decision exceeded the no decision leniency)")
-			os.Exit(2)
+			os.Exit(1)
 		}
 	}
 
