@@ -130,7 +130,7 @@ func NewBroker(options *BatkubeOptions) *broker {
 		now:                        make(chan float64, 1),
 		end:                        make(chan bool),
 		timers:                     make(chan float64),
-		noDecisionLeniency:         100,
+		noDecisionLeniency:         500,
 	}
 	b.currentSimulationTimestep = b.baseSimulationTimestep
 
