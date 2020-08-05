@@ -102,7 +102,7 @@ Flag options from the api
 type BatkubeOptions struct {
 	TimeoutValue               time.Duration `long:"timeout-value" description:"maximum amount of time spent waiting for messages from the scheduler" default:"20ms"`
 	BaseSimulationTimestep     time.Duration `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time. This value increases according to a backoff policy, up to a maximum amount" default:"100ms"`
-	MaxSimulationTimestep      time.Duration `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"50s"`
+	MaxSimulationTimestep      time.Duration `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"20s"`
 	BackoffMultiplier          float64       `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
 	FastForwardOnNoPendingJobs bool          `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
 	DetectSchedulerDeadlock    bool          `long:"detect-scheduler-deadlock" description:"allow to stop the simulation if the simulator believes the scheduler crashed"`
@@ -130,7 +130,7 @@ func NewBroker(options *BatkubeOptions) *broker {
 		now:                        make(chan float64, 1),
 		end:                        make(chan bool),
 		timers:                     make(chan float64),
-		noDecisionLeniency:         20,
+		noDecisionLeniency:         100,
 	}
 	b.currentSimulationTimestep = b.baseSimulationTimestep
 
@@ -138,6 +138,7 @@ func NewBroker(options *BatkubeOptions) *broker {
 	InitResources()
 	log.Infoln("[broker] Listening to batsim on", options.BatEndpoint)
 	b.batSock = NewReplySocket(options.BatEndpoint)
+	b.batSock.SetRcvtimeo(10 * time.Second)
 	b.timeSock = NewRequestSocket(options.TimeEndpoint)
 
 	return &b
@@ -172,13 +173,28 @@ func (b *broker) Run() {
 		batMsg = translate.BatMessage{}
 
 		// Batsim message : receive it, decode it, handle it
-		batMsgBytes, err := b.batSock.RecvBytes(0)
-		if err != nil {
-			log.Panicln("Error while receiving Batsim message: " + err.Error())
+		//
+		// Having troubles with timeouts on zmq sockets, going with
+		// another solution made by hand
+		received := make(chan bool)
+		go func() {
+			batMsgBytes, err := b.batSock.RecvBytes(0)
+			if err != nil {
+				log.Panicln("Error while receiving Batsim message: " + err.Error())
+			}
+			if err := json.Unmarshal(batMsgBytes, &batMsg); err != nil {
+				log.Panicln(err)
+			}
+			received <- true
+		}()
+		select {
+		case <-received:
+			break
+		case <-time.After(5 * time.Second):
+			log.Error("Timeout waiting for a message from Batsim")
+			os.Exit(1)
 		}
-		if err := json.Unmarshal(batMsgBytes, &batMsg); err != nil {
-			log.Panicln(err)
-		}
+
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
 		b.updateNow(batMsg.Now)
 
@@ -211,7 +227,7 @@ func (b *broker) Run() {
 			b.processMessagesToSend(&batMsg)
 		}
 
-		batMsgBytes, err = json.Marshal(batMsg)
+		batMsgBytes, err := json.Marshal(batMsg)
 		if err != nil {
 			log.Panicln("Error in message merging: " + err.Error())
 		}
@@ -368,7 +384,7 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 			b.cyclesWithoutDecision = 0
 			stopReceivingEvents = true
 		} else if elapsedSinceLoopStart > b.timeoutValue {
-			if b.firstJobWasScheduled && b.detectSchedulerDeadlock && b.runningJobs == 0 && b.unfinishedJobs > 0 {
+			if b.detectSchedulerDeadlock && b.runningJobs == 0 && b.unfinishedJobs > 0 {
 				// There are pending jobs meaning to be
 				// scheduled. If this goes on for too long,
 				// there may be a problem on the scheduler
