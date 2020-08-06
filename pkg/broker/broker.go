@@ -59,9 +59,9 @@ type broker struct {
 	// receive any decision, when no jobs are running and some are waiting
 	// to be scheduled.
 	detectSchedulerDeadlock bool
-	cyclesWithoutDecision   int
-	// Number of acceptable cycles without decisions acceptable before deciding on a deadlock
-	noDecisionLeniency int
+	lastDecisionTime        time.Time
+	// Amount of time to wait before deciding on a crash from the scheduler.
+	schedulerCrashTimeout time.Duration
 
 	// Set to true when a no_more_static_job_to_submit NOTIFY is received.
 	noMoreJobs bool
@@ -81,6 +81,7 @@ type broker struct {
 	// The scheduler is a bit slow at startup, so the simulation shouldn't be too
 	// fast before it reacts for the first time
 	firstJobWasScheduled bool
+	schedulerStarted     bool // Prevents unwanted sheduler crash detection
 
 	// Channel for sharing the current time accross the different routines.
 	// Must be of capacity 1.
@@ -101,14 +102,15 @@ Flag options from the api
 */
 type BatkubeOptions struct {
 	TimeoutValue               time.Duration `long:"timeout-value" description:"maximum amount of time spent waiting for messages from the scheduler" default:"20ms"`
-	BaseSimulationTimestep     time.Duration `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time. This value increases according to a backoff policy, up to a maximum amount" default:"100ms"`
 	MaxSimulationTimestep      time.Duration `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"20s"`
+	BaseSimulationTimestep     time.Duration `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time. This value increases according to a backoff policy, up to a maximum amount" default:"100ms"`
+	MinDelay                   time.Duration `long:"min-delay" description:"minimum amount of time to spend in an exchange with the scheduler. Setting this too low may lead to wrong behaviors from the scheduler. The optimal value depends on the host system." default:"10ms"`
 	BackoffMultiplier          float64       `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
-	FastForwardOnNoPendingJobs bool          `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
 	DetectSchedulerDeadlock    bool          `long:"detect-scheduler-deadlock" description:"allow to stop the simulation if the simulator believes the scheduler crashed"`
+	SchedulerCrashTimeout      time.Duration `long:"scheduler-crash-timeout" description:"When expecting a decision from the scheduler, amount of time to wait before deciding on a crash when no decision is received" default:"5s"`
+	FastForwardOnNoPendingJobs bool          `long:"fast-forward-on-no-pending-jobs" description:"if there are no pending jobs the simulation may fast forwards to the next Batsim event, potentially skipping some scheduler decisions"`
 	BatEndpoint                string        `long:"batkube-endpoint" description:"batkube zmq socket endpoint" default:"tcp://127.0.0.1:28000"`
 	TimeEndpoint               string        `long:"batsky-endpoint" description:"batsky-go zmq socket endpoint" default:"tcp://127.0.0.1:27000"`
-	MinDelay                   time.Duration `long:"min-delay" description:"minimum amount of time to spend in an exchange with the scheduler. Setting this too low may lead to wrong behaviors from the scheduler. The optimal value depends on the host system." default:"10ms"`
 }
 
 func NewBroker(options *BatkubeOptions) *broker {
@@ -130,7 +132,7 @@ func NewBroker(options *BatkubeOptions) *broker {
 		now:                        make(chan float64, 1),
 		end:                        make(chan bool),
 		timers:                     make(chan float64),
-		noDecisionLeniency:         200,
+		schedulerCrashTimeout:      options.SchedulerCrashTimeout,
 	}
 	b.currentSimulationTimestep = b.baseSimulationTimestep
 
@@ -138,7 +140,9 @@ func NewBroker(options *BatkubeOptions) *broker {
 	InitResources()
 	log.Infoln("[broker] Listening to batsim on", options.BatEndpoint)
 	b.batSock = NewReplySocket(options.BatEndpoint)
-	b.batSock.SetRcvtimeo(10 * time.Second)
+	// zmq returns an exit code 2 in this case, while we want to return 1.
+	// This is why we implement our own timeout solution
+	//b.batSock.SetRcvtimeo(10 * time.Second)
 	b.timeSock = NewRequestSocket(options.TimeEndpoint)
 
 	return &b
@@ -171,6 +175,7 @@ func (b *broker) Run() {
 	// Main loop
 	var batMsg translate.BatMessage
 	thisIsTheEnd := false
+	var batsimStarted bool
 	for !thisIsTheEnd {
 		batMsg = translate.BatMessage{}
 
@@ -189,12 +194,17 @@ func (b *broker) Run() {
 			}
 			received <- true
 		}()
-		select {
-		case <-received:
-			break
-		case <-time.After(5 * time.Second):
-			log.Error("Timeout waiting for a message from Batsim")
-			b.Shutdown(1)
+		if !batsimStarted {
+			<-received
+			batsimStarted = true
+		} else {
+			select {
+			case <-received:
+				break
+			case <-time.After(5 * time.Second):
+				log.Error("Timeout waiting for a message from Batsim")
+				b.Shutdown(1)
+			}
 		}
 
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
@@ -267,6 +277,7 @@ func (b *broker) handleTimeRequests() {
 
 		_, err := b.timeSock.SendBytes([]byte("ready"), 0) // Tell time we're ready to receive
 		timeMsgBytes, err := b.timeSock.RecvBytes(0)       //  Wait for next request from client
+		b.schedulerStarted = true
 		durations := make([]int64, 0)
 		if err != nil {
 			panic("Error receiving message:" + err.Error())
@@ -341,10 +352,11 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 
 	// Get pending events to send to Batsim
 	loopStartTime := time.Now()
+	b.lastDecisionTime = time.Now()
 	loopSimulatedStartTime := batMsg.Now
 	var elapsedSinceLoopStart time.Duration
 	var stopReceivingEvents bool // Go compiler does not like infinite loops
-	var messageIsNotEmpty bool
+	var decisionWasMade bool
 	for !stopReceivingEvents {
 		select {
 		case requested := <-b.timers:
@@ -356,7 +368,7 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 				batMsg.Events = append(batMsg.Events, b.newCallMeLater(batMsg.Now, requested))
 			}
 		case pod := <-ToExecute: // Jobs sent over by the api
-			messageIsNotEmpty = true
+			decisionWasMade = true
 			b.firstJobWasScheduled = true
 			b.currentSimulationTimestep = b.baseSimulationTimestep
 			b.runningJobs++
@@ -373,6 +385,12 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 			log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
 		default:
 		}
+		// We wait for both parties to send signs of life before doing anything
+		if !b.schedulerStarted {
+			loopStartTime = time.Now()
+			b.lastDecisionTime = time.Now()
+			continue
+		}
 
 		elapsedSinceLoopStart = time.Now().Sub(loopStartTime)
 		if elapsedSinceLoopStart < b.minDelay {
@@ -382,25 +400,22 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 		batMsg.Now = addAndRound(loopSimulatedStartTime, elapsedSinceLoopStart)
 		b.updateNow(batMsg.Now)
 
-		if messageIsNotEmpty {
-			b.cyclesWithoutDecision = 0
+		if decisionWasMade {
+			b.lastDecisionTime = time.Now()
 			stopReceivingEvents = true
 		} else if elapsedSinceLoopStart > b.timeoutValue {
-			if b.detectSchedulerDeadlock && b.runningJobs == 0 && b.unfinishedJobs > 0 {
+			if b.detectSchedulerDeadlock &&
+				b.runningJobs == 0 &&
+				b.unfinishedJobs > 0 &&
+				time.Now().After(b.lastDecisionTime.Add(b.schedulerCrashTimeout)) {
 				// There are pending jobs meaning to be
 				// scheduled. If this goes on for too long,
 				// there may be a problem on the scheduler
 				// side.
-				b.cyclesWithoutDecision++
-			} else {
-				b.cyclesWithoutDecision = 0
+				log.Error("Was expecting a decision from the scheduler (waited to long without any decision)")
+				b.Shutdown(1)
 			}
 			stopReceivingEvents = true
-		}
-
-		if b.cyclesWithoutDecision > b.noDecisionLeniency {
-			log.Error("Was expecting a decision from the scheduler (number of cycles without decision exceeded the no decision leniency)")
-			b.Shutdown(1)
 		}
 	}
 
