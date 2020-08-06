@@ -197,6 +197,7 @@ func (b *broker) Run() {
 		if !batsimStarted {
 			<-received
 			batsimStarted = true
+			b.lastDecisionTime = time.Now()
 		} else {
 			select {
 			case <-received:
@@ -352,7 +353,6 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 
 	// Get pending events to send to Batsim
 	loopStartTime := time.Now()
-	b.lastDecisionTime = time.Now()
 	loopSimulatedStartTime := batMsg.Now
 	var elapsedSinceLoopStart time.Duration
 	var stopReceivingEvents bool // Go compiler does not like infinite loops
@@ -412,7 +412,7 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 				// scheduled. If this goes on for too long,
 				// there may be a problem on the scheduler
 				// side.
-				log.Error("Was expecting a decision from the scheduler (waited to long without any decision)")
+				log.Error("Was expecting a decision from the scheduler (waited to long without any decision making)")
 				b.Shutdown(1)
 			}
 			stopReceivingEvents = true
