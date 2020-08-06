@@ -130,7 +130,7 @@ func NewBroker(options *BatkubeOptions) *broker {
 		now:                        make(chan float64, 1),
 		end:                        make(chan bool),
 		timers:                     make(chan float64),
-		noDecisionLeniency:         500,
+		noDecisionLeniency:         200,
 	}
 	b.currentSimulationTimestep = b.baseSimulationTimestep
 
@@ -144,24 +144,26 @@ func NewBroker(options *BatkubeOptions) *broker {
 	return &b
 }
 
+func (b *broker) Shutdown(code int) {
+	log.Infoln("[broker] Closing Batsim socket...")
+	err := b.batSock.Close()
+	if err != nil {
+		log.Errorln("[broker] Error while closing Batsim socket: ", err)
+	}
+	log.Infoln("[broker] Batsim socket closed.") // TODO : is it?
+
+	if err = b.timeSock.Close(); err != nil {
+		log.Errorln("[broker] Error while closing time socket: ", err)
+	}
+
+	// WARNING: This is required to avoid stalling of the connection: the
+	// last message is never sent if not called
+	zmq.Term()
+	os.Exit(code)
+}
+
 func (b *broker) Run() {
-	defer func() {
-		log.Infoln("[broker] Closing Batsim socket...")
-		err := b.batSock.Close()
-		if err != nil {
-			log.Errorln("[broker] Error while closing Batsim socket: ", err)
-		}
-		log.Infoln("[broker] Batsim socket closed.") // TODO : is it?
-
-		if err = b.timeSock.Close(); err != nil {
-			log.Errorln("[broker] Error while closing time socket: ", err)
-		}
-
-		// WARNING: This is required to avoid stalling of the connection: the
-		// last message is never sent if not called
-		zmq.Term()
-		os.Exit(0)
-	}()
+	defer b.Shutdown(0)
 
 	// Loop responsible for time requests
 	go b.handleTimeRequests()
@@ -192,7 +194,7 @@ func (b *broker) Run() {
 			break
 		case <-time.After(5 * time.Second):
 			log.Error("Timeout waiting for a message from Batsim")
-			os.Exit(1)
+			b.Shutdown(1)
 		}
 
 		batMsg.Now = round(batMsg.Now) // There is a rounding issue with some timestamps
@@ -398,7 +400,7 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 
 		if b.cyclesWithoutDecision > b.noDecisionLeniency {
 			log.Error("Was expecting a decision from the scheduler (number of cycles without decision exceeded the no decision leniency)")
-			os.Exit(1)
+			b.Shutdown(1)
 		}
 	}
 
