@@ -8,9 +8,10 @@ Kubernetes scheduler written in Go, in order to run basic Kubernets cluster simu
 
 - Clone any Kubernetes scheduler and adapt it using the [batsky-go
     installer](https://github.com/oar-team/batsky-go-installer)
-- Launch the scheduler, specify where the master is (at `http://localhost:8001`)
-- Launch Batkube `go run cmd/kubernetes-server/main.go --scheme=http --port 8001`
-- Create a directory for Batsim output 'ex : `mkdir /tmp/expe-out`
+- Launch the scheduler, give it `kubeconfig.yaml` as input for it to find the
+    simulated cluster.
+- Launch Batkube `go run cmd/kubernetes-server/main.go --scheme=http --port 8001 [OPTIONS]`
+- Create a directory for Batsim output (ex : `mkdir /tmp/expe-out`)
 - Wait for the Batkube API to launch (it should say `Serving kubernetes at http://127.0.0.1:8001`)
 - Launch Batsim with your desired platform and workload (ex : `batsim -p
     examples/platforms/platform_graphene_16nodes.xml -w
@@ -18,17 +19,12 @@ Kubernetes scheduler written in Go, in order to run basic Kubernets cluster simu
 
 Notes :
 
-- Internally, resources are not cleaned up perdiocically because there are not
-    implemented in a thread safe way. This causes memory issues with long
-    running simulations
+- Internally, resources are not cleaned up periodically because there are not
+    implemented in a thread safe way. This mays cause memory issues with long
+    running simulations.
 - [batsky-go](https://github.com/oar-team/batsky-go) suffers from an unknown
     technical issue which leads it to panic with error `bad timer`. In that
     case, just re-launch the simulation. It does not happen very often.
-- If you desire to change the parameters of the simulation, change them
-    directly in the code, on the first lines of `pkg/broker/broker.go`, and
-    then re-compile the code (or run your simulation with `go run` like in the
-    aforementioned example)
 
-Please read the [dev notes](dev-notes.md) if you intend to take over this project for further development.
-
-Technial notes for further development :
+Please read the [dev notes](dev-notes.md) if you intend to take over this
+project for further development.
