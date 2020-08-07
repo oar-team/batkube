@@ -170,7 +170,7 @@ func (b *broker) Run() {
 	defer b.Shutdown(0)
 
 	// Loop responsible for time requests
-	go b.handleTimeRequests()
+	go b.handleTimeRequestsFromScheduler()
 
 	// Main loop
 	var batMsg translate.BatMessage
@@ -183,7 +183,7 @@ func (b *broker) Run() {
 		//
 		// Having troubles with timeouts on zmq sockets, going with
 		// another solution made by hand
-		received := make(chan bool)
+		receivedBatMsg := make(chan bool)
 		go func() {
 			batMsgBytes, err := b.batSock.RecvBytes(0)
 			if err != nil {
@@ -192,14 +192,14 @@ func (b *broker) Run() {
 			if err := json.Unmarshal(batMsgBytes, &batMsg); err != nil {
 				log.Panicln(err)
 			}
-			received <- true
+			receivedBatMsg <- true
 		}()
 		if !batsimStarted {
-			<-received
+			<-receivedBatMsg
 			batsimStarted = true
 		} else {
 			select {
-			case <-received:
+			case <-receivedBatMsg:
 				break
 			case <-time.After(5 * time.Second):
 				log.Error("Timeout waiting for a message from Batsim")
@@ -236,7 +236,7 @@ func (b *broker) Run() {
 				b.emptyRequestedCallStack(&batMsg)
 			}
 		} else {
-			b.processMessagesToSend(&batMsg)
+			b.exchangeWithScheduler(&batMsg)
 		}
 
 		batMsgBytes, err := json.Marshal(batMsg)
@@ -259,7 +259,7 @@ end : send a boolean on this channel to end the loop.
 now : whenever now is updated, send it to this channel.
 events : CALL_ME_LATER events are sent to this channel. They are stacked and sent whenever the receiver is ready.
 */
-func (b *broker) handleTimeRequests() {
+func (b *broker) handleTimeRequestsFromScheduler() {
 	if cap(b.now) != 1 {
 		panic("now should be a buffered channel with capacity 1")
 	}
@@ -347,7 +347,7 @@ with them.
 It handles all the options defined above regarding timing and other message
 sending conditions.
 */
-func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
+func (b *broker) exchangeWithScheduler(batMsg *translate.BatMessage) {
 	batMsg.Events = make([]translate.Event, 0)
 
 	// Get pending events to send to Batsim
@@ -367,7 +367,7 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 			if !b.isAlreadyRequested(requested) {
 				batMsg.Events = append(batMsg.Events, b.newCallMeLater(batMsg.Now, requested))
 			}
-		case pod := <-ToExecute: // Jobs sent over by the api
+		case pod := <-ToExecute: // Jobs sent over by the api for Batsim to execute
 			decisionWasMade = true
 			b.firstJobWasScheduled = true
 			b.currentSimulationTimestep = b.baseSimulationTimestep
@@ -385,7 +385,8 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 			log.Infof("[broker:bathandler] pod %s was scheduled on node %s", pod.Metadata.Name, pod.Spec.NodeName)
 		default:
 		}
-		// We wait for both parties to send signs of life before doing anything
+		// We know that Batsim already started at this point. We still
+		// need to wait for the scheduler.
 		if !b.schedulerStarted {
 			loopStartTime = time.Now()
 			b.lastDecisionTime = time.Now()
@@ -419,7 +420,7 @@ func (b *broker) processMessagesToSend(batMsg *translate.BatMessage) {
 		}
 	}
 
-	// If CALL_ME_LATER on scheduler timers are enables, some may point to
+	// If CALL_ME_LATER on scheduler timers are enabled, some may point to
 	// timestamps in the past now
 	b.removeOutdatedCML(batMsg)
 
@@ -478,6 +479,9 @@ func round(now float64) float64 {
 	return math.Round(now*1000) / 1000 // we want to round to the closest millisecond
 }
 
+/*
+Empties Batsim's requested calls so we can end the simulation
+*/
 func (b *broker) emptyRequestedCallStack(batMsg *translate.BatMessage) {
 	if len(batMsg.Events) != 0 {
 		log.Panicf("emptyRequestedCallStack called with non-empty event list")
@@ -509,9 +513,6 @@ func (b *broker) emptyRequestedCallStack(batMsg *translate.BatMessage) {
 	}
 }
 
-/*
-Warning : not thread safe.
-*/
 func (b *broker) newCallMeLater(now, timestamp float64) translate.Event {
 	err, callMeLater := translate.MakeEvent(now, "CALL_ME_LATER", translate.CallMeLaterData{Timestamp: timestamp})
 	if err != nil {
@@ -538,9 +539,6 @@ func (b *broker) newCallMeLater(now, timestamp float64) translate.Event {
 	return callMeLater
 }
 
-/*
-Warning : not thread safe.
-*/
 func (b *broker) deleteRequestedCall(timestamp float64) {
 	for i, requested := range b.requestedCalls {
 		if requested == timestamp {
@@ -562,7 +560,8 @@ func (b *broker) isAlreadyRequested(requested float64) bool {
 }
 
 /*
-Returns the next step Batsim is allowed to fast forward to
+Returns the next step Batsim is allowed to fast forward to. Returns now if
+Batsim is allowed to fast forward without limit.
 */
 func (b *broker) getNextWakeUp(now float64) float64 {
 	var timestep time.Duration

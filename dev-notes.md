@@ -34,6 +34,11 @@ changing the swagger spec.
 
 ## Other general notes
 
+- This project is a research project. Little effort was put into the structure
+    of the code itself and organisation of the functions in the different files
+    may seem a little chaotic. Especially, kuernetes resources management is
+    very sketchy and not thread safe. The code is still robust, except when it
+    comes to termination.
 - The original `swagger.json` used to generate the API is included in this
     repo. It is based on [Kubernetes 1.18
     spec](https://github.com/kubernetes/kubernetes/blob/release-1.18/api/openapi-spec/swagger.json)
