@@ -1,0 +1,44 @@
+<?xml version='1.0'?>
+<!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid/simgrid.dtd">
+<platform version="4.1">
+
+  <config id="General">
+    <prop id="maxmin/precision" value="1e-9"/>
+    <prop id="smpi/os" value="0:8.9300920419081e-06:7.65438202550106e-10;1420:1.39684254077781e-05:2.97409403415968e-10;32768:1.54082820250394e-05:2.44104034252286e-10;65536:0.000237866424242424:0;327680:0:0"/>
+    <prop id="smpi/or" value="0:8.14025462333494e-06:8.3958813204998e-10;1420:1.26995184134793e-05:9.09218191293861e-10;32768:3.09570602567453e-05:6.95645307772806e-10;65536:0:0;327680:0:0"/>
+    <prop id="smpi/bw-factor" value="0:0.400976530736138;1420:0.913555534273577;32768:1.07831886657594;65536:0.956083935262915;327680:0.929867998857892"/>
+    <prop id="smpi/lat-factor" value="0:1.35489260823384;1420:3.43725032107889;32768:5.72164710873587;65536:11.9885319715471;327680:9.65041953605594"/>
+  </config>
+
+<AS id="AS_graphene_full" routing="Full" >
+
+<host id="graphene-1.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="6"/>
+	<prop id="memory" value="4Gi"/>
+	<prop id="role" value="master"/>
+</host>
+<link id="graphene-1.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
+<link id="graphene-1.nancy.grid5000.fr_UP" bandwidth="1.25E8Bps" latency="1.0E-4s" />
+<link id="graphene-1.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
+
+<host id="graphene-2.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="6"/>
+	<prop id="memory" value="4Gi"/>
+</host>
+<link id="graphene-2.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
+<link id="graphene-2.nancy.grid5000.fr_UP" bandwidth="1.25E8Bps" latency="1.0E-4s" />
+<link id="graphene-2.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
+
+<host id="graphene-3.nancy.grid5000.fr" speed="16.673E9f" core="4">
+	<prop id="speed" value="16.673E9f"/>
+	<prop id="core" value="6"/>
+	<prop id="memory" value="4Gi"/>
+</host>
+<link id="graphene-3.nancy.grid5000.fr_loopback" bandwidth="10000MiBps" latency="1.5E-9s" />
+<link id="graphene-3.nancy.grid5000.fr_UP" bandwidth="1.25E8Bps" latency="1.0E-4s" />
+<link id="graphene-3.nancy.grid5000.fr_DOWN" bandwidth="1.25E8Bps" latency="1.0E-4s" />
+
+</AS>
+</platform>
