@@ -1,4 +1,4 @@
-module gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube
+module github.com/oar-team/batkube
 
 go 1.14
 

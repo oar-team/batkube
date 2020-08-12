@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // ReplaceCoreV1NamespacedServiceAccountOKCode is the HTTP code returned for type ReplaceCoreV1NamespacedServiceAccountOK

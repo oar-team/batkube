@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewPatchNodeV1beta1RuntimeClassParams creates a new PatchNodeV1beta1RuntimeClassParams object

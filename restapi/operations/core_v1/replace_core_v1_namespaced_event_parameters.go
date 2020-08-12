@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewReplaceCoreV1NamespacedEventParams creates a new ReplaceCoreV1NamespacedEventParams object

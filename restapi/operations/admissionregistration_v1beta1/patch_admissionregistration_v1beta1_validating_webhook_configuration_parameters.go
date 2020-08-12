@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewPatchAdmissionregistrationV1beta1ValidatingWebhookConfigurationParams creates a new PatchAdmissionregistrationV1beta1ValidatingWebhookConfigurationParams object

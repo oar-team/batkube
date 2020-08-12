@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewReplaceAppsV1NamespacedReplicaSetScaleParams creates a new ReplaceAppsV1NamespacedReplicaSetScaleParams object

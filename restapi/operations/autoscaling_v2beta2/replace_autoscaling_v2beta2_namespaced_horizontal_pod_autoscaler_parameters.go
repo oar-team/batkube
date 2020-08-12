@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewReplaceAutoscalingV2beta2NamespacedHorizontalPodAutoscalerParams creates a new ReplaceAutoscalingV2beta2NamespacedHorizontalPodAutoscalerParams object

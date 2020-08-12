@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // WatchExtensionsV1beta1IngressListForAllNamespacesOKCode is the HTTP code returned for type WatchExtensionsV1beta1IngressListForAllNamespacesOK

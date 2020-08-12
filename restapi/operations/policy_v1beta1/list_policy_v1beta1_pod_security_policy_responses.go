@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // ListPolicyV1beta1PodSecurityPolicyOKCode is the HTTP code returned for type ListPolicyV1beta1PodSecurityPolicyOK

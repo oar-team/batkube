@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // DeleteFlowcontrolApiserverV1alpha1FlowSchemaOKCode is the HTTP code returned for type DeleteFlowcontrolApiserverV1alpha1FlowSchemaOK

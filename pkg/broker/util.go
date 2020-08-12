@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
+	"github.com/oar-team/batkube/models"
+	"github.com/oar-team/batkube/pkg/translate"
 )
 
 /*

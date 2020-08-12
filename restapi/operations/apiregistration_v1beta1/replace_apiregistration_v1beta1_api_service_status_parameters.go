@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewReplaceApiregistrationV1beta1APIServiceStatusParams creates a new ReplaceApiregistrationV1beta1APIServiceStatusParams object

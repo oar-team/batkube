@@ -3,8 +3,8 @@ package broker
 import (
 	"github.com/davecgh/go-spew/spew"
 	log "github.com/sirupsen/logrus"
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
+	"github.com/oar-team/batkube/models"
+	"github.com/oar-team/batkube/pkg/translate"
 )
 
 func handleBatMessage(b *broker, msg translate.BatMessage) {

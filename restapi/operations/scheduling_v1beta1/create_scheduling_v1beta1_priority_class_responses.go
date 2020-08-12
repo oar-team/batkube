@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // CreateSchedulingV1beta1PriorityClassOKCode is the HTTP code returned for type CreateSchedulingV1beta1PriorityClassOK

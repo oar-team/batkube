@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // ReplacePolicyV1beta1NamespacedPodDisruptionBudgetOKCode is the HTTP code returned for type ReplacePolicyV1beta1NamespacedPodDisruptionBudgetOK

@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // WatchNodeV1beta1RuntimeClassListOKCode is the HTTP code returned for type WatchNodeV1beta1RuntimeClassListOK

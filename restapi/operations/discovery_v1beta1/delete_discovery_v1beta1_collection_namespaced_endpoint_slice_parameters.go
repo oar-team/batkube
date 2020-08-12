@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewDeleteDiscoveryV1beta1CollectionNamespacedEndpointSliceParams creates a new DeleteDiscoveryV1beta1CollectionNamespacedEndpointSliceParams object

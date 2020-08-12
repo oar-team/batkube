@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewDeleteRbacAuthorizationV1CollectionNamespacedRoleBindingParams creates a new DeleteRbacAuthorizationV1CollectionNamespacedRoleBindingParams object

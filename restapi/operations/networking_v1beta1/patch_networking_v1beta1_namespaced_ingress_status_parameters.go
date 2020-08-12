@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewPatchNetworkingV1beta1NamespacedIngressStatusParams creates a new PatchNetworkingV1beta1NamespacedIngressStatusParams object

@@ -10,7 +10,7 @@ import (
 	zmq "github.com/pebbe/zmq4"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/pkg/translate"
+	"github.com/oar-team/batkube/pkg/translate"
 )
 
 type broker struct {
@@ -104,7 +104,7 @@ type BatkubeOptions struct {
 	TimeoutValue               time.Duration `long:"timeout-value" description:"maximum amount of time spent waiting for messages from the scheduler" default:"20ms"`
 	MaxSimulationTimestep      time.Duration `long:"max-simulation-timestep" description:"maximum value authorized for simulationTimestep, in seconds" default:"20s"`
 	BaseSimulationTimestep     time.Duration `long:"base-simulation-timestep" description:"maximum amount of time Batsim is allowed to jump forward in time. This value increases according to a backoff policy, up to a maximum amount" default:"100ms"`
-	MinDelay                   time.Duration `long:"min-delay" description:"minimum amount of time to spend in an exchange with the scheduler. Setting this too low may lead to wrong behaviors from the scheduler. The optimal value depends on the host system." default:"10ms"`
+	MinDelay                   time.Duration `long:"min-delay" description:"minimum amount of time to spend in an exchange with the scheduler. Setting this too low may lead to wrong behaviors from the scheduler. The optimal value depends on the host system." default:"0ms"`
 	BackoffMultiplier          float64       `long:"backoff-multiplier" description:"each time the scheduler did not react, simulationTimestep is multiplied by this amount" default:"2"`
 	DetectSchedulerDeadlock    bool          `long:"detect-scheduler-deadlock" description:"allow to stop the simulation if the simulator believes the scheduler crashed"`
 	SchedulerCrashTimeout      time.Duration `long:"scheduler-crash-timeout" description:"When expecting a decision from the scheduler, amount of time to wait before deciding on a crash when no decision is received" default:"5s"`

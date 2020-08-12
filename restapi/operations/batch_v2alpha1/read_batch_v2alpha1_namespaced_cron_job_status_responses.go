@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // ReadBatchV2alpha1NamespacedCronJobStatusOKCode is the HTTP code returned for type ReadBatchV2alpha1NamespacedCronJobStatusOK

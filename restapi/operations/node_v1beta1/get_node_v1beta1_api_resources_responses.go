@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // GetNodeV1beta1APIResourcesOKCode is the HTTP code returned for type GetNodeV1beta1APIResourcesOK

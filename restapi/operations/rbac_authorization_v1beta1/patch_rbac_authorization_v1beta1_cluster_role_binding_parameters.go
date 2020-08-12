@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewPatchRbacAuthorizationV1beta1ClusterRoleBindingParams creates a new PatchRbacAuthorizationV1beta1ClusterRoleBindingParams object

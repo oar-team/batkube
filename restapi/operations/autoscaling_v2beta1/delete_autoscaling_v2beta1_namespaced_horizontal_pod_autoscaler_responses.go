@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // DeleteAutoscalingV2beta1NamespacedHorizontalPodAutoscalerOKCode is the HTTP code returned for type DeleteAutoscalingV2beta1NamespacedHorizontalPodAutoscalerOK

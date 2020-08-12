@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewDeleteSettingsV1alpha1CollectionNamespacedPodPresetParams creates a new DeleteSettingsV1alpha1CollectionNamespacedPodPresetParams object

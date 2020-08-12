@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewReplaceApiextensionsV1beta1CustomResourceDefinitionParams creates a new ReplaceApiextensionsV1beta1CustomResourceDefinitionParams object

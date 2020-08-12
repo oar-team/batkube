@@ -25,7 +25,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 	"golang.org/x/net/netutil"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/restapi/operations"
+	"github.com/oar-team/batkube/restapi/operations"
 )
 
 const (

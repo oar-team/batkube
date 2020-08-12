@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewCreateDiscoveryV1beta1NamespacedEndpointSliceParams creates a new CreateDiscoveryV1beta1NamespacedEndpointSliceParams object

@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // NewPatchFlowcontrolApiserverV1alpha1FlowSchemaStatusParams creates a new PatchFlowcontrolApiserverV1alpha1FlowSchemaStatusParams object

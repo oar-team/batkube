@@ -10,6 +10,7 @@
         "delay10": {
             "type": "delay",
             "delay": 10,
+	    "cpu": "1",
 	    "scheduler": "default"
         }
     }

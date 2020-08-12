@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"gitlab.com/ryax-tech/internships/2020/scheduling_simulation/batkube/models"
+	"github.com/oar-team/batkube/models"
 )
 
 // PatchAdmissionregistrationV1beta1ValidatingWebhookConfigurationOKCode is the HTTP code returned for type PatchAdmissionregistrationV1beta1ValidatingWebhookConfigurationOK
