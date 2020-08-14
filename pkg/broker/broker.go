@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/oar-team/batkube/pkg/translate"
 	zmq "github.com/pebbe/zmq4"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
-	"github.com/oar-team/batkube/pkg/translate"
 )
 
 type broker struct {
@@ -391,6 +391,11 @@ func (b *broker) exchangeWithScheduler(batMsg *translate.BatMessage) {
 			loopStartTime = time.Now()
 			b.lastDecisionTime = time.Now()
 			continue
+		}
+		// We can't start counting for scheduler crash if jobs are
+		// still running.
+		if b.runningJobs > 0 {
+			b.lastDecisionTime = time.Now()
 		}
 
 		elapsedSinceLoopStart = time.Now().Sub(loopStartTime)
